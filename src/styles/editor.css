@@ -1,0 +1,49 @@
+@reference "tailwindcss";
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  overflow-x: hidden;
+}
+
+.EasyMDEContainer {
+  height: 100% !important;
+}
+
+.editor-toolbar {
+  @apply fixed top-0 left-0 z-50 flex w-full justify-center border-none opacity-50 hover:opacity-50 md:opacity-0 lg:opacity-0;
+}
+
+.editor-statusbar {
+  @apply fixed right-0 bottom-0;
+}
+
+.CodeMirror {
+  border: none !important;
+}
+
+.CodeMirror-cursor {
+  border-left: 2px solid #000 !important;
+}
+
+.CodeMirror-scroll {
+  max-width: 80ch;
+  margin: 1rem auto !important;
+  overflow: visible !important;
+  height: 100% !important;
+}
+
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar {
+  display: none !important;
+}
+
+.cm-header {
+  font-weight: 500;
+}
+
+.CodeMirror pre.CodeMirror-line {
+  font-size: 16px;
+  line-height: 1.6;
+}

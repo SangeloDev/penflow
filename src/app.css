@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+.main-editor-preview {
+  @apply prose p-4;
+}
