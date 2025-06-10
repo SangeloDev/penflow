@@ -3,8 +3,18 @@
 
 :root {
   --base: oklch(1 0 0);
+  --aside: #959694;
+  --color-primary: rgb(255, 160, 7);
+  --color-selection: rgba(255, 160, 7, 0.75);
 }
 
 @theme inline {
   --color-base: var(--base);
+  --color-aside: var(--aside);
+  --color-primary: var(--aside);
+  --color-selection: var(--aside);
+}
+
+::selection {
+  @apply bg-selection;
 }
