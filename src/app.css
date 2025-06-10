@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-.main-editor-preview {
-  @apply prose p-4;
+:root {
+  --base: oklch(1 0 0);
+}
+
+@theme inline {
+  --color-base: var(--base);
 }

@@ -1,3 +1,4 @@
+@reference "../app.css";
 @reference "tailwindcss";
 
 body {
@@ -8,7 +9,7 @@ body {
 }
 
 .EasyMDEContainer {
-  height: 100% !important;
+  @apply h-full! has-[.disabled-for-preview]:[.CodeMirror-scroll]:hidden;
 }
 
 .editor-toolbar {
@@ -19,19 +20,19 @@ body {
   @apply fixed right-0 bottom-0;
 }
 
-.CodeMirror {
-  border: none !important;
+.main-editor-preview {
+  @apply prose bg-base top-0 right-0 left-0 mx-auto mt-7 mb-4 min-h-full max-w-[80ch] overflow-visible p-0 p-4 pb-[50px];
 }
 
-.CodeMirror-cursor {
-  border-left: 2px solid #000 !important;
+.CodeMirror {
+  @apply border-none!;
 }
 
 .CodeMirror-scroll {
   max-width: 80ch;
   margin: 1rem auto !important;
   overflow: visible !important;
-  height: 100% !important;
+  min-height: 100% !important;
 }
 
 .CodeMirror-vscrollbar,

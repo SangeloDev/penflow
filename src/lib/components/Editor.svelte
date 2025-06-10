@@ -26,6 +26,10 @@
         previewClass: "main-editor-preview",
         unorderedListStyle: "-",
         hideIcons: ["fullscreen", "side-by-side"],
+        shortcuts: {
+          drawImage: "Ctrl-Alt-K",
+          drawTable: "Ctrl-Alt-T",
+        },
         renderingConfig: {
           codeSyntaxHighlighting: true,
           hljs: hljs,
@@ -49,6 +53,4 @@
   });
 </script>
 
-<!-- <div class="flex h-full w-full flex-col *:text-left"> -->
 <textarea bind:this={textareaElement}></textarea>
-<!-- </div> -->
