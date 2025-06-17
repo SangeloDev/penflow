@@ -15,6 +15,12 @@
   --color-selection: var(--aside);
 }
 
+@layer utilities {
+  .btn {
+    @apply cursor-pointer rounded p-2 hover:bg-gray-200 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:bg-gray-200;
+  }
+}
+
 ::selection {
   @apply bg-selection;
 }

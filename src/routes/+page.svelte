@@ -1,14 +1,12 @@
 <script lang="ts">
+  // import EditorWindow from "$lib/components/EditorWindow.svelte";
   import Editor from "$lib/components/Editor.svelte";
+
+  const items = [
+    { id: 0, enabled: true },
+    { id: 9, enabled: false },
+  ];
 </script>
 
-<Editor />
-
-<div class="text-aside fixed bottom-0 left-0 px-[10px] py-2 text-xs">
-  <span class="mr-2 inline-block">&copy; penflow 2025</span>
-  <span class="mr-2 inline-block select-none">
-    <a href="">about</a>
-    //
-    <a href="">settings</a>
-  </span>
-</div>
+<!-- <EditorWindow /> -->
+<Editor autosaveDelay={2000} placeholder="Let your mind flow..." fullscreen={true} toolbarItems={items} />

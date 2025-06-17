@@ -43,9 +43,17 @@
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-markdown": "^6.3.3",
+    "@codemirror/language": "^6.11.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.37.2",
     "@inlang/paraglide-js": "^2.0.0",
-    "easymde": "^2.20.0",
-    "highlight.js": "^11.11.1"
+    "dompurify": "^3.2.6",
+    "highlight.js": "^11.11.1",
+    "lucide-svelte": "^0.515.0",
+    "markdown-it": "^14.1.0",
+    "svelte-splitpanes": "^8.0.9"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
