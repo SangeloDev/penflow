@@ -10,8 +10,8 @@ export interface Block {
 
 export interface ToolbarItem {
   id: number;
-  title: string;
-  action: (textarea: HTMLTextAreaElement | undefined) => void;
-  icon: ComponentType;
+  title?: string;
+  action?: (textarea: HTMLTextAreaElement | undefined) => void;
+  icon?: ComponentType;
   enabled: boolean;
 }

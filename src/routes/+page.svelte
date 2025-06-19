@@ -1,12 +1,63 @@
 <script lang="ts">
-  // import EditorWindow from "$lib/components/EditorWindow.svelte";
   import Editor from "$lib/components/Editor.svelte";
+  import Modal from "$lib/components/Modal.svelte";
+  import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
+  import type { ToolbarItem } from "$lib/types";
+  import { CircleHelp, Notebook } from "lucide-svelte";
+  import { globalHotkeys as hotkeys } from "$lib/utils/hotkeys";
 
-  const items = [
+  const items: ToolbarItem[] = [
     { id: 0, enabled: true },
     { id: 9, enabled: false },
   ];
+
+  let shortcutModalVisible = $state(false);
 </script>
 
-<!-- <EditorWindow /> -->
-<Editor autosaveDelay={2000} placeholder="Let your mind flow..." fullscreen={true} toolbarItems={items} />
+<Editor
+  placeholder="Let your mind flow..."
+  fullscreen={true}
+  toolbarItems={items}
+  autosaveDelay={2000}
+  autosaveId="penflow-app-website"
+  bind:shortcutModalVisible />
+
+<Modal bind:show={shortcutModalVisible}>
+  {#snippet header()}
+    <h1 class="flex items-center gap-2 font-semibold"><CircleHelp size={18} /> Help</h1>
+  {/snippet}
+  <Shortcuts>
+    <div>
+      <h1 class="mb-2 font-semibold">Editor Hotkeys</h1>
+      <ul>
+        {#each hotkeys as s (s.id)}
+          <li class="mb-1 grid grid-cols-2">
+            <span>{s.desc}</span>
+            <span class="place-self-end rounded bg-gray-100 px-2 py-[0.15rem] font-mono">{s.shortcut}</span>
+          </li>
+        {/each}
+      </ul>
+    </div>
+    <div>
+      <h1 class="mb-2 font-semibold">Global Hotkeys</h1>
+      <ul>
+        {#each hotkeys as s (s.id)}
+          <li class="mb-1 grid grid-cols-2">
+            <span>{s.desc}</span>
+            <span class="place-self-end rounded bg-gray-100 px-2 py-[0.15rem] font-mono">{s.shortcut}</span>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  </Shortcuts>
+  {#snippet footer()}
+    <a
+      class="flex items-center gap-2 hover:[&>span]:underline"
+      href="https://www.markdownguide.org/basic-syntax/"
+      target="_blank"
+      rel="noopener noreferrer">
+      <Notebook size={18} />
+      <span class="text-primary">Need help with Markdown?</span>
+    </a>
+  {/snippet}
+</Modal>

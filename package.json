@@ -43,17 +43,25 @@
     "workbox-window": "^7.3.0"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.3.3",
     "@codemirror/language": "^6.11.1",
+    "@codemirror/language-data": "^6.5.1",
+    "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.37.2",
     "@inlang/paraglide-js": "^2.0.0",
-    "dompurify": "^3.2.6",
+    "@lezer/highlight": "^1.2.1",
+    "@twemoji/api": "^16.0.1",
     "highlight.js": "^11.11.1",
+    "isomorphic-dompurify": "^2.25.0",
     "lucide-svelte": "^0.515.0",
     "markdown-it": "^14.1.0",
-    "svelte-splitpanes": "^8.0.9"
+    "markdown-it-emoji": "^3.0.0",
+    "markdown-it-task-checkbox": "^1.0.6",
+    "svelte-splitpanes": "^8.0.9",
+    "thememirror": "^2.0.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

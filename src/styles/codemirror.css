@@ -1,0 +1,41 @@
+@import "tailwindcss" with (
+  reference: true
+);
+
+.cm-editor {
+  @apply h-full;
+  font-size: 16px;
+}
+
+.cm-scroller {
+  @apply overflow-auto font-mono text-lg;
+}
+
+.cm-scroller.side-by-side::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Opera */
+}
+
+.cm-scroller.side-by-side {
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For IE and Edge */
+}
+
+.cm-content {
+  @apply p-4;
+}
+
+.cm-selectionMatch {
+  @apply bg-[#7ad8fd5e]!;
+}
+
+.cm-gutters {
+  @apply border-r-gray-200 select-none;
+}
+
+.cm-gutter .cm-gutterElement {
+  @apply px-4!;
+}
+
+.cm-activeLineGutter {
+  @apply text-[#6a7282];
+}

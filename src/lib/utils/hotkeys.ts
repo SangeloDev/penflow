@@ -1,3 +1,10 @@
+import { defaultKeymap, historyKeymap, indentWithTab, selectParentSyntax } from "@codemirror/commands";
+import { searchKeymap } from "@codemirror/search";
+import { closeBracketsKeymap } from "@codemirror/autocomplete";
+import * as f from "$lib/utils/formattingActions";
+import { toggleHeadingCycle } from "$lib/utils/formatting.js";
+import { keymap } from "@codemirror/view";
+
 /**
  * Creates a reusable keydown event handler for hotkeys.
  * This function is not exported and serves as a helper.
@@ -73,3 +80,154 @@ export function globalHotkey(params: { [key: string]: (e: KeyboardEvent) => void
     },
   };
 }
+
+export const globalHotkeys = [
+  {
+    id: 0,
+    desc: "Settings",
+    shortcut: "Ctrl+,",
+    action: console.log("hello world") /*() => cycleEditMode(mode, false)*/,
+  },
+  {
+    id: 2,
+    desc: "Help",
+    shortcut: "Ctrl+Alt+/",
+    action: console.log("hello world") /*() => cycleEditMode(mode, false)*/,
+  },
+];
+
+// export const globalEditorHotkeys = {
+//   "ctrl+e": () => cycleModeForward(),
+//   "ctrl+shift+e": () => cycleModeBackward(),
+//   "ctrl+s": () => saveFile(),
+//   "ctrl+o": () => openFile(),
+//   "ctrl+shift+o": () => newFile(),
+//   "ctrl+alt+/": () => (shortcutModalVisible = true),
+// };
+// "ctrl+shift+f": () => toggleFullscreen(),
+
+export const editorKeymap = keymap.of([
+  ...closeBracketsKeymap,
+  ...searchKeymap,
+  ...historyKeymap,
+  indentWithTab,
+  {
+    key: "Mod-b",
+    run: (view) => {
+      f.toggleBold(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-i",
+    run: (view) => {
+      f.toggleItalic(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Shift-h",
+    run: (view) => {
+      toggleHeadingCycle(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-1",
+    run: (view) => {
+      f.toggleHeading(1, view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-2",
+    run: (view) => {
+      f.toggleHeading(2, view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-3",
+    run: (view) => {
+      f.toggleHeading(3, view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-4",
+    run: (view) => {
+      f.toggleHeading(4, view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-5",
+    run: (view) => {
+      f.toggleHeading(5, view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-6",
+    run: (view) => {
+      f.toggleHeading(6, view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Shift-b",
+    run: (view) => {
+      f.toggleQuote(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Shift-c",
+    run: (view) => {
+      f.toggleCodeBlock(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Alt-c",
+    run: (view) => {
+      f.toggleInlineCode(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-l",
+    run: (view) => {
+      f.toggleList(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Shift-l",
+    run: (view) => {
+      f.toggleOrderedList(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-k",
+    run: (view) => {
+      f.wrapLink(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Shift-k",
+    run: (view) => {
+      f.wrapImage(view);
+      return true;
+    },
+  },
+  {
+    key: "Mod-Shift-t",
+    run: (view) => {
+      f.insertTable(view);
+      return true;
+    },
+  },
+]);

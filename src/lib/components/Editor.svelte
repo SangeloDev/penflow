@@ -5,62 +5,100 @@
   import { Splitpanes, Pane } from "svelte-splitpanes";
   // import { marked } from "marked";
   // import DOMPurify from "dompurify";
-  import { undo, redo, initHistory, saveToHistory } from "$lib/utils/formatting.js";
+  // import { undo, redo, initHistory, saveToHistory } from "$lib/utils/formatting.js";
   import * as f from "$lib/utils/formattingActions";
   import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-  import { hotkey, globalHotkey } from "$lib/utils/hotkeys";
-  import { onDestroy, onMount } from "svelte";
+  import { globalHotkey, editorKeymap } from "$lib/utils/hotkeys";
+  import {
+    type EditorMode,
+    getDirtyness,
+    getMode,
+    setDirty,
+    setMode,
+    newFile,
+    saveFile,
+    loadFileContent,
+    generateFilename,
+    handleFileSelect,
+  } from "./Editor.svelte.ts";
+  import { onDestroy, onMount, untrack } from "svelte";
   import type { ToolbarItem } from "$lib/types";
   import { Bold, Code, Italic, Link, List, ListOrdered, Quote, Image, Heading, Table } from "lucide-svelte";
+
+  // codemirror imports
+  import {
+    EditorView,
+    lineNumbers,
+    highlightActiveLine,
+    highlightActiveLineGutter,
+    placeholder as placeholderExtension,
+    keymap,
+  } from "@codemirror/view";
+  import { EditorState, Compartment } from "@codemirror/state";
+  import { Prec } from "@codemirror/state";
+  import { languages } from "@codemirror/language-data";
+  import { markdown as markdownExt, markdownLanguage } from "@codemirror/lang-markdown";
+  import { defaultKeymap, history } from "@codemirror/commands";
+  import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
+  import { closeBrackets } from "@codemirror/autocomplete";
+  import { highlightSelectionMatches } from "@codemirror/search";
+  import { tags as t } from "@lezer/highlight";
+  import { createTheme, tomorrow } from "thememirror";
+  import "../../styles/codemirror.css";
 
   let {
     autosaveId = "my-markdown-editor",
     autosaveDelay = 10000,
     autofocus = true,
     fullscreen = false,
-    defaultMode = "edit",
+    defaultMode = "side-by-side",
     placeholder = "Write your markdown here...",
     toolbarItems = [],
+    shortcutModalVisible = $bindable(),
   }: {
     autosaveId?: string;
     autosaveDelay?: number;
     autofocus?: boolean;
     fullscreen?: boolean;
-    defaultMode?: "edit" | "preview" | "side-by-side";
+    defaultMode?: EditorMode;
     placeholder?: string;
     toolbarItems?: Array<ToolbarItem>;
+    shortcutModalVisible?: boolean;
   } = $props();
 
   // States
   let content = $state("");
-  let mode = $state<"edit" | "preview" | "side-by-side">(defaultMode);
+  let mode = $derived(getMode());
   let autosaveTimer: number | null = null;
   let isFullscreen = $state(fullscreen);
-  let isDirty = $state(false);
-  let activeFilename: string | null = $state(null);
+  let isDirty = $derived(getDirtyness());
+  let activeFilename: string | undefined = $state(undefined);
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
 
-  let textareaElement: HTMLTextAreaElement | undefined = $state();
+  // codemirror
+  let editorView: EditorView | undefined = $state();
+  let editorContainer: HTMLDivElement | undefined = $state();
+  const historyCompartment = new Compartment();
+
+  // panes
   let previewElement: HTMLDivElement | undefined = $state();
   let ignoreEditorScroll = false;
   let ignorePreviewScroll = false;
-  let selectionStart = 0;
-  let selectionEnd = 0;
   let lastSplitterClick = 0;
 
   const doubleClickThreshold = 300; // in ms since last click
   const defaultItems = [
-    { id: 0, title: "Bold", icon: Bold, action: () => f.toggleBold(textareaElement) },
-    { id: 1, title: "Italic", icon: Italic, action: () => f.toggleItalic(textareaElement) },
-    { id: 2, title: "Heading", icon: Heading, action: () => toggleHeadingCycle(textareaElement) },
-    { id: 3, title: "List", icon: List, action: () => f.toggleList(textareaElement) },
-    { id: 4, title: "Ordered List", icon: ListOrdered, action: () => f.toggleOrderedList(textareaElement) },
-    { id: 5, title: "Quote", icon: Quote, action: () => f.toggleQuote(textareaElement) },
-    { id: 6, title: "Code", icon: Code, action: () => f.toggleCodeBlock(textareaElement) },
-    { id: 7, title: "Link", icon: Link, action: () => f.insertLink(textareaElement) },
-    { id: 8, title: "Image", icon: Image, action: () => f.insertImage(textareaElement) },
-    { id: 9, title: "Table", icon: Table, action: () => f.insertImage(textareaElement) },
+    { id: 0, title: "Bold", icon: Bold, action: () => f.toggleBold(editorView) },
+    { id: 1, title: "Italic", icon: Italic, action: () => f.toggleItalic(editorView) },
+    { id: 2, title: "Heading", icon: Heading, action: () => toggleHeadingCycle(editorView) },
+    { id: 3, title: "List", icon: List, action: () => f.toggleList(editorView) },
+    { id: 4, title: "Ordered List", icon: ListOrdered, action: () => f.toggleOrderedList(editorView) },
+    { id: 5, title: "Quote", icon: Quote, action: () => f.toggleQuote(editorView) },
+    { id: 6, title: "Code", icon: Code, action: () => f.toggleCodeBlock(editorView) },
+    { id: 7, title: "Link", icon: Link, action: () => f.wrapLink(editorView) },
+    { id: 8, title: "Image", icon: Image, action: () => f.wrapImage(editorView) },
+    { id: 9, title: "Table", icon: Table, action: () => f.insertTable(editorView) },
   ];
 
   const finalToolbarItems = $derived(() => {
@@ -80,155 +118,131 @@
     // "ctrl+shift+f": () => toggleFullscreen(),
     "ctrl+e": () => cycleEditMode(mode),
     "ctrl+shift+e": () => cycleEditMode(mode, false),
-    "ctrl+o": () => openFile(),
-    "ctrl+s": () => saveFile(),
+    "ctrl+s": () => saveFile(content, activeFilename),
+    "ctrl+o": () => openFile(editorView, isDirty, content, activeFilename, historyCompartment),
+    "ctrl+shift+o": () => newFile(editorView, content, autosaveId, activeFilename, isDirty),
+    "ctrl+alt+slash": () => (shortcutModalVisible = true),
   };
 
-  const editorHotkeys = {
-    "ctrl+z": () => undo(textareaElement),
-    "ctrl+y": () => redo(textareaElement),
-    "ctrl+shift+z": () => redo(textareaElement),
-    "ctrl+b": () => f.toggleBold(textareaElement),
-    "ctrl+i": () => f.toggleItalic(textareaElement),
-    "ctrl+shift+h": () => toggleHeadingCycle(textareaElement),
-    "ctrl+alt+1": () => f.toggleHeading(1, textareaElement),
-    "ctrl+alt+2": () => f.toggleHeading(2, textareaElement),
-    "ctrl+alt+3": () => f.toggleHeading(3, textareaElement),
-    "ctrl+alt+4": () => f.toggleHeading(4, textareaElement),
-    "ctrl+alt+5": () => f.toggleHeading(5, textareaElement),
-    "ctrl+alt+6": () => f.toggleHeading(6, textareaElement),
-    "ctrl+shift+b": () => f.toggleQuote(textareaElement),
-    "ctrl+shift+c": () => f.toggleCodeBlock(textareaElement),
-    "ctrl+alt+c": () => f.toggleInlineCode(textareaElement),
-    "ctrl+l": () => f.toggleList(textareaElement),
-    "ctrl+shift+l": () => f.toggleOrderedList(textareaElement),
-    "ctrl+k": () => f.insertLink(textareaElement),
-    "ctrl+shift+k": () => f.insertImage(textareaElement),
-    "ctrl+shift+t": () => f.insertTable(textareaElement),
-  };
+  const tomorrowMarkdown = createTheme({
+    variant: "light",
+    settings: {
+      background: "#FFFFFF",
+      foreground: "#4D4D4C",
+      caret: "#AEAFAD",
+      selection: "#D6D6D6",
+      gutterBackground: "#FFFFFF",
+      gutterForeground: "#4D4D4C80",
+      lineHighlight: "#EFEFEF",
+    },
+    styles: [
+      { tag: t.heading1, color: "#4271AE", fontWeight: "bold" },
+      { tag: t.heading2, color: "#4271AE", fontWeight: "bold" },
+      { tag: t.heading3, color: "#4271AE", fontWeight: "bold" },
+      { tag: t.heading4, color: "#4271AE", fontWeight: "bold" },
+      { tag: t.heading5, color: "#4271AE", fontWeight: "bold" },
+      { tag: t.heading6, color: "#4271AE", fontWeight: "bold" },
+      { tag: t.emphasis, fontStyle: "italic" },
+      { tag: t.strong, fontWeight: "bold" },
+      { tag: t.strikethrough, textDecoration: "line-through" },
+      { tag: t.quote, fontStyle: "italic" },
+      { tag: t.link, color: "#4271AE" },
+    ],
+  });
 
-  // Autosave logic
+  // set the default mode
+  setMode(defaultMode);
+
+  // codemirror setup effect
   $effect(() => {
-    if (autosaveTimer) clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(() => {
-      localStorage.setItem(autosaveId, content);
-    }, autosaveDelay);
-  });
+    if (!editorContainer) return;
 
-  // On mount, load autosave
-  $effect(() => {
-    if (textareaElement) {
-      textareaElement.selectionStart = selectionStart;
-      textareaElement.selectionEnd = selectionEnd;
-      textareaElement.focus();
-    }
-  });
-
-  $effect(() => {
-    if (textareaElement) {
-      requestAnimationFrame(() => {
-        if (!textareaElement) return;
-        const cursorY = getCursorYPosition(textareaElement, selectionStart);
-        const desiredScrollTop = cursorY - textareaElement.clientHeight / 2;
-
-        textareaElement.scrollTop = desiredScrollTop;
-        textareaElement.selectionStart = selectionStart;
-        textareaElement.selectionEnd = selectionEnd;
-        textareaElement.focus();
-      });
-    }
-  });
-
-  let documentTitle = $derived(() => {
-    const dirtyIndicator = isDirty ? "* " : "";
-    let fileName = activeFilename;
-
-    if (!fileName) {
-      const generated = generateFilename(content);
-      fileName = generated !== "note.md" ? generated : "Untitled";
-    }
-
-    return `${dirtyIndicator}${fileName}`;
-  });
-
-  /**
-   * Creates a sanitized filename from the first H1 heading in the content.
-   * Falls back to "note.md" if no heading is found.
-   */
-  function generateFilename(markdownContent: string): string {
-    const headingMatch = markdownContent.match(/^# (.*)/m);
-    let baseName = "note";
-
-    if (headingMatch && headingMatch[1]) {
-      baseName = headingMatch[1].trim();
-    }
-
-    const sanitizedName = baseName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-+|-+$/g, "");
-
-    return (sanitizedName || "note") + ".md";
-  }
-
-  /**
-   * Prompts the user to download the current editor content.
-   */
-  function saveFile() {
-    if (!content && !activeFilename) return; // Don't save empty, untitled files
-    const filename = activeFilename ?? generateFilename(content);
-    const blob = new Blob([content], {
-      type: "text/markdown;charset=utf-8",
+    const state = EditorState.create({
+      doc: untrack(() => content),
+      extensions: [
+        lineNumbers(),
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        historyCompartment.of(history()),
+        bracketMatching(),
+        closeBrackets(),
+        highlightSelectionMatches(),
+        markdownExt({ base: markdownLanguage, codeLanguages: languages }),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        placeholderExtension(placeholder),
+        Prec.highest(editorKeymap),
+        Prec.default(keymap.of(defaultKeymap)),
+        EditorView.lineWrapping,
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            content = update.state.doc.toString();
+            setDirty(true);
+          }
+        }),
+        tomorrow,
+        tomorrowMarkdown,
+        EditorView.theme({}, { dark: false }),
+      ],
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    activeFilename = filename;
-    isDirty = false;
-  }
 
-  /**
-   * Updates the editor and state with new file content.
-   */
-  function loadFileContent(fileContent: string, fileName: string) {
-    content = fileContent;
-    activeFilename = fileName;
-    isDirty = false;
-    // After loading new content, re-initialize the history
-    if (textareaElement) {
-      initHistory(textareaElement);
+    const view = new EditorView({
+      state,
+      parent: editorContainer,
+    });
+
+    editorView = view;
+
+    // add class if in side-by-side mode
+    if (mode === "side-by-side") {
+      view.scrollDOM.classList.add("side-by-side");
     }
-  }
 
-  /**
-   * Handles file selection from the hidden input (fallback method).
-   */
-  function handleFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
+    // ensure autofocus
+    if (autofocus) {
+      view.focus();
+    }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const newContent = e.target?.result as string;
-      loadFileContent(newContent, file.name);
+    return () => {
+      view.destroy();
+      editorView = undefined;
     };
-    reader.readAsText(file);
-    input.value = "";
-  }
+  });
 
-  /**
-   * Opens a file dialog using the best available browser API.
-   */
-  async function openFile() {
-    if (isDirty && !confirm("You have unsaved changes. Discard them and open a new file?")) {
+  // sync scroll listener
+  $effect(() => {
+    if (editorView && mode === "side-by-side") {
+      const listener = () => syncScroll("editor");
+      editorView.scrollDOM.addEventListener("scroll", listener);
+      return () => editorView?.scrollDOM.removeEventListener("scroll", listener);
+    }
+  });
+
+  // timer for autosave
+  $effect(() => {
+    if (autosaveTimer) {
+      // clean up any previous timer
+      clearInterval(autosaveTimer);
+    }
+    if (autosaveDelay > 0) {
+      autosaveTimer = setInterval(() => {
+        if (isDirty) {
+          saveToLocalStorage();
+        }
+      }, autosaveDelay);
+    }
+    return () => {
+      if (autosaveTimer) clearInterval(autosaveTimer);
+    };
+  });
+
+  async function openFile(
+    view: EditorView | undefined,
+    dirtyness: boolean,
+    oldContent: string,
+    activeFilename: string | undefined,
+    historyCompartment: Compartment
+  ) {
+    if (dirtyness && !confirm("You have unsaved changes. Discard them and open a new file?")) {
       return;
     }
 
@@ -239,7 +253,7 @@
         });
         const file = await fileHandle.getFile();
         const newContent = await file.text();
-        loadFileContent(newContent, file.name);
+        loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("Error opening file:", err);
@@ -254,19 +268,51 @@
     }
   }
 
-  // Mode switching
-  function setMode(newMode: "edit" | "preview" | "side-by-side") {
-    // if the editor is visible, save its cursor/selection state
-    if (textareaElement) {
-      selectionStart = textareaElement.selectionStart;
-      selectionEnd = textareaElement.selectionEnd;
-    }
-    mode = newMode;
+  // autosave
+  function saveToLocalStorage() {
+    if (!autosaveId) return;
+    localStorage.setItem(
+      autosaveId,
+      JSON.stringify({
+        content,
+        activeFilename,
+        timestamp: Date.now(),
+      })
+    );
   }
 
-  // function toggleFullscreen() {
-  //   isFullscreen = !isFullscreen;
-  // }
+  // load content from localStorage (optional, e.g. on mount)
+  function loadFromLocalStorage() {
+    if (!autosaveId) return;
+    const data = localStorage.getItem(autosaveId);
+    if (data) {
+      try {
+        const { content: savedContent, activeFilename: savedFilename } = JSON.parse(data);
+        loadFileContent(
+          editorView,
+          content,
+          activeFilename,
+          savedFilename ?? documentTitle(),
+          savedContent,
+          historyCompartment
+        );
+      } catch (err) {
+        console.error("error loading file content from localStorage: ", err);
+      }
+    }
+  }
+
+  let documentTitle = $derived(() => {
+    const dirtyIndicator = isDirty ? "• " : "";
+    let fileName = activeFilename;
+
+    if (!fileName) {
+      const generated = generateFilename(content);
+      fileName = generated !== "note.md" ? generated : "Untitled";
+    }
+
+    return `${dirtyIndicator}${fileName}`;
+  });
 
   function cycleEditMode(currentMode: "edit" | "preview" | "side-by-side", forward = true) {
     if (forward) {
@@ -300,31 +346,26 @@
 
   let globalHotkeyCleanup: { destroy: () => void };
 
-  function handleInput() {
-    saveToHistory(textareaElement);
-  }
-
   // Autoscroll
   function syncScroll(source: "editor" | "preview") {
-    if (!textareaElement || !previewElement) return;
+    if (!editorView || !previewElement) return;
+
+    const sourceEl = source === "editor" ? editorView.scrollDOM : previewElement;
+    const targetEl = source === "editor" ? previewElement : editorView.scrollDOM;
 
     if (source === "editor") {
       if (ignoreEditorScroll) {
-        ignoreEditorScroll = false; // reset and exit
+        ignoreEditorScroll = false;
         return;
       }
       ignorePreviewScroll = true;
     } else {
       if (ignorePreviewScroll) {
-        ignorePreviewScroll = false; // reset and exit
+        ignorePreviewScroll = false;
         return;
       }
       ignoreEditorScroll = true;
     }
-
-    // determine source and target elements based on the argument
-    const sourceEl = source === "editor" ? textareaElement : previewElement;
-    const targetEl = source === "editor" ? previewElement : textareaElement;
 
     const sourceScrollableDist = sourceEl.scrollHeight - sourceEl.clientHeight;
     const targetScrollableDist = targetEl.scrollHeight - targetEl.clientHeight;
@@ -335,67 +376,10 @@
     targetEl.scrollTop = scrollRatio * targetScrollableDist;
   }
 
-  /**
-   * Calculates the Y-coordinate (in pixels) of the cursor within a textarea.
-   * It does this by creating a hidden "mirror" div with the same styles and content.
-   */
-  function getCursorYPosition(element: HTMLTextAreaElement, cursorPosition: number): number {
-    // create a mirror div
-    const mirror = document.createElement("div");
-    const style = window.getComputedStyle(element);
-
-    // sync all the important styles from the textarea to the mirror
-    [
-      "font",
-      "lineHeight",
-      "padding",
-      "width",
-      "border",
-      "letterSpacing",
-      "wordSpacing",
-      "whiteSpace",
-      "wordWrap",
-    ].forEach((prop) => {
-      mirror.style[prop as any] = style[prop as any];
-    });
-
-    // make the mirror invisible and position it off-screen
-    mirror.style.position = "absolute";
-    mirror.style.left = "-9999px";
-    mirror.style.top = "0";
-    mirror.style.visibility = "hidden";
-
-    // set the mirror's content to the text before the cursor
-    mirror.textContent = element.value.substring(0, cursorPosition);
-
-    // create a marker span to measure its position
-    const marker = document.createElement("span");
-    // use a zero-width space to ensure the span has height
-    marker.textContent = "\u200B";
-    mirror.appendChild(marker);
-
-    // append the mirror to the dom to perform the measurement
-    document.body.appendChild(mirror);
-
-    // the marker's offsettop is the cursor's y-position
-    const cursorY = marker.offsetTop;
-
-    // clean up by removing the mirror from the dom
-    document.body.removeChild(mirror);
-
-    return cursorY;
-  }
-
-  /**
-   * Resets the side-by-side panes to a 50/50 split.
-   */
   function resetPanes() {
     editorPaneSize = 50;
   }
 
-  /**
-   * Detects a double-click on the splitter and resets the panes.
-   */
   function handleSplitterClick() {
     const now = Date.now();
     if (now - lastSplitterClick < doubleClickThreshold) {
@@ -405,7 +389,8 @@
   }
 
   onMount(() => {
-    initHistory(textareaElement);
+    loadFromLocalStorage(); // load from local storage
+
     globalHotkeyCleanup = globalHotkey(globalHotkeys);
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -417,13 +402,14 @@
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      // Cleanup all listeners
       globalHotkeyCleanup?.destroy();
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   });
+
   onDestroy(() => {
     globalHotkeyCleanup?.destroy();
+    editorView?.destroy();
   });
 </script>
 
@@ -431,11 +417,10 @@
   <title>{documentTitle()} - Penflow</title>
 </svelte:head>
 
-<!-- Hidden file input for browsers that don't support the File System Access API -->
 <input
   type="file"
   bind:this={fileInput}
-  onchange={handleFileSelect}
+  onchange={() => handleFileSelect(event, editorView, activeFilename, content, historyCompartment)}
   style="display: none;"
   accept=".md, .markdown, text/markdown" />
 
@@ -443,49 +428,23 @@
   class:fullscreen={isFullscreen}
   class={`
     flex w-full flex-col rounded-lg bg-white
-    ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full bg-gray-900 shadow-none [&_textarea]:resize-none" : "mx-auto max-h-fit max-w-3xl shadow"}
+    ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full bg-gray-900 shadow-none" : "mx-auto max-h-fit max-w-3xl shadow"}
   `}>
   <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} />
-  <!-- {isFullscreen} -->
-  <!-- onFullscreenToggle={toggleFullscreen} -->
 
   {#if mode === "edit"}
-    <!-- svelte-ignore a11y_autofocus -->
-    <textarea
-      class="min-h-[300px] w-full flex-1 resize-y border-none p-4 font-mono text-sm focus:outline-0"
-      bind:value={content}
-      use:hotkey={editorHotkeys}
-      oninput={handleInput}
-      onblur={() => saveToHistory(textareaElement, true)}
-      onkeydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") saveToHistory(textareaElement, true);
-      }}
-      spellcheck="true"
-      {placeholder}
-      {autofocus}
-      bind:this={textareaElement}>
-    </textarea>
+    <div class="bg-base min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
   {:else if mode === "preview"}
-    <div class="flex-1 overflow-auto bg-gray-50 p-4">
-      <Preview {content} />
+    <div class="flex flex-1 justify-center overflow-y-auto bg-gray-50 p-4">
+      <div class="max-w-[90ch]">
+        <Preview {content} />
+      </div>
     </div>
   {:else if mode === "side-by-side"}
     <div class="flex flex-1 overflow-hidden">
       <Splitpanes class="default-theme" dblClickSplitter={false} on:splitter-click={handleSplitterClick}>
         <Pane bind:size={editorPaneSize} minSize={20}>
-          <!-- svelte-ignore a11y_autofocus -->
-          <textarea
-            class="bg-base h-full w-full overflow-y-auto border-r border-gray-200 p-4 font-mono text-sm focus:outline-0"
-            bind:value={content}
-            use:hotkey={editorHotkeys}
-            oninput={handleInput}
-            onblur={() => saveToHistory(textareaElement, true)}
-            spellcheck="true"
-            {placeholder}
-            {autofocus}
-            bind:this={textareaElement}
-            onscroll={() => syncScroll("editor")}>
-          </textarea>
+          <div class="bg-base h-full w-full" bind:this={editorContainer}></div>
         </Pane>
         <Pane minSize={20}>
           <div
@@ -499,5 +458,5 @@
     </div>
   {/if}
 
-  <StatusBar {content} />
+  <StatusBar {content} bind:shortcutModalVisible />
 </div>

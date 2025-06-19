@@ -28,13 +28,17 @@
   {/each}
 
   <div class="flex-1"></div>
-  <button class="btn" onclick={() => onModeChange("edit")} aria-pressed={mode === "edit"}>
+  <button class="btn" onclick={() => onModeChange("edit")} aria-pressed={mode === "edit"} title="Edit">
     <Pencil size={20} />
   </button>
-  <button class="btn" onclick={() => onModeChange("side-by-side")} aria-pressed={mode === "side-by-side"}>
+  <button
+    class="btn"
+    onclick={() => onModeChange("side-by-side")}
+    aria-pressed={mode === "side-by-side"}
+    title="Side by Side">
     <Columns size={20} />
   </button>
-  <button class="btn" onclick={() => onModeChange("preview")} aria-pressed={mode === "preview"}>
+  <button class="btn" onclick={() => onModeChange("preview")} aria-pressed={mode === "preview"} title="Preview">
     <Eye size={20} />
   </button>
   <!-- <button class="btn" onclick={onFullscreenToggle}>

@@ -1,211 +1,135 @@
-import { error } from "@sveltejs/kit";
+// src/lib/utils/formatting.ts
 
-export type HistoryEntry = {
-  value: string;
-  selectionStart: number;
-  selectionEnd: number;
-};
+import type { EditorView } from "@codemirror/view";
+import type { ChangeSpec, TransactionSpec } from "@codemirror/state";
+import { undo, redo } from "@codemirror/commands";
 
-export let history: HistoryEntry[] = [];
-export let historyIndex = -1;
-export const historySaveDelay = 700;
-
-let historySaveTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function _applyHistoryEntry(entry: HistoryEntry, textareaElement: HTMLTextAreaElement) {
-  textareaElement.value = entry.value;
-  textareaElement.selectionStart = entry.selectionStart;
-  textareaElement.selectionEnd = entry.selectionEnd;
-  textareaElement.focus();
-  textareaElement.dispatchEvent(new Event("input", { bubbles: true }));
-}
-
-function _pushToHistory(textareaElement: HTMLTextAreaElement | undefined) {
-  if (!textareaElement) throw error(500, "textareaElement is undefined");
-
-  const newEntry: HistoryEntry = {
-    value: textareaElement.value,
-    selectionStart: textareaElement.selectionStart,
-    selectionEnd: textareaElement.selectionEnd,
-  };
-
-  const lastEntry = history[historyIndex];
-
-  if (
-    lastEntry &&
-    lastEntry.value === newEntry.value &&
-    lastEntry.selectionStart === newEntry.selectionStart &&
-    lastEntry.selectionEnd === newEntry.selectionEnd
-  ) {
-    return;
+/**
+ * A wrapper function to apply formatting actions to a CodeMirror view.
+ * It handles the transaction dispatch and focuses the editor.
+ * @param view The CodeMirror EditorView instance.
+ * @param action A function that returns the changes to be applied.
+ */
+function executeFormatAction(view: EditorView, action: (view: EditorView) => ChangeSpec | { changes: ChangeSpec }) {
+  const changes = action(view);
+  if (changes) {
+    view.dispatch(view.state.update(changes as TransactionSpec));
   }
-
-  history = history.slice(0, historyIndex + 1);
-  history.push(newEntry);
-  historyIndex++;
+  view.focus();
 }
 
-export function saveToHistory(textareaElement: HTMLTextAreaElement | undefined, immediate = false) {
-  if (historySaveTimeout) {
-    clearTimeout(historySaveTimeout);
-    historySaveTimeout = null;
-  }
-
-  if (immediate) {
-    _pushToHistory(textareaElement);
-  } else {
-    historySaveTimeout = setTimeout(() => {
-      _pushToHistory(textareaElement);
-    }, historySaveDelay);
-  }
+/**
+ * Inserts text at the current cursor position or over the current selection.
+ * @param text The text to insert.
+ * @param view The CodeMirror EditorView instance.
+ */
+export function insertAtCursor(text: string, view: EditorView) {
+  executeFormatAction(view, () => view.state.replaceSelection(text));
 }
 
-export function initHistory(textareaElement: HTMLTextAreaElement | undefined) {
-  _pushToHistory(textareaElement);
-}
+/**
+ * Toggles wrapping the selected text with a given marker (e.g., "**" for bold).
+ * If the text is already wrapped, it unwraps it.
+ * @param wrapper The string to wrap the selection with (e.g., "*", "**", "`").
+ * @param view The CodeMirror EditorView instance.
+ */
+export function toggleWrap(view: EditorView, wrapper: string, endWrapper?: string) {
+  executeFormatAction(view, () => {
+    return view.state.changeByRange((range) => {
+      const text = view.state.sliceDoc(range.from, range.to);
+      const isWrapped = text.startsWith(wrapper) && text.endsWith(wrapper);
 
-export function undo(textareaElement: HTMLTextAreaElement | undefined) {
-  if (!textareaElement) throw error(500, "textareaElement is undefined");
-
-  if (historyIndex > 0) {
-    historyIndex--;
-    _applyHistoryEntry(history[historyIndex], textareaElement);
-  }
-}
-
-export function redo(textareaElement: HTMLTextAreaElement | undefined) {
-  if (!textareaElement) throw error(500, "textareaElement is undefined");
-
-  if (historyIndex < history.length - 1) {
-    historyIndex++;
-    _applyHistoryEntry(history[historyIndex], textareaElement);
-  }
-}
-
-// **Clean wrapper function that handles history and reactivity**
-function executeFormatAction(
-  textareaElement: HTMLTextAreaElement | undefined,
-  action: (element: HTMLTextAreaElement) => void
-) {
-  if (!textareaElement) throw error(500, "textareaElement is undefined");
-
-  // Save current state for undo
-  saveToHistory(textareaElement, true);
-
-  // Execute the formatting action
-  action(textareaElement);
-
-  // Trigger Svelte reactivity
-  textareaElement.dispatchEvent(new Event("input", { bubbles: true }));
-}
-
-// **Simplified formatting functions - pure logic only**
-export function insertAtCursor(text: string, textareaElement: HTMLTextAreaElement | undefined) {
-  executeFormatAction(textareaElement, (element) => {
-    const [start, end] = [element.selectionStart, element.selectionEnd];
-    element.setRangeText(text, start, end, "end");
+      if (isWrapped) {
+        // unwrap the text
+        const newText = text.slice(wrapper.length, text.length - wrapper.length);
+        return {
+          changes: { from: range.from, to: range.to, insert: newText },
+          range: range.extend(range.from, range.to - 2 * wrapper.length),
+        };
+      } else {
+        // wrap the text
+        const newText = `${wrapper}${text}${endWrapper || wrapper}`;
+        return {
+          changes: { from: range.from, to: range.to, insert: newText },
+          range: range.extend(range.from, range.to + 2 * wrapper.length),
+        };
+      }
+    });
   });
 }
 
-export function toggleWrap(wrapper: string, textareaElement: HTMLTextAreaElement | undefined) {
-  executeFormatAction(textareaElement, (element) => {
-    const [start, end] = [element.selectionStart, element.selectionEnd];
-    const selected = element.value.slice(start, end);
+/**
+ * Toggles a multi-line block with start and end markers (e.g., "```").
+ * @param startMarker The starting marker for the block.
+ * @param endMarker The ending marker for the block.
+ * @param view The CodeMirror EditorView instance.
+ */
+export function toggleBlock(startMarker: string, endMarker: string, view: EditorView) {
+  const blockStart = startMarker + "\n";
+  const blockEnd = "\n" + endMarker;
+  toggleWrap(view, blockStart, blockEnd); // a simplified approach using toggleWrap
+}
 
-    let newText: string;
-    let newStart = start,
-      newEnd = end;
+/**
+ * Adds or removes a prefix for each line in the selection.
+ * @param prefix The prefix to toggle (e.g., "> ", "- ").
+ * @param view The CodeMirror EditorView instance.
+ */
+export function toggleLinePrefix(prefix: string, view: EditorView) {
+  executeFormatAction(view, () => {
+    const changes: ChangeSpec[] = [];
+    const { from, to } = view.state.selection.main;
+    const startLine = view.state.doc.lineAt(from);
+    const endLine = view.state.doc.lineAt(to);
 
-    if (selected.startsWith(wrapper) && selected.endsWith(wrapper) && selected.length >= 2 * wrapper.length) {
-      newText = selected.slice(wrapper.length, -wrapper.length);
-      newEnd = start + newText.length;
-    } else {
-      newText = wrapper + selected + wrapper;
-      newStart = start + wrapper.length;
-      newEnd = end + wrapper.length;
+    const lines: string[] = [];
+    for (let i = startLine.number; i <= endLine.number; i++) {
+      lines.push(view.state.doc.line(i).text);
     }
 
-    element.setRangeText(newText, start, end, "select");
-    element.selectionStart = newStart;
-    element.selectionEnd = newEnd;
-  });
-}
+    const allHavePrefix = lines.every((line) => line.startsWith(prefix) || line.length === 0);
 
-export function toggleBlock(startMarker: string, endMarker: string, textareaElement: HTMLTextAreaElement | undefined) {
-  executeFormatAction(textareaElement, (element) => {
-    const [start, end] = [element.selectionStart, element.selectionEnd];
-    const selected = element.value.slice(start, end);
+    for (let i = startLine.number; i <= endLine.number; i++) {
+      const line = view.state.doc.line(i);
+      if (line.length === 0) continue;
 
-    const blockStart = startMarker + "\n";
-    const blockEnd = "\n" + endMarker;
-
-    let newText: string;
-    let newStart = start,
-      newEnd = end;
-
-    if (selected.startsWith(blockStart) && selected.endsWith(blockEnd)) {
-      newText = selected.slice(blockStart.length, -blockEnd.length);
-      newEnd = start + newText.length;
-    } else {
-      newText = blockStart + selected + blockEnd;
-      newStart = start + blockStart.length;
-      newEnd = end + blockStart.length;
+      if (allHavePrefix) {
+        changes.push({
+          from: line.from,
+          to: line.from + prefix.length,
+          insert: "",
+        });
+      } else if (!line.text.startsWith(prefix)) {
+        changes.push({ from: line.from, insert: prefix });
+      }
     }
-
-    element.setRangeText(newText, start, end, "select");
-    element.selectionStart = newStart;
-    element.selectionEnd = newEnd;
-    element.focus();
+    return { changes };
   });
 }
 
-export function toggleLinePrefix(prefix: string, textareaElement: HTMLTextAreaElement | undefined) {
-  executeFormatAction(textareaElement, (element) => {
-    const [start, end] = [element.selectionStart, element.selectionEnd];
-    const value = element.value;
-    const selection = value.slice(start, end);
-
-    const lines = selection.split("\n");
-    const allHavePrefix = lines.every((line) => line.startsWith(prefix));
-    const newLines = allHavePrefix
-      ? lines.map((line) => line.replace(new RegExp("^" + prefix), ""))
-      : lines.map((line) => prefix + line);
-
-    const newSelection = newLines.join("\n");
-    element.setRangeText(newSelection, start, end, "select");
-    element.selectionStart = start;
-    element.selectionEnd = start + newSelection.length;
-  });
-}
-
-export function toggleHeadingCycle(textareaElement: HTMLTextAreaElement | undefined) {
-  executeFormatAction(textareaElement, (element) => {
-    const { value, selectionStart } = element;
-
-    const lineStartIndex = value.lastIndexOf("\n", selectionStart - 1) + 1;
-    let lineEndIndex = value.indexOf("\n", selectionStart);
-    if (lineEndIndex === -1) {
-      lineEndIndex = value.length;
-    }
-
-    const currentLine = value.substring(lineStartIndex, lineEndIndex);
-
-    // use a regex to find an existing heading prefix (e.g., "### ")
+/**
+ * Cycles the heading level of the current line from H1 to H6 and then to plain text.
+ * @param view The CodeMirror EditorView instance.
+ */
+export function toggleHeadingCycle(view: EditorView | undefined) {
+  if (!view) return;
+  executeFormatAction(view, () => {
+    const { from } = view.state.selection.main;
+    const line = view.state.doc.lineAt(from);
     const headingRegex = /^(#{1,6})\s/;
-    const match = currentLine.match(headingRegex);
+    const match = line.text.match(headingRegex);
 
     let currentLevel = 0;
-    let contentWithoutPrefix = currentLine;
+    let contentWithoutPrefix = line.text;
 
     if (match) {
       currentLevel = match[1].length;
-      contentWithoutPrefix = currentLine.substring(match[0].length);
+      contentWithoutPrefix = line.text.substring(match[0].length);
     }
 
-    // cycle to the next level: 0 -> 1 -> 2 -> ... -> 6 -> 0
     const nextLevel = (currentLevel + 1) % 7;
+    let newLine;
 
-    let newLine: string;
     if (nextLevel === 0) {
       newLine = contentWithoutPrefix;
     } else {
@@ -213,6 +137,11 @@ export function toggleHeadingCycle(textareaElement: HTMLTextAreaElement | undefi
       newLine = newPrefix + contentWithoutPrefix;
     }
 
-    element.setRangeText(newLine, lineStartIndex, lineEndIndex, "select");
+    return {
+      changes: { from: line.from, to: line.to, insert: newLine },
+    };
   });
 }
+
+// re-export codemirror's history commands
+export { undo, redo };

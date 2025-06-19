@@ -21,7 +21,7 @@
 </svelte:head>
 
 <div class="flex min-h-svh flex-col">
-  <main class="mx-auto my-0 box-border flex w-full max-w-[64rem] flex-1 flex-col p-4">
+  <main>
     {@render children?.()}
   </main>
 

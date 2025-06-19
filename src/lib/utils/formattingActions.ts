@@ -1,49 +1,71 @@
 // src/lib/utils/formattingActions.ts
 
-import { insertAtCursor, redo, toggleBlock, toggleLinePrefix, toggleWrap, undo } from "$lib/utils/formatting.js";
+import type { EditorView } from "@codemirror/view";
+import {
+  insertAtCursor,
+  toggleBlock,
+  toggleLinePrefix,
+  toggleWrap,
+  undo as cmUndo,
+  redo as cmRedo,
+} from "$lib/utils/formatting";
 
-export function toggleBold(textarea: HTMLTextAreaElement | undefined) {
-  toggleWrap("**", textarea);
+// a helper to ensure the view exists before running an action
+function run(view: EditorView | undefined, action: (v: EditorView) => void) {
+  if (view) {
+    action(view);
+  }
 }
 
-export function toggleItalic(textarea: HTMLTextAreaElement | undefined) {
-  toggleWrap("*", textarea);
+export function toggleBold(view: EditorView | undefined) {
+  run(view, (v) => toggleWrap(v, "**"));
 }
 
-export function toggleHeading(level = 1, textarea: HTMLTextAreaElement | undefined) {
-  toggleLinePrefix("#".repeat(level) + " ", textarea);
+export function toggleItalic(view: EditorView | undefined) {
+  run(view, (v) => toggleWrap(v, "*"));
 }
 
-export function toggleQuote(textarea: HTMLTextAreaElement | undefined) {
-  toggleLinePrefix("> ", textarea);
+export function toggleHeading(level = 1, view: EditorView | undefined) {
+  run(view, (v) => toggleLinePrefix("#".repeat(level) + " ", v));
 }
 
-export function toggleInlineCode(textarea: HTMLTextAreaElement | undefined) {
-  toggleWrap("`", textarea);
+export function toggleQuote(view: EditorView | undefined) {
+  run(view, (v) => toggleLinePrefix("> ", v));
 }
 
-export function toggleCodeBlock(textarea: HTMLTextAreaElement | undefined) {
-  toggleBlock("```", "```", textarea);
+export function toggleInlineCode(view: EditorView | undefined) {
+  run(view, (v) => toggleWrap(v, "`"));
 }
 
-export function toggleList(textarea: HTMLTextAreaElement | undefined) {
-  toggleLinePrefix("- ", textarea);
+export function toggleCodeBlock(view: EditorView | undefined) {
+  run(view, (v) => toggleBlock("```", "```", v));
 }
 
-export function toggleOrderedList(textarea: HTMLTextAreaElement | undefined) {
-  toggleLinePrefix("1. ", textarea);
+export function toggleList(view: EditorView | undefined) {
+  run(view, (v) => toggleLinePrefix("- ", v));
 }
 
-export function insertLink(textarea: HTMLTextAreaElement | undefined) {
-  insertAtCursor("[Link text](https://example.com)", textarea);
+export function toggleOrderedList(view: EditorView | undefined) {
+  run(view, (v) => toggleLinePrefix("1.", v));
 }
 
-export function insertImage(textarea: HTMLTextAreaElement | undefined) {
-  insertAtCursor("![Alt text](https://example.com/image.png)", textarea);
+export function wrapLink(view: EditorView | undefined) {
+  run(view, (v) => toggleWrap(v, "[", "](https://)"));
 }
 
-export function insertTable(textarea: HTMLTextAreaElement | undefined) {
-  insertAtCursor("| Header 1 | Header 2 |\n| -------- | -------- |\n|  Cell 1  |  Cell 2  |\n", textarea);
+export function wrapImage(view: EditorView | undefined) {
+  run(view, (v) => toggleWrap(v, "![", "](https://)"));
 }
 
-export { undo, redo };
+export function insertTable(view: EditorView | undefined) {
+  run(view, (v) => insertAtCursor("| Header 1 | Header 2 |\n| -------- | -------- |\n|  Cell 1  |  Cell 2  |\n", v));
+}
+
+// wrappers for codemirror's history commands
+export function undo(view: EditorView | undefined) {
+  if (view) cmUndo(view);
+}
+
+export function redo(view: EditorView | undefined) {
+  if (view) cmRedo(view);
+}
