@@ -6,8 +6,14 @@
   import { full as emoji } from "markdown-it-emoji";
   import twemoji from "@twemoji/api";
   import checkboxes from "markdown-it-task-checkbox";
-
-  let { content }: { content: string } = $props();
+  import { setContent } from "./Editor.svelte.ts";
+  let { 
+    content,
+    onContentChange 
+   }: { 
+    content: string;
+    onContentChange?: (newContent: string) => void 
+  } = $props();
   let renderedHtml = $derived("");
 
   const md = new MarkdownIt("commonmark", {
@@ -28,7 +34,7 @@
   })
     .use(emoji)
     .use(checkboxes, {
-      disabled: true,
+      disabled: false,
       divWrap: false,
       divClass: "checkbox",
       idPrefix: "cbx_",
@@ -43,6 +49,14 @@
       if (token.map && token.nesting === 1) {
         token.attrSet("data-source-line", String(token.map[0]));
       }
+
+      if (token.children) {
+        for (const child of token.children) {
+          if (child.type === "checkbox_input" && token.map) {
+            child.attrSet("data-source-line", String(token.map[0]));
+          }
+        }
+      }
     }
   }
 
@@ -56,7 +70,46 @@
   };
 
   $effect(() => {
-    renderedHtml = md.render(content);
+    if (typeof content !== "string") {
+      console.warn("Preview received invalid content:", content);
+      renderedHtml = "<pre style='color:red'>⚠️ Error: Content is not a string.</pre>";
+      return;
+    }
+
+    try {
+      renderedHtml = md.render(content);
+    } catch (err) {
+      console.error("Markdown rendering failed:", err);
+      renderedHtml = "<pre style='color:red'>⚠️ Error while rendering markdown.</pre>";
+    }
+
+    // Checkbox-Listener nur setzen, wenn DOM erfolgreich aktualisiert wurde
+    setTimeout(() => {
+      const checkboxes = document.querySelectorAll("input[type='checkbox'][data-source-line]");
+      checkboxes.forEach((checkbox) => {
+        checkbox.addEventListener("click", (e) => {
+          e.preventDefault();
+          const input = e.target as HTMLInputElement;
+          const line = input.getAttribute("data-source-line");
+          if (!line) return;
+
+          const lineNumber = parseInt(line);
+          const lines = content.split("\n");
+          const currentLine = lines[lineNumber];
+          if (!currentLine) return;
+
+          if (currentLine.includes("- [ ]")) {
+            lines[lineNumber] = currentLine.replace("- [ ]", "- [x]");
+          } else if (currentLine.includes("- [x]")) {
+            lines[lineNumber] = currentLine.replace("- [x]", "- [ ]");
+          }
+
+          content = lines.join("\n");
+          setContent(content)
+          onContentChange?.(content);
+        });
+      });
+    });
   });
 </script>
 

@@ -61,4 +61,5 @@ li.task-list-item {
 
 li.task-list-item input {
   @apply mr-2;
+  cursor: pointer;
 }
