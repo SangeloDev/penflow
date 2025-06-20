@@ -1,4 +1,4 @@
-<div align="center"><img style="display:inline;" src="/assets/icon/hd_hi.svg" alt="penflow logo" width="92" /></div>
+<div align="center"><img style="display:inline;" src="./static/assets/icon/hd_hi.svg" alt="penflow logo" width="92" /></div>
 
 # penflow
 
