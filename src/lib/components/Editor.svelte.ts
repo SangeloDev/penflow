@@ -8,6 +8,9 @@ import type { EditorView } from "@codemirror/view";
 export type EditorMode = "edit" | "side-by-side" | "preview";
 
 let mode: EditorMode = $state("edit");
+let content: string = $state("");
+let shortcutModalVisible = $state(false);
+let activeFilename: string | undefined = $state(undefined);
 let isDirty = $state(false);
 
 /**
@@ -24,6 +27,89 @@ export async function setMode(newMode: EditorMode) {
  */
 export function getMode() {
   return mode;
+}
+
+/**
+ * Sets the active filename
+ * @param filename - new filename
+ */
+export const setActiveFilename = (filename: string | undefined) => {
+  activeFilename = filename;
+};
+
+/**
+ * Gets the current active filename
+ * @returns activeFilename
+ */
+export const getActiveFilename = () => {
+  return activeFilename;
+};
+
+/**
+ * Gets the visibility of the shortcut modal.
+ * @returns visible: boolean
+ */
+export function getShortcutModalVisibility() {
+  return shortcutModalVisible;
+}
+
+/**
+ * Sets whether the modal is visible or not.
+ * @param visible: boolean
+ */
+export function setShortcutModalVisibility(visible: boolean) {
+  shortcutModalVisible = visible;
+}
+
+/**
+ * Get the current editor content.
+ * @returns string
+ */
+export function getContent() {
+  return content;
+}
+
+/**
+ * Set the editor content.
+ * @param newContent - the new editor content
+ */
+export function setContent(newContent: string) {
+  content = newContent;
+}
+
+/**
+ * Cycles the edit mode forwards or backwards, depending on the forward boolean.
+ * @param currentMode
+ * @param forward
+ */
+export function cycleEditMode(currentMode: "edit" | "preview" | "side-by-side", forward = true) {
+  if (forward) {
+    switch (currentMode) {
+      case "edit":
+        setMode("side-by-side");
+        break;
+      case "side-by-side":
+        setMode("preview");
+        break;
+      case "preview":
+      default:
+        setMode("edit");
+        break;
+    }
+  } else {
+    switch (currentMode) {
+      case "edit":
+        setMode("preview");
+        break;
+      case "preview":
+        setMode("side-by-side");
+        break;
+      case "side-by-side":
+      default:
+        setMode("edit");
+        break;
+    }
+  }
 }
 
 export function setDirty(dirtyness: boolean) {
@@ -90,14 +176,14 @@ export function loadFileContent(
   historyCompartment: Compartment
 ) {
   // update svelte state for preview and other ui elements
-  content = fileContent;
-  activeFilename = fileName;
+  setContent(fileContent);
+  setActiveFilename(fileName);
   setDirty(false);
 
   // directly update the editor view if it exists
   if (view) {
     view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: fileContent },
+      changes: { from: 0, to: view.state.doc.length, insert: getContent() },
     });
 
     resetUndoHistory(view, historyCompartment);
@@ -125,8 +211,8 @@ export function newFile(
   }
 
   // reset editor
-  content = "";
-  activeFilename = null;
+  setContent("");
+  setActiveFilename(undefined);
   isDirty = false;
 
   // clear the editor view if it exists
@@ -179,6 +265,6 @@ export function saveFile(content: string, activeFilename: string | undefined) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  activeFilename = filename;
+  setActiveFilename(filename);
   setDirty(false);
 }

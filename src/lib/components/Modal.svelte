@@ -1,7 +1,7 @@
 <script lang="ts">
   import { X } from "lucide-svelte";
 
-  let { show = $bindable(), header, footer, children } = $props();
+  let { show = $bindable(), header, footer, children, onclose } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
 
@@ -27,7 +27,7 @@
     p-0 backdrop:bg-black backdrop:opacity-25
   "
   bind:this={dialog}
-  onclose={() => (show = false)}
+  onclose={() => onclose()}
   onclick={(e) => {
     if (e.target === dialog) dialog.close();
   }}>

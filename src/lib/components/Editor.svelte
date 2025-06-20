@@ -8,18 +8,30 @@
   // import { undo, redo, initHistory, saveToHistory } from "$lib/utils/formatting.js";
   import * as f from "$lib/utils/formattingActions";
   import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-  import { globalHotkey, editorKeymap } from "$lib/utils/hotkeys";
+  import {
+    globalHotkey,
+    editorKeymap,
+    constructedGlobalHotkeys,
+    createGlobalHotkeys,
+    type HotkeyContext,
+  } from "$lib/utils/hotkeys";
   import {
     type EditorMode,
     getDirtyness,
     getMode,
     setDirty,
     setMode,
-    newFile,
-    saveFile,
     loadFileContent,
     generateFilename,
     handleFileSelect,
+    cycleEditMode,
+    saveFile,
+    newFile,
+    getContent,
+    setContent,
+    getShortcutModalVisibility,
+    setShortcutModalVisibility,
+    getActiveFilename,
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
   import type { ToolbarItem } from "$lib/types";
@@ -54,7 +66,7 @@
     defaultMode = "side-by-side",
     placeholder = "Write your markdown here...",
     toolbarItems = [],
-    shortcutModalVisible = $bindable(),
+    shortcutModalVisible = $bindable(getShortcutModalVisibility()),
   }: {
     autosaveId?: string;
     autosaveDelay?: number;
@@ -67,12 +79,12 @@
   } = $props();
 
   // States
-  let content = $state("");
+  let content = $derived(getContent());
   let mode = $derived(getMode());
   let autosaveTimer: number | null = null;
   let isFullscreen = $state(fullscreen);
   let isDirty = $derived(getDirtyness());
-  let activeFilename: string | undefined = $state(undefined);
+  let activeFilename: string | undefined = $state(getActiveFilename());
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
 
@@ -113,16 +125,27 @@
       .filter((item) => item.enabled); // filter out items where `enabled` is explicitly `false`.
   });
 
-  // hotkeys
-  const globalHotkeys = {
-    // "ctrl+shift+f": () => toggleFullscreen(),
-    "ctrl+e": () => cycleEditMode(mode),
-    "ctrl+shift+e": () => cycleEditMode(mode, false),
-    "ctrl+s": () => saveFile(content, activeFilename),
-    "ctrl+o": () => openFile(editorView, isDirty, content, activeFilename, historyCompartment),
-    "ctrl+shift+o": () => newFile(editorView, content, autosaveId, activeFilename, isDirty),
-    "ctrl+alt+slash": () => (shortcutModalVisible = true),
+  const getView = () => {
+    return editorView;
   };
+
+  // hotkeys
+  const hotkeyContext: HotkeyContext = {
+    setShortcutModalVisibility,
+    getMode,
+    cycleEditMode: cycleEditMode,
+    saveFile: () => saveFile(content, activeFilename),
+    openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
+    newFile: () => newFile(editorView, content, autosaveId, activeFilename, getDirtyness()),
+    content: getContent(),
+    activeFilename: getActiveFilename(),
+    autosaveId,
+    view: getView(),
+    getDirtyness,
+  };
+
+  const hotkeys = createGlobalHotkeys(hotkeyContext);
+  const globalHotkeys = constructedGlobalHotkeys(hotkeys);
 
   const tomorrowMarkdown = createTheme({
     variant: "light",
@@ -175,7 +198,7 @@
         EditorView.lineWrapping,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            content = update.state.doc.toString();
+            setContent(update.state.doc.toString());
             setDirty(true);
           }
         }),
@@ -304,7 +327,7 @@
 
   let documentTitle = $derived(() => {
     const dirtyIndicator = isDirty ? "• " : "";
-    let fileName = activeFilename;
+    let fileName = getActiveFilename();
 
     if (!fileName) {
       const generated = generateFilename(content);
@@ -313,36 +336,6 @@
 
     return `${dirtyIndicator}${fileName}`;
   });
-
-  function cycleEditMode(currentMode: "edit" | "preview" | "side-by-side", forward = true) {
-    if (forward) {
-      switch (currentMode) {
-        case "edit":
-          setMode("side-by-side");
-          break;
-        case "side-by-side":
-          setMode("preview");
-          break;
-        case "preview":
-        default:
-          setMode("edit");
-          break;
-      }
-    } else {
-      switch (currentMode) {
-        case "edit":
-          setMode("preview");
-          break;
-        case "preview":
-          setMode("side-by-side");
-          break;
-        case "side-by-side":
-        default:
-          setMode("edit");
-          break;
-      }
-    }
-  }
 
   let globalHotkeyCleanup: { destroy: () => void };
 

@@ -15,3 +15,12 @@ export interface ToolbarItem {
   icon?: ComponentType;
   enabled: boolean;
 }
+
+export interface Hotkey {
+  id: number;
+  desc: string | null;
+  shortcut?: string;
+  key?: string;
+  hidden?: boolean;
+  action: (arg0: any) => void;
+}

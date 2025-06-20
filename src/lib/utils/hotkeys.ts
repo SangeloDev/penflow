@@ -1,9 +1,11 @@
-import { defaultKeymap, historyKeymap, indentWithTab, selectParentSyntax } from "@codemirror/commands";
+import { historyKeymap, indentWithTab } from "@codemirror/commands";
 import { searchKeymap } from "@codemirror/search";
 import { closeBracketsKeymap } from "@codemirror/autocomplete";
 import * as f from "$lib/utils/formattingActions";
 import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-import { keymap } from "@codemirror/view";
+import { EditorView, keymap, type KeyBinding } from "@codemirror/view";
+import { type EditorMode } from "$lib/components/Editor.svelte.ts";
+import type { Hotkey } from "$lib/types";
 
 /**
  * Creates a reusable keydown event handler for hotkeys.
@@ -81,21 +83,6 @@ export function globalHotkey(params: { [key: string]: (e: KeyboardEvent) => void
   };
 }
 
-export const globalHotkeys = [
-  {
-    id: 0,
-    desc: "Settings",
-    shortcut: "Ctrl+,",
-    action: console.log("hello world") /*() => cycleEditMode(mode, false)*/,
-  },
-  {
-    id: 2,
-    desc: "Help",
-    shortcut: "Ctrl+Alt+/",
-    action: console.log("hello world") /*() => cycleEditMode(mode, false)*/,
-  },
-];
-
 // export const globalEditorHotkeys = {
 //   "ctrl+e": () => cycleModeForward(),
 //   "ctrl+shift+e": () => cycleModeBackward(),
@@ -104,130 +91,289 @@ export const globalHotkeys = [
 //   "ctrl+shift+o": () => newFile(),
 //   "ctrl+alt+/": () => (shortcutModalVisible = true),
 // };
-// "ctrl+shift+f": () => toggleFullscreen(),
+
+// Define a type for the context for better type safety
+export type HotkeyContext = {
+  setShortcutModalVisibility: (arg0: boolean) => void;
+  getMode: () => EditorMode | undefined;
+  cycleEditMode: (mode: EditorMode | undefined, reverse?: boolean) => void;
+  saveFile: (content: string, filename?: string) => void;
+  openFile: (view: EditorView | undefined) => void;
+  newFile: (
+    view: EditorView | undefined,
+    content: string,
+    autosaveId: string,
+    filename: string | undefined,
+    isDirty: boolean
+  ) => void;
+  content: string;
+  activeFilename?: string;
+  autosaveId: string;
+  view?: EditorView;
+  getDirtyness: () => boolean;
+};
+
+export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[] => [
+  {
+    id: 0,
+    desc: "Settings",
+    shortcut: "Ctrl+Comma",
+    action: () => undefined, // Or connect to a settings function from context
+  },
+  {
+    id: 1,
+    desc: "Help",
+    shortcut: "Ctrl+Alt+Slash",
+    action: () => context?.setShortcutModalVisibility(true),
+  },
+  {
+    id: 2,
+    desc: "Cycle Editing Mode",
+    shortcut: "Ctrl+E",
+    action: () => context?.cycleEditMode(context?.getMode()),
+  },
+  {
+    id: 3,
+    desc: null,
+    hidden: true,
+    shortcut: "Ctrl+Shift+E",
+    action: () => context?.cycleEditMode(context?.getMode(), false),
+  },
+  {
+    id: 4,
+    desc: "Save File",
+    shortcut: "Ctrl+S",
+    action: () => context?.saveFile(context?.content, context?.activeFilename),
+  },
+  {
+    id: 5,
+    desc: "Open File",
+    shortcut: "Ctrl+O",
+    action: () => context?.openFile(context?.view),
+  },
+  {
+    id: 6,
+    desc: "New File",
+    shortcut: "Ctrl+Shift+O",
+    action: () =>
+      context?.newFile(
+        context?.view,
+        context?.content,
+        context?.autosaveId,
+        context?.activeFilename,
+        context?.getDirtyness()
+      ),
+  },
+];
+
+/**
+ * Constructed hotkeys from globalHotkeys variable.
+ * @param hotkeys
+ * @returns
+ */
+export const constructedGlobalHotkeys = (hotkeys: Hotkey[]) => {
+  return hotkeys.reduce((accumulator: { [key: string]: (arg0: any) => void }, hotkey) => {
+    const { shortcut, action } = hotkey;
+
+    // If a hotkey entry is missing a shortcut, skip it instead of crashing.
+    if (!shortcut) {
+      return accumulator;
+    }
+
+    // Add the key-value pair to our object.
+    // We use .toLowerCase() to ensure consistency (e.g., "Ctrl+S" becomes "ctrl+s").
+    accumulator[shortcut.toLowerCase()] = action;
+
+    // Return the accumulator for the next iteration.
+    return accumulator;
+  }, {}); // The `{}` is the initial value – we start with an empty object.
+};
+
+export const editorHotkeys: Hotkey[] = [
+  {
+    id: 0,
+    desc: "Bold",
+    shortcut: "Ctrl+B",
+    key: "Mod-b",
+    action: (view: EditorView) => {
+      f.toggleBold(view);
+      return true;
+    },
+  },
+  {
+    id: 1,
+    desc: "Italic",
+    shortcut: "Ctrl+I",
+    key: "Mod-i",
+    action: (view: EditorView) => {
+      f.toggleItalic(view);
+      return true;
+    },
+  },
+  {
+    id: 2,
+    desc: "Cycle Headings",
+    shortcut: "Ctrl+Shift+H",
+    key: "Mod-Shift-h",
+    action: (view: EditorView) => {
+      toggleHeadingCycle(view);
+      return true;
+    },
+  },
+  {
+    id: 3,
+    desc: "Headings",
+    shortcut: "Ctrl+Alt+1 -> 6",
+    key: "Mod-Alt-1",
+    action: (view: EditorView) => {
+      f.toggleHeading(1, view);
+      return true;
+    },
+  },
+  {
+    id: 4,
+    desc: null,
+    key: "Mod-Alt-2",
+    action: (view: EditorView) => {
+      f.toggleHeading(2, view);
+      return true;
+    },
+    hidden: true,
+  },
+  {
+    id: 5,
+    desc: null,
+    key: "Mod-Alt-3",
+    action: (view: EditorView) => {
+      f.toggleHeading(3, view);
+      return true;
+    },
+    hidden: true,
+  },
+  {
+    id: 6,
+    desc: null,
+    key: "Mod-Alt-4",
+    action: (view: EditorView) => {
+      f.toggleHeading(4, view);
+      return true;
+    },
+    hidden: true,
+  },
+  {
+    id: 7,
+    desc: null,
+    key: "Mod-Alt-5",
+    action: (view: EditorView) => {
+      f.toggleHeading(5, view);
+      return true;
+    },
+    hidden: true,
+  },
+  {
+    id: 8,
+    desc: null,
+    key: "Mod-Alt-6",
+    action: (view: EditorView) => {
+      f.toggleHeading(6, view);
+      return true;
+    },
+    hidden: true,
+  },
+  {
+    id: 9,
+    desc: "Blockquote",
+    shortcut: "Ctrl+Shift+B",
+    key: "Mod-Shift-b",
+    action: (view: EditorView) => {
+      f.toggleQuote(view);
+      return true;
+    },
+  },
+  {
+    id: 10,
+    desc: "Code Block",
+    shortcut: "Ctrl+Shift+C",
+    key: "Mod-Shift-c",
+    action: (view: EditorView) => {
+      f.toggleCodeBlock(view);
+      return true;
+    },
+  },
+  {
+    id: 11,
+    desc: "Inline Code",
+    shortcut: "Ctrl+Alt+C",
+    key: "Mod-Alt-c",
+    action: (view: EditorView) => {
+      f.toggleInlineCode(view);
+      return true;
+    },
+  },
+  {
+    id: 12,
+    desc: "Bulleted List",
+    shortcut: "Ctrl+L",
+    key: "Mod-l",
+    action: (view: EditorView) => {
+      f.toggleList(view);
+      return true;
+    },
+  },
+  {
+    id: 13,
+    desc: "Numbered List",
+    shortcut: "Ctrl+Shift+L",
+    key: "Mod-Shift-l",
+    action: (view: EditorView) => {
+      f.toggleOrderedList(view);
+      return true;
+    },
+  },
+  {
+    id: 14,
+    desc: "Insert Link",
+    shortcut: "Ctrl+K",
+    key: "Mod-k",
+    action: (view: EditorView) => {
+      f.wrapLink(view);
+      return true;
+    },
+  },
+  {
+    id: 15,
+    desc: "Insert Image",
+    shortcut: "Ctrl+Shift+K",
+    key: "Mod-Shift-k",
+    action: (view: EditorView) => {
+      f.wrapImage(view);
+      return true;
+    },
+  },
+  {
+    id: 16,
+    desc: "Insert Table",
+    shortcut: "Ctrl+Shift+T",
+    key: "Mod-Shift-t",
+    action: (view: EditorView) => {
+      f.insertTable(view);
+      return true;
+    },
+  },
+];
+
+const constructedEditorHotkeys = editorHotkeys.map(
+  (hotkey) =>
+    ({
+      key: hotkey.key,
+      run: hotkey.action,
+    }) as KeyBinding
+);
 
 export const editorKeymap = keymap.of([
   ...closeBracketsKeymap,
   ...searchKeymap,
   ...historyKeymap,
   indentWithTab,
-  {
-    key: "Mod-b",
-    run: (view) => {
-      f.toggleBold(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-i",
-    run: (view) => {
-      f.toggleItalic(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Shift-h",
-    run: (view) => {
-      toggleHeadingCycle(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-1",
-    run: (view) => {
-      f.toggleHeading(1, view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-2",
-    run: (view) => {
-      f.toggleHeading(2, view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-3",
-    run: (view) => {
-      f.toggleHeading(3, view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-4",
-    run: (view) => {
-      f.toggleHeading(4, view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-5",
-    run: (view) => {
-      f.toggleHeading(5, view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-6",
-    run: (view) => {
-      f.toggleHeading(6, view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Shift-b",
-    run: (view) => {
-      f.toggleQuote(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Shift-c",
-    run: (view) => {
-      f.toggleCodeBlock(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Alt-c",
-    run: (view) => {
-      f.toggleInlineCode(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-l",
-    run: (view) => {
-      f.toggleList(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Shift-l",
-    run: (view) => {
-      f.toggleOrderedList(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-k",
-    run: (view) => {
-      f.wrapLink(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Shift-k",
-    run: (view) => {
-      f.wrapImage(view);
-      return true;
-    },
-  },
-  {
-    key: "Mod-Shift-t",
-    run: (view) => {
-      f.insertTable(view);
-      return true;
-    },
-  },
+  ...constructedEditorHotkeys,
 ]);
