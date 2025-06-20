@@ -1,6 +1,7 @@
 <script lang="ts">
   import CircleHelp from "lucide-svelte/icons/circle-help";
   import Settings from "lucide-svelte/icons/settings";
+  import { setShortcutModalVisibility } from "./Editor.svelte.ts";
 
   let {
     content,
@@ -22,7 +23,7 @@
   <a class="cursor-pointer" href="/" title="Settings">
     <Settings size={16} />
   </a>
-  <button class="cursor-pointer" onclick={() => (shortcutModalVisible = true)} title="Help">
+  <button class="cursor-pointer" onclick={() => setShortcutModalVisibility(true)} title="Help">
     <CircleHelp size={16} />
   </button>
 </div>
