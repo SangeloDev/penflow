@@ -35,7 +35,19 @@
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
   import type { ToolbarItem } from "$lib/types";
-  import { Bold, Code, Italic, Link, List, ListOrdered, Quote, Image, Heading, Table } from "lucide-svelte";
+  import {
+    Bold,
+    Code,
+    Italic,
+    Link,
+    List,
+    ListOrdered,
+    Quote,
+    Image,
+    Heading,
+    Table,
+    CheckSquare,
+  } from "lucide-svelte";
 
   // codemirror imports
   import {
@@ -106,6 +118,7 @@
     { id: 2, title: "Heading", icon: Heading, action: () => toggleHeadingCycle(editorView) },
     { id: 3, title: "List", icon: List, action: () => f.toggleList(editorView) },
     { id: 4, title: "Ordered List", icon: ListOrdered, action: () => f.toggleOrderedList(editorView) },
+    { id: 10, title: "Checklist", icon: CheckSquare, action: () => f.toggleCheckList(editorView) },
     { id: 5, title: "Quote", icon: Quote, action: () => f.toggleQuote(editorView) },
     { id: 6, title: "Code", icon: Code, action: () => f.toggleCodeBlock(editorView) },
     { id: 7, title: "Link", icon: Link, action: () => f.wrapLink(editorView) },
@@ -172,6 +185,21 @@
       { tag: t.link, color: "#4271AE" },
     ],
   });
+
+  function updateEditorContent(newContent: string) {
+    if (!editorView) return;
+
+    editorView.dispatch({
+      changes: {
+        from: 0,
+        to: editorView.state.doc.length,
+        insert: newContent,
+      },
+    });
+
+    setContent(newContent);
+    setDirty(true);
+  }
 
   // set the default mode
   setMode(defaultMode);
@@ -430,7 +458,7 @@
   {:else if mode === "preview"}
     <div class="flex flex-1 justify-center overflow-y-auto bg-gray-50 p-4">
       <div class="max-w-[90ch]">
-        <Preview {content} />
+        <Preview {content} onContentChange={updateEditorContent} />
       </div>
     </div>
   {:else if mode === "side-by-side"}
@@ -444,7 +472,7 @@
             class="h-full w-full overflow-y-auto bg-gray-50 p-4"
             bind:this={previewElement}
             onscroll={() => syncScroll("preview")}>
-            <Preview {content} />
+            <Preview {content} onContentChange={updateEditorContent} />
           </div>
         </Pane>
       </Splitpanes>

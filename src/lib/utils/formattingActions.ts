@@ -49,6 +49,10 @@ export function toggleOrderedList(view: EditorView | undefined) {
   run(view, (v) => toggleLinePrefix("1.", v));
 }
 
+export function toggleCheckList(view: EditorView | undefined) {
+  run(view, (v) => toggleLinePrefix("- [ ] ", v));
+}
+
 export function wrapLink(view: EditorView | undefined) {
   run(view, (v) => toggleWrap(v, "[", "](https://)"));
 }
