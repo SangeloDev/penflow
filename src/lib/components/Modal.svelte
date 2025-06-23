@@ -23,7 +23,8 @@
     min-w-[25rem]
     -translate-1/2
     rounded-sm
-    border-none
+    border
+    border-gray-400/30
     p-0 backdrop:bg-black backdrop:opacity-25
   "
   bind:this={dialog}
