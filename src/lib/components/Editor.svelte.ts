@@ -10,6 +10,7 @@ export type EditorMode = "edit" | "side-by-side" | "preview";
 let mode: EditorMode = $state("edit");
 let content: string = $state("");
 let shortcutModalVisible = $state(false);
+let settingsModalVisible = $state(false);
 let activeFilename: string | undefined = $state(undefined);
 let isDirty = $state(false);
 
@@ -59,6 +60,22 @@ export function getShortcutModalVisibility() {
  */
 export function setShortcutModalVisibility(visible: boolean) {
   shortcutModalVisible = visible;
+}
+
+/**
+ * Gets the visibility of the shortcut modal.
+ * @returns visible: boolean
+ */
+export function getSettingsModalVisibility() {
+  return settingsModalVisible;
+}
+
+/**
+ * Sets whether the modal is visible or not.
+ * @param visible: boolean
+ */
+export function setSettingsModalVisibility(visible: boolean) {
+  settingsModalVisible = visible;
 }
 
 /**

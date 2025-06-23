@@ -1,14 +1,16 @@
 <script lang="ts">
   import CircleHelp from "lucide-svelte/icons/circle-help";
   import Settings from "lucide-svelte/icons/settings";
-  import { setShortcutModalVisibility } from "./Editor.svelte.ts";
+  import { setSettingsModalVisibility, setShortcutModalVisibility } from "./Editor.svelte.ts";
 
   let {
     content,
     shortcutModalVisible = $bindable(),
+    settingsModalVisible = $bindable(),
   }: {
     content: string;
     shortcutModalVisible: boolean | undefined;
+    settingsModalVisible: boolean | undefined;
   } = $props();
 
   let lines = $derived(content.split("\n").length);
@@ -20,9 +22,9 @@
   <span>{lines} lines</span>
   <span>{words} words</span>
   <span>{chars} chars</span>
-  <a class="cursor-pointer" href="/" title="Settings">
+  <button class="cursor-pointer" onclick={() => setSettingsModalVisibility(true)} title="Settings">
     <Settings size={16} />
-  </a>
+  </button>
   <button class="cursor-pointer" onclick={() => setShortcutModalVisibility(true)} title="Help">
     <CircleHelp size={16} />
   </button>

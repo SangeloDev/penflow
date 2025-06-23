@@ -3,9 +3,14 @@
   import Modal from "$lib/components/Modal.svelte";
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
   import type { ToolbarItem } from "$lib/types";
-  import { CircleHelp, Notebook } from "lucide-svelte";
+  import { CircleHelp, Notebook, Settings } from "lucide-svelte";
   import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/utils/hotkeys";
-  import { getShortcutModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
+  import {
+    getShortcutModalVisibility,
+    setShortcutModalVisibility,
+    getSettingsModalVisibility,
+    setSettingsModalVisibility,
+  } from "$lib/components/Editor.svelte.ts";
 
   const items: ToolbarItem[] = [
     { id: 0, enabled: true },
@@ -13,6 +18,7 @@
   ];
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
+  let settingsModalVisible = $derived(getSettingsModalVisibility());
 </script>
 
 <Editor
@@ -22,6 +28,13 @@
   autosaveDelay={2000}
   autosaveId="penflow-app-website"
   bind:shortcutModalVisible />
+
+<Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)}>
+  {#snippet header()}
+    <h1 class="flex items-center gap-2 font-semibold"><Settings size={18} /> Settings</h1>
+  {/snippet}
+  <p>settings</p>
+</Modal>
 
 <Modal bind:show={shortcutModalVisible} onclose={() => setShortcutModalVisibility(false)}>
   {#snippet header()}
