@@ -41,6 +41,10 @@
   .btn {
     @apply cursor-pointer rounded-sm p-2 hover:bg-gray-200 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:bg-gray-200;
   }
+
+  .text-link {
+    @apply text-primary hover:underline;
+  }
 }
 
 ::selection {

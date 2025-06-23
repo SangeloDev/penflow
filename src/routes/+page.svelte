@@ -62,7 +62,7 @@
       target="_blank"
       rel="noopener noreferrer">
       <Notebook size={18} />
-      <span class="text-primary">Need help with Markdown?</span>
+      <span class="text-link">Need help with Markdown?</span>
     </a>
   {/snippet}
 </Modal>
