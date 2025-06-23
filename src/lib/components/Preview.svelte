@@ -128,6 +128,8 @@
   prose-a:text-primary
   prose-a:no-underline
   prose-a:hover:underline
+  prose-blockquote:[&>p]:before:content-none
+  prose-blockquote:[&>p]:after:content-none
   max-w-none
   flex-1
   p-4
