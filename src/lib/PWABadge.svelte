@@ -1,106 +1,81 @@
 <script lang="ts">
-  import { useRegisterSW } from 'virtual:pwa-register/svelte'
+  import { X } from "lucide-svelte";
+  import { useRegisterSW } from "virtual:pwa-register/svelte";
 
   // check for updates every hour
-  const period = 60 * 60 * 1000
+  const period = 60 * 60 * 1000;
 
   /**
    * This function will register a periodic sync check every hour, you can modify the interval as needed.
    */
   function registerPeriodicSync(swUrl: string, r: ServiceWorkerRegistration) {
-    if (period <= 0) return
+    if (period <= 0) return;
 
     setInterval(async () => {
-      if ('onLine' in navigator && !navigator.onLine)
-        return
+      if ("onLine" in navigator && !navigator.onLine) return;
 
       const resp = await fetch(swUrl, {
-        cache: 'no-store',
+        cache: "no-store",
         headers: {
-          'cache': 'no-store',
-          'cache-control': 'no-cache',
+          cache: "no-store",
+          "cache-control": "no-cache",
         },
-      })
+      });
 
-      if (resp?.status === 200)
-        await r.update()
-    }, period)
+      if (resp?.status === 200) await r.update();
+    }, period);
   }
 
   const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW({
     onRegisteredSW(swUrl, r) {
-      if (period <= 0) return
-      if (r?.active?.state === 'activated') {
-        registerPeriodicSync(swUrl, r)
-      }
-      else if (r?.installing) {
-        r.installing.addEventListener('statechange', (e) => {
-          const sw = e.target as ServiceWorker
-          if (sw.state === 'activated')
-            registerPeriodicSync(swUrl, r)
-        })
+      if (period <= 0) return;
+      if (r?.active?.state === "activated") {
+        registerPeriodicSync(swUrl, r);
+      } else if (r?.installing) {
+        r.installing.addEventListener("statechange", (e) => {
+          const sw = e.target as ServiceWorker;
+          if (sw.state === "activated") registerPeriodicSync(swUrl, r);
+        });
       }
     },
-  })
+  });
 
   function close() {
-      offlineReady.set(false)
-      needRefresh.set(false)
+    offlineReady.set(false);
+    needRefresh.set(false);
   }
 
-  let toast = $derived($offlineReady || $needRefresh)
-  let message = $derived($offlineReady ? 'App ready to work offline' : ($needRefresh ? 'New content available, click on reload button to update.' : ''))
+  let toast = $derived($offlineReady || $needRefresh);
+  let message = $derived(
+    $offlineReady
+      ? "Penflow is now ready to work offline."
+      : $needRefresh
+        ? "An update is available. Click on reload to update Penflow."
+        : ""
+  );
+
+  // test alerts in dev mode
+  // if (import.meta.env.DEV) {
+  //   offlineReady.set(true);
+  //   needRefresh.set(true);
+  // }
 </script>
 
 {#if toast}
   <div
-    class="pwa-toast"
+    class="fixed right-0 bottom-0 z-[999] m-4 rounded-sm border border-gray-400/30 bg-white text-left shadow-md"
     role="alert"
-    aria-labelledby="toast-message"
-  >
-    <div class="message">
+    aria-labelledby="toast-message">
+    <div class="m-3 mr-10">
       <span id="toast-message">
-        { message }
+        {message}
       </span>
     </div>
-    <div class="buttons">
-      {#if $needRefresh}
-        <button type="button" onclick={() => updateServiceWorker(true)}>
-          Reload
-        </button>
-      {/if}
-      <button type="button" onclick={close}>
-        Close
-      </button>
-    </div>
+    {#if $needRefresh}
+      <div class="m-3 flex gap-2">
+        <button class="btn btn-primary" type="button" onclick={() => updateServiceWorker(true)}>Reload</button>
+      </div>
+    {/if}
+    <button class="btn absolute top-0 right-0" type="button" onclick={close}><X size={16} /></button>
   </div>
 {/if}
-
-<style>
-  .pwa-toast {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    margin: 16px;
-    padding: 12px;
-    border: 1px solid #8885;
-    border-radius: 4px;
-    z-index: 2;
-    text-align: left;
-    box-shadow: 3px 4px 5px 0 #8885;
-    background-color: white;
-  }
-  .pwa-toast .message {
-    margin-bottom: 8px;
-  }
-  .pwa-toast .buttons {
-    display: flex;
-  }
-  .pwa-toast button {
-    border: 1px solid #8885;
-    outline: none;
-    margin-right: 5px;
-    border-radius: 2px;
-    padding: 3px 10px;
-  }
-</style>

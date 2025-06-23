@@ -7,12 +7,12 @@
   import twemoji from "@twemoji/api";
   import checkboxes from "markdown-it-task-checkbox";
   import { setContent } from "./Editor.svelte.ts";
-  let { 
+  let {
     content,
-    onContentChange 
-   }: { 
+    onContentChange,
+  }: {
     content: string;
-    onContentChange?: (newContent: string) => void 
+    onContentChange?: (newContent: string) => void;
   } = $props();
   let renderedHtml = $derived("");
 
@@ -83,7 +83,7 @@
       renderedHtml = "<pre style='color:red'>⚠️ Error while rendering markdown.</pre>";
     }
 
-    // Checkbox-Listener nur setzen, wenn DOM erfolgreich aktualisiert wurde
+    // only use checkbox listener if dom is updated successfully
     setTimeout(() => {
       const checkboxes = document.querySelectorAll("input[type='checkbox'][data-source-line]");
       checkboxes.forEach((checkbox) => {
@@ -105,7 +105,7 @@
           }
 
           content = lines.join("\n");
-          setContent(content)
+          setContent(content);
           onContentChange?.(content);
         });
       });
@@ -113,7 +113,27 @@
   });
 </script>
 
-<div class="prose max-w-none flex-1 p-4 break-words">
+<div
+  class="
+  prose
+  prose-pre:prose-code:bg-transparent
+  prose-pre:prose-code:px-0
+  prose-code:bg-gray-300
+  prose-code:py-1
+  prose-code:px-2
+  prose-code:rounded-sm
+  prose-code:before:content-none
+  prose-code:after:content-none
+  prose-code:font-medium
+  prose-a:text-primary
+  prose-a:no-underline
+  prose-a:hover:underline
+  prose-blockquote:[&>p]:before:content-none
+  prose-blockquote:[&>p]:after:content-none
+  max-w-none
+  flex-1
+  p-4
+  break-words">
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   {@html DOMPurify.sanitize(renderedHtml as string)}
 </div>

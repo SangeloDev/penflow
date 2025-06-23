@@ -152,9 +152,9 @@
     setShortcutModalVisibility,
     getMode,
     cycleEditMode: cycleEditMode,
-    saveFile: () => saveFile(content, activeFilename),
+    saveFile: () => saveFile(content, getActiveFilename()),
     openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
-    newFile: () => newFile(editorView, content, autosaveId, activeFilename, getDirtyness()),
+    newFile: () => newFile(editorView, content, autosaveId, getActiveFilename(), getDirtyness()),
     content: getContent(),
     activeFilename: getActiveFilename(),
     autosaveId,
@@ -462,7 +462,7 @@
     <div class="bg-base min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
   {:else if mode === "preview"}
     <div class="flex flex-1 justify-center overflow-y-auto bg-gray-50 p-4">
-      <div class="max-w-[90ch]">
+      <div class="w-full md:w-[90ch] lg:w-[90ch]">
         <Preview {content} onContentChange={updateEditorContent} />
       </div>
     </div>

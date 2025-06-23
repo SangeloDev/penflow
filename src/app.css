@@ -5,15 +5,22 @@
   --base: oklch(1 0 0);
   --aside: #959694;
   --primary: #df7126;
-  --color-primary: rgb(255, 160, 7);
-  --color-selection: rgba(255, 160, 7, 0.75);
+  --primary-selection: rgba(223, 113, 38, 0.25);
+
+  --black: #080401;
+}
+
+.dark {
+  --primary: #ffa007;
 }
 
 @theme inline {
   --color-base: var(--base);
   --color-aside: var(--aside);
   --color-primary: var(--primary);
-  --color-selection: var(--aside);
+  --color-selection: var(--primary-selection);
+
+  --color-black: var(--black);
 
   --animate-zoom: zoom 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-fade: fade 0.2s ease-out;
@@ -39,7 +46,23 @@
 
 @layer utilities {
   .btn {
-    @apply cursor-pointer rounded-sm p-2 hover:bg-gray-200 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:bg-gray-200;
+    @apply cursor-pointer rounded-sm p-2 hover:backdrop-brightness-95 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:backdrop-brightness-95;
+  }
+
+  .btn.btn-outline {
+    @apply border border-gray-500 text-black;
+  }
+
+  .btn.btn-primary {
+    @apply bg-primary border-primary text-white hover:opacity-85;
+  }
+
+  .btn.btn-primary.btn-outline {
+    @apply text-primary bg-transparent;
+  }
+
+  .text-link {
+    @apply text-primary hover:underline;
   }
 }
 
