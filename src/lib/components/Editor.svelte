@@ -1,3 +1,7 @@
+<script module>
+  import emojiList from "../json/emoji.json";
+</script>
+
 <script lang="ts">
   import Toolbar from "./Toolbar.svelte";
   import StatusBar from "./StatusBar.svelte";
@@ -66,9 +70,10 @@
   import { markdown as markdownExt, markdownLanguage } from "@codemirror/lang-markdown";
   import { defaultKeymap, history } from "@codemirror/commands";
   import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
-  import { closeBrackets } from "@codemirror/autocomplete";
+  import { closeBrackets, autocompletion, CompletionContext } from "@codemirror/autocomplete";
   import { highlightSelectionMatches } from "@codemirror/search";
   import { tags as t } from "@lezer/highlight";
+  import twemoji from "@twemoji/api";
   import { createTheme, tomorrow } from "thememirror";
   import "../../styles/codemirror.css";
 
@@ -226,6 +231,7 @@
         markdownExt({ base: markdownLanguage, codeLanguages: languages }),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         placeholderExtension(placeholder),
+        autocompletion({ override: [emojiCompletionSource] }),
         Prec.highest(editorKeymap),
         Prec.default(keymap.of(defaultKeymap)),
         EditorView.lineWrapping,
@@ -290,6 +296,33 @@
       if (autosaveTimer) clearInterval(autosaveTimer);
     };
   });
+
+  function emojiCompletionSource(context: CompletionContext) {
+    // match a ':' followed by at least two word characters
+    let word = context.matchBefore(/:\w+$/);
+    if (!word || (word.from == word.to && !context.explicit)) return null;
+
+    // Filter emoji list by shortcode or name
+    let query = word.text; //.slice(1); // Remove ':'
+
+    let options = emojiList.emojis
+      .filter((e) => e.shortname.startsWith(query))
+      .map((e) => ({
+        label: `${e.shortname}`,
+        type: "emoji",
+        detail: e.emoji,
+        render: (element: HTMLElement) => {
+          element.innerHTML = twemoji.parse(e.emoji);
+          element.appendChild(document.createTextNode(` ${e.shortname}`));
+        },
+        apply: e.shortname,
+      }));
+
+    return {
+      from: word.from,
+      options,
+    };
+  }
 
   async function openFile(
     view: EditorView | undefined,
