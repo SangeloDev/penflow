@@ -82,7 +82,8 @@ export function setContent(newContent: string) {
  * @param currentMode
  * @param forward
  */
-export function cycleEditMode(currentMode: "edit" | "preview" | "side-by-side", forward = true) {
+export function cycleEditMode(currentMode: EditorMode | undefined, forward = true) {
+  if (!currentMode) return;
   if (forward) {
     switch (currentMode) {
       case "edit":
