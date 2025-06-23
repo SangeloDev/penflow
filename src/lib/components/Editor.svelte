@@ -1,5 +1,5 @@
 <script module>
-  import emojiList from "../json/emojis.json";
+  import emojiList from "../json/emoji.json";
 </script>
 
 <script lang="ts">
@@ -306,7 +306,7 @@
         label: `${e.shortname}`,
         type: "emoji",
         detail: e.emoji,
-        render: (element, _completion, _input) => {
+        render: (element: HTMLElement) => {
           element.innerHTML = twemoji.parse(e.emoji);
           element.appendChild(document.createTextNode(` ${e.shortname}`));
         },
