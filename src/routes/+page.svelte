@@ -15,6 +15,14 @@
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
 </script>
 
+<svelte:head>
+  <title>Penflow – A distraction-free Markdown editor.</title>
+  <meta name="title" content="Penflow – A distraction-free Markdown editor." />
+  <meta
+    name="description"
+    content="A simple, clean, distraction-free and open-source Markdown Editor webapp that works offline." />
+</svelte:head>
+
 <Editor
   placeholder="Let your mind flow..."
   fullscreen={true}
