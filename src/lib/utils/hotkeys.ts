@@ -94,6 +94,7 @@ export function globalHotkey(params: { [key: string]: (e: KeyboardEvent) => void
 
 // Define a type for the context for better type safety
 export type HotkeyContext = {
+  setSettingsModalVisibility: (arg0: boolean) => void;
   setShortcutModalVisibility: (arg0: boolean) => void;
   getMode: () => EditorMode | undefined;
   cycleEditMode: (mode: EditorMode | undefined, reverse?: boolean) => void;
@@ -118,7 +119,7 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
     id: 0,
     desc: "Settings",
     shortcut: "Ctrl+Comma",
-    action: () => undefined, // Or connect to a settings function from context
+    action: () => context?.setSettingsModalVisibility(true),
   },
   {
     id: 1,

@@ -35,6 +35,8 @@
     setContent,
     getShortcutModalVisibility,
     setShortcutModalVisibility,
+    getSettingsModalVisibility,
+    setSettingsModalVisibility,
     getActiveFilename,
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
@@ -85,6 +87,7 @@
     placeholder = "Write your markdown here...",
     toolbarItems = [],
     shortcutModalVisible = $bindable(getShortcutModalVisibility()),
+    settingsModalVisible = $bindable(getSettingsModalVisibility()),
   }: {
     autosaveId?: string;
     autosaveDelay?: number;
@@ -94,6 +97,7 @@
     placeholder?: string;
     toolbarItems?: Array<ToolbarItem>;
     shortcutModalVisible?: boolean;
+    settingsModalVisible?: boolean;
   } = $props();
 
   // States
@@ -151,6 +155,7 @@
 
   // hotkeys
   const hotkeyContext: HotkeyContext = {
+    setSettingsModalVisibility,
     setShortcutModalVisibility,
     getMode,
     cycleEditMode: cycleEditMode,
@@ -534,5 +539,5 @@
     </div>
   {/if}
 
-  <StatusBar {content} bind:shortcutModalVisible />
+  <StatusBar {content} bind:shortcutModalVisible bind:settingsModalVisible />
 </div>

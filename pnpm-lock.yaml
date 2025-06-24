@@ -72,6 +72,9 @@ importers:
       thememirror:
         specifier: ^2.0.1
         version: 2.0.1(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.2)
+      vite-plugin-commit-hash:
+        specifier: ^1.0.8
+        version: 1.0.8(rollup@2.79.2)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0))
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.5
@@ -3349,6 +3352,11 @@ packages:
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
     hasBin: true
+
+  vite-plugin-commit-hash@1.0.8:
+    resolution: {integrity: sha512-lftothagIqI7aDA+rXC5Z09Nk0/QjpG8bT815dKK6CInZp/6c2f2REc91UwNQH1kqH+/121SuSexYgfXZ494BQ==}
+    peerDependencies:
+      vite: '>=2'
 
   vite-plugin-pwa@0.21.2:
     resolution: {integrity: sha512-vFhH6Waw8itNu37hWUJxL50q+CBbNcMVzsKaYHQVrfxTt3ihk3PeLO22SbiP1UNWzcEPaTQv+YVxe4G0KOjAkg==}
@@ -7136,6 +7144,14 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@10.0.0: {}
+
+  vite-plugin-commit-hash@1.0.8(rollup@2.79.2)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)):
+    dependencies:
+      '@rollup/pluginutils': 5.1.4(rollup@2.79.2)
+      magic-string: 0.30.17
+      vite: 6.3.5(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0)
+    transitivePeerDependencies:
+      - rollup
 
   vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.41.0))(workbox-build@7.3.0)(workbox-window@7.3.0):
     dependencies:

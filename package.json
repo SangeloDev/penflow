@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "prebuild": "node scripts/build/getCommitHash.js",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
@@ -62,7 +63,8 @@
     "markdown-it-emoji": "^3.0.0",
     "markdown-it-task-checkbox": "^1.0.6",
     "svelte-splitpanes": "^8.0.9",
-    "thememirror": "^2.0.1"
+    "thememirror": "^2.0.1",
+    "vite-plugin-commit-hash": "^1.0.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
