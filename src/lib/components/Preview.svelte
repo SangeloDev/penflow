@@ -1,12 +1,14 @@
 <script lang="ts">
   import MarkdownIt from "markdown-it";
-  import DOMPurify from "isomorphic-dompurify";
-  import "highlight.js/styles/base16/dracula.min.css";
   import hljs from "highlight.js";
   import { full as emoji } from "markdown-it-emoji";
-  import twemoji from "@twemoji/api";
   import checkboxes from "markdown-it-task-checkbox";
+  import { alert } from "@mdit/plugin-alert";
+  import twemoji from "@twemoji/api";
+  import DOMPurify from "isomorphic-dompurify";
   import { setContent } from "./Editor.svelte.ts";
+  import "highlight.js/styles/base16/dracula.min.css";
+  import "../../styles/preview.css";
   let {
     content,
     onContentChange,
@@ -41,6 +43,7 @@
       ulClass: "task-list",
       liClass: "task-list-item",
     })
+    .use(alert)
     .enable("table")
     .enable("strikethrough");
 

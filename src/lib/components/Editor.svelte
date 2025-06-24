@@ -269,7 +269,7 @@
   $effect(() => {
     if (editorView && mode === "side-by-side") {
       const listener = () => syncScroll("editor");
-      editorView.scrollDOM.addEventListener("scroll", listener);
+      editorView.scrollDOM.addEventListener("scroll", listener, { passive: true });
       return () => editorView?.scrollDOM.removeEventListener("scroll", listener);
     }
   });
