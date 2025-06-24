@@ -486,7 +486,11 @@
 </script>
 
 <svelte:head>
-  <title>{documentTitle()} - Penflow</title>
+  {#if isWelcomeMessageActive}
+    <title>Welcome to Penflow!</title>
+  {:else}
+    <title>{documentTitle()} - Penflow</title>
+  {/if}
 </svelte:head>
 
 <input
