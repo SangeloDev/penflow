@@ -1,5 +1,5 @@
 <script module>
-  import emojiList from "../json/emoji.json";
+  import emojiList from "../data/emoji.json";
 </script>
 
 <script lang="ts">
@@ -54,6 +54,7 @@
     Table,
     CheckSquare,
   } from "lucide-svelte";
+  import { welcome } from "../data/welcome";
 
   // codemirror imports
   import {
@@ -108,6 +109,7 @@
   let activeFilename: string | undefined = $state(getActiveFilename());
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
+  let isWelcomeMessageActive = $state(false);
 
   // codemirror
   let editorView: EditorView | undefined = $state();
@@ -196,6 +198,16 @@
     ],
   });
 
+  // check if this is the first visit or not
+  const isFirstVisit = typeof window !== "undefined" && !localStorage.getItem(welcome.key);
+  if (isFirstVisit) {
+    // first time user content.
+    setContent(welcome.text);
+    // set flag in localStorage to ensure this block only runs once.
+    localStorage.setItem(welcome.key, "true");
+    isWelcomeMessageActive = true;
+  }
+
   function updateEditorContent(newContent: string) {
     if (!editorView) return;
 
@@ -239,6 +251,10 @@
           if (update.docChanged) {
             setContent(update.state.doc.toString());
             setDirty(true);
+            // activate message saving on edit
+            if (isWelcomeMessageActive) {
+              isWelcomeMessageActive = false;
+            }
           }
         }),
         tomorrow,
@@ -274,7 +290,7 @@
   $effect(() => {
     if (editorView && mode === "side-by-side") {
       const listener = () => syncScroll("editor");
-      editorView.scrollDOM.addEventListener("scroll", listener);
+      editorView.scrollDOM.addEventListener("scroll", listener, { passive: true });
       return () => editorView?.scrollDOM.removeEventListener("scroll", listener);
     }
   });
@@ -287,7 +303,7 @@
     }
     if (autosaveDelay > 0) {
       autosaveTimer = setInterval(() => {
-        if (isDirty) {
+        if (isDirty && !isWelcomeMessageActive) {
           saveToLocalStorage();
         }
       }, autosaveDelay);
@@ -448,7 +464,9 @@
   }
 
   onMount(() => {
-    loadFromLocalStorage(); // load from local storage
+    if (!isFirstVisit) {
+      loadFromLocalStorage();
+    }
 
     globalHotkeyCleanup = globalHotkey(globalHotkeys);
 
@@ -473,7 +491,11 @@
 </script>
 
 <svelte:head>
-  <title>{documentTitle()} - Penflow</title>
+  {#if isWelcomeMessageActive}
+    <title>Welcome to Penflow!</title>
+  {:else}
+    <title>{documentTitle()} - Penflow</title>
+  {/if}
 </svelte:head>
 
 <input
