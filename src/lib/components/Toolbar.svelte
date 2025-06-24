@@ -21,24 +21,32 @@
   {#each toolbarItems as item (item.id)}
     {#if item}
       {@const Component = item.icon}
-      <button disabled={mode === "preview"} class="btn" onclick={item.action as () => void} title={item.title}>
+      <button
+        disabled={mode === "preview"}
+        class="btn btn-square"
+        onclick={item.action as () => void}
+        title={item.title}>
         <Component size={20} />
       </button>
     {/if}
   {/each}
 
   <div class="flex-1"></div>
-  <button class="btn" onclick={() => onModeChange("edit")} aria-pressed={mode === "edit"} title="Edit">
+  <button class="btn btn-square" onclick={() => onModeChange("edit")} aria-pressed={mode === "edit"} title="Edit">
     <Pencil size={20} />
   </button>
   <button
-    class="btn"
+    class="btn btn-square"
     onclick={() => onModeChange("side-by-side")}
     aria-pressed={mode === "side-by-side"}
     title="Side by Side">
     <Columns size={20} />
   </button>
-  <button class="btn" onclick={() => onModeChange("preview")} aria-pressed={mode === "preview"} title="Preview">
+  <button
+    class="btn btn-square"
+    onclick={() => onModeChange("preview")}
+    aria-pressed={mode === "preview"}
+    title="Preview">
     <Eye size={20} />
   </button>
   <!-- <button class="btn" onclick={onFullscreenToggle}>

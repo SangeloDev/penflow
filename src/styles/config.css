@@ -46,7 +46,11 @@
 
 @layer utilities {
   .btn {
-    @apply cursor-pointer rounded-sm p-2 hover:backdrop-brightness-95 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:backdrop-brightness-95;
+    @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 hover:backdrop-brightness-95 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:backdrop-brightness-95;
+  }
+
+  .btn-square {
+    @apply p-2;
   }
 
   .btn.btn-outline {

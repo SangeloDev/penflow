@@ -1,9 +1,10 @@
 <script lang="ts">
   import Editor from "$lib/components/Editor.svelte";
   import Modal from "$lib/components/Modal.svelte";
+  import Settings from "$lib/components/modals/Settings.svelte";
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
   import type { ToolbarItem } from "$lib/types";
-  import { CircleHelp, Notebook, Settings } from "lucide-svelte";
+  import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
   import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/utils/hotkeys";
   import {
     getShortcutModalVisibility,
@@ -37,16 +38,16 @@
   autosaveId="penflow-app-website"
   bind:shortcutModalVisible />
 
-<Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)}>
+<Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
   {#snippet header()}
-    <h1 class="flex items-center gap-2 font-semibold"><Settings size={18} /> Settings</h1>
+    <SettingsIcon size={18} /> Settings
   {/snippet}
-  <p>settings</p>
+  <Settings />
 </Modal>
 
 <Modal bind:show={shortcutModalVisible} onclose={() => setShortcutModalVisibility(false)}>
   {#snippet header()}
-    <h1 class="flex items-center gap-2 font-semibold"><CircleHelp size={18} /> Help</h1>
+    <CircleHelp size={18} /> Help
   {/snippet}
   <Shortcuts>
     <div>

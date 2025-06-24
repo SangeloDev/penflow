@@ -3,11 +3,13 @@ import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
+import { CommitHashPlugin } from "vite-plugin-commit-hash";
 
 export default defineConfig({
   plugins: [
     sveltekit(),
     tailwindcss(),
+    CommitHashPlugin({ noPrefix: false, noVirtual: false }),
     paraglideVitePlugin({
       project: "./project.inglang",
       outdir: "./src/lib/paraglide",

@@ -21,6 +21,14 @@ export default ts.config(
       globals: { ...globals.browser, ...globals.node },
     },
     rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "no-undef": "off",
       "@typescript-eslint/no-explicit-any": "off",
     },
