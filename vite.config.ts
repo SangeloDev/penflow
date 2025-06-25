@@ -3,10 +3,12 @@ import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import { CommitHashPlugin } from "vite-plugin-commit-hash";
 
 export default defineConfig({
   plugins: [
+    basicSsl(),
     sveltekit(),
     tailwindcss(),
     CommitHashPlugin({ noPrefix: false, noVirtual: false }),
