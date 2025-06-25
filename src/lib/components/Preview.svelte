@@ -4,6 +4,7 @@
   import { full as emoji } from "markdown-it-emoji";
   import checkboxes from "markdown-it-task-checkbox";
   import { alert } from "@mdit/plugin-alert";
+  import footnote from "markdown-it-footnote";
   import twemoji from "@twemoji/api";
   import DOMPurify from "isomorphic-dompurify";
   import { setContent } from "./Editor.svelte.ts";
@@ -44,6 +45,7 @@
       liClass: "task-list-item",
     })
     .use(alert)
+    .use(footnote)
     .enable("table")
     .enable("strikethrough");
 
