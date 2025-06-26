@@ -38,6 +38,7 @@
     getSettingsModalVisibility,
     setSettingsModalVisibility,
     getActiveFilename,
+    setActiveFileHandle,
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
   import type { ToolbarItem } from "$lib/types";
@@ -356,6 +357,7 @@
         const [fileHandle] = await window.showOpenFilePicker({
           types: [{ description: "Markdown", accept: { "text/markdown": [".md", ".markdown"] } }],
         });
+        setActiveFileHandle(fileHandle);
         const file = await fileHandle.getFile();
         const newContent = await file.text();
         loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
@@ -365,6 +367,8 @@
         }
       }
     } else {
+      // no need to store file handle in fallback mode
+      setActiveFileHandle(undefined);
       try {
         fileInput.click();
       } catch {

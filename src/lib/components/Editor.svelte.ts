@@ -12,6 +12,7 @@ let content: string = $state("");
 let shortcutModalVisible = $state(false);
 let settingsModalVisible = $state(false);
 let activeFilename: string | undefined = $state(undefined);
+let activeFileHandle: FileSystemHandle | undefined = $state(undefined);
 let isDirty = $state(false);
 
 /**
@@ -45,6 +46,22 @@ export const setActiveFilename = (filename: string | undefined) => {
 export const getActiveFilename = () => {
   return activeFilename;
 };
+
+/**
+ * Gets the currently set file handle
+ * @returns activeFileHandle
+ */
+export const getActiveFileHandle = () => {
+  return activeFileHandle;
+};
+
+/**
+ * Sets the active file handle
+ * @param handle - the file handle to be set active
+ */
+export function setActiveFileHandle(handle: FileSystemHandle | undefined) {
+  activeFileHandle = handle;
+}
 
 /**
  * Gets the visibility of the shortcut modal.
@@ -268,21 +285,67 @@ export function generateFilename(markdownContent: string): string {
 
 /**
  * Prompts the user to download the current editor content.
+ * Uses the File System Access API if available, with a fallback to the traditional download method.
  */
-export function saveFile(content: string, activeFilename: string | undefined) {
+export async function saveFile(
+  content: string,
+  activeFilename: string | undefined,
+  activeFileHandle: FileSystemFileHandle | undefined
+) {
   if (!content && !activeFilename) return; // Don't save empty, untitled files
-  const filename = activeFilename ?? generateFilename(content);
-  const blob = new Blob([content], {
-    type: "text/markdown;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-  setActiveFilename(filename);
-  setDirty(false);
+
+  // if a file handle exists, try to save directly to it
+  if (activeFileHandle) {
+    try {
+      const writable = await activeFileHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      setDirty(false);
+      return;
+    } catch (error) {
+      console.error("Error saving to existing file handle:", error);
+      // if saving fails, fall through to the save as logic below
+    }
+  }
+
+  // save as
+  const baseFilename = activeFilename ?? generateFilename(content);
+
+  if ("showSaveFilePicker" in window) {
+    try {
+      const options: SaveFilePickerOptions = {
+        suggestedName: baseFilename,
+        types: [{ description: "Markdown Files", accept: { "text/markdown": [".md", ".markdown"] } }],
+      };
+
+      const newHandle = await window.showSaveFilePicker(options);
+      const writable = await newHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+
+      setActiveFileHandle(newHandle);
+      setActiveFilename(newHandle.name);
+      setDirty(false);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        console.log("File save dialog cancelled by user.");
+      } else {
+        console.error("Error with showSaveFilePicker:", error);
+      }
+    }
+  } else {
+    // fallback for browsers that don't support/enable the file system api
+    console.log("Using fallback download method.");
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = baseFilename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setActiveFilename(baseFilename);
+    setDirty(false);
+  }
 }
