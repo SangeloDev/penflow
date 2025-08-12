@@ -79,6 +79,7 @@
   import { createTheme, tomorrow, coolGlow } from "thememirror";
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
+  import "../../styles/splitpanes.css";
 
   let {
     autosaveId = "my-markdown-editor",
@@ -553,7 +554,11 @@
     </div>
   {:else if mode === "side-by-side"}
     <div class="flex flex-1 overflow-hidden">
-      <Splitpanes class="default-theme" dblClickSplitter={false} on:splitter-click={handleSplitterClick}>
+      <Splitpanes
+        class="default-theme"
+        theme={uiTheme.current === "dark" ? "dark-theme" : "default-theme"}
+        dblClickSplitter={false}
+        on:splitter-click={handleSplitterClick}>
         <Pane bind:size={editorPaneSize} minSize={20}>
           <div class="h-full w-full" bind:this={editorContainer}></div>
         </Pane>
