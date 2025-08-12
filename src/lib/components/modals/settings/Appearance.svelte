@@ -14,7 +14,7 @@
     <div class="flex gap-2">
       <input class="hidden" type="radio" id="light-theme" name="theme" value="light" checked />
       <label
-        class="bg-base flex size-10 cursor-pointer items-center justify-center rounded-full border border-gray-500"
+        class="flex size-10 cursor-pointer items-center justify-center rounded-full border border-gray-500 bg-white"
         for="light-theme">
         <Sun class="size-6" />
         <span class="sr-only">Light</span>
@@ -24,7 +24,7 @@
         class="flex size-10 cursor-pointer items-center justify-center rounded-full border border-gray-500 bg-gray-800 text-base"
         for="dark-theme">
         <Moon class="size-6" />
-        <span class="sr-only">Light</span>
+        <span class="sr-only">Dark</span>
       </label>
     </div>
     <button class="btn w-fit"><RotateCcw size={16} /> Reset to system preferences</button>

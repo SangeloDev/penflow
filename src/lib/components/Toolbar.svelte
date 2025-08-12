@@ -17,7 +17,7 @@
   } = $props();
 </script>
 
-<div class="flex items-center gap-2 border-b border-gray-300 bg-gray-100 p-2">
+<div class="border-base-400 bg-base-200 flex items-center gap-2 border-b p-2">
   {#each toolbarItems as item (item.id)}
     {#if item}
       {@const Component = item.icon}

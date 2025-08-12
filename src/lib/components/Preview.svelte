@@ -121,9 +121,10 @@
 <div
   class="
   prose
+  dark:prose-invert
   prose-pre:prose-code:bg-transparent
   prose-pre:prose-code:px-0
-  prose-code:bg-gray-300
+  prose-code:bg-base-400
   prose-code:py-1
   prose-code:px-2
   prose-code:rounded-sm
