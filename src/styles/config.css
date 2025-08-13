@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --base-100: var(--color-white);
   --base-150: var(--color-gray-50);
@@ -71,7 +73,8 @@
     @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1;
     @apply hover:backdrop-brightness-95 dark:hover:backdrop-brightness-150;
     @apply aria-pressed:cursor-default aria-pressed:backdrop-brightness-95 dark:aria-pressed:backdrop-brightness-150;
-    @apply disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent;
+    @apply disabled:cursor-default disabled:opacity-50 disabled:hover:backdrop-brightness-100;
+    @apply aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:backdrop-brightness-100;
   }
 
   .btn-square {
