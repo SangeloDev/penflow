@@ -30,6 +30,7 @@
   /* --aside: #4e4f4e; */
   --aside: var(--color-gray-200);
   --primary: #ffa007;
+  --primary-selection: rgba(223, 113, 38, 0.35);
 }
 
 @theme inline {

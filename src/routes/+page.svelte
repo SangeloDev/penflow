@@ -57,7 +57,9 @@
           {#if !s.hidden}
             <li class="mb-1 grid grid-cols-2">
               <span>{s.desc}</span>
-              <span class="bg-base-200 place-self-end rounded px-2 py-[0.15rem] font-mono">{s.shortcut}</span>
+              <span class="dark:bg-base-400 bg-base-200 place-self-end rounded px-2 py-[0.15rem] font-mono">
+                {s.shortcut}
+              </span>
             </li>
           {/if}
         {/each}
@@ -70,7 +72,9 @@
           {#if !s.hidden}
             <li class="mb-1 grid grid-cols-2">
               <span>{s.desc}</span>
-              <span class="bg-base-200 place-self-end rounded px-2 py-[0.15rem] font-mono">{s.shortcut}</span>
+              <span class="dark:bg-base-400 bg-base-200 place-self-end rounded px-2 py-[0.15rem] font-mono">
+                {s.shortcut}
+              </span>
             </li>
           {/if}
         {/each}
