@@ -63,7 +63,7 @@
 
 {#if toast}
   <div
-    class="fixed right-0 bottom-0 z-[999] m-4 rounded-sm border border-gray-400/30 bg-white text-left shadow-md"
+    class="bg-base-100 dark:bg-base-200 border-base-400/30 fixed right-0 bottom-0 z-[999] m-4 rounded-sm border text-left shadow-md"
     role="alert"
     aria-labelledby="toast-message">
     <div class="m-3 mr-10">
@@ -76,6 +76,6 @@
         <button class="btn btn-primary" type="button" onclick={() => updateServiceWorker(true)}>Reload</button>
       </div>
     {/if}
-    <button class="btn absolute top-0 right-0" type="button" onclick={close}><X size={16} /></button>
+    <button class="btn btn-square absolute top-0 right-0" type="button" onclick={close}><X size={16} /></button>
   </div>
 {/if}

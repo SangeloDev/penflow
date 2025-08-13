@@ -1,21 +1,46 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --base: oklch(1 0 0);
-  --aside: #959694;
+  --base-100: var(--color-white);
+  --base-150: var(--color-gray-50);
+  --base-200: var(--color-gray-100);
+  --base-300: var(--color-gray-200);
+  --base-400: var(--color-gray-300);
+  --base-500: var(--color-gray-400);
+
+  /* --aside: #959694; */
+  --aside: var(--color-gray-400);
   --primary: #df7126;
   --primary-selection: rgba(223, 113, 38, 0.25);
 
-  --black: #080401;
+  --black: #080502;
 }
 
 .dark {
+  --base-100: var(--color-gray-950);
+  --base-150: var(--color-gray-900);
+  --base-200: var(--color-gray-800);
+  --base-300: var(--color-gray-700);
+  --base-400: var(--color-gray-600);
+  --base-500: var(--color-gray-500);
+
+  /* --aside: #4e4f4e; */
+  --aside: var(--color-gray-200);
   --primary: #ffa007;
+  --primary-selection: rgba(223, 113, 38, 0.35);
 }
 
 @theme inline {
-  --color-base: var(--base);
+  --color-base-100: var(--base-100);
+  --color-base-150: var(--base-150);
+  --color-base-200: var(--base-200);
+  --color-base-300: var(--base-300);
+  --color-base-400: var(--base-400);
+  --color-base-500: var(--base-500);
+
   --color-aside: var(--aside);
   --color-primary: var(--primary);
   --color-selection: var(--primary-selection);
@@ -46,7 +71,11 @@
 
 @layer utilities {
   .btn {
-    @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 hover:backdrop-brightness-95 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent aria-pressed:cursor-default aria-pressed:backdrop-brightness-95;
+    @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1;
+    @apply hover:backdrop-brightness-95 dark:hover:backdrop-brightness-150;
+    @apply aria-pressed:cursor-default aria-pressed:backdrop-brightness-95 dark:aria-pressed:backdrop-brightness-150;
+    @apply disabled:cursor-default disabled:opacity-50 disabled:hover:backdrop-brightness-100;
+    @apply aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:backdrop-brightness-100;
   }
 
   .btn-square {

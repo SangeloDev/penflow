@@ -35,7 +35,7 @@
 </script>
 
 <div class="flex flex-row gap-4 lg:grid-cols-2">
-  <div class="flex min-w-1/5 flex-col gap-1 border-r border-gray-200 pr-4">
+  <div class="border-base-300 flex min-w-1/5 flex-col gap-1 border-r pr-4">
     {#each data.nav as item (item.id)}
       {@const Icon = item.icon}
       <button class="btn" onclick={() => (current = item)} aria-pressed={current.id === item.id}>
@@ -57,7 +57,7 @@
       {/each}
     </div>
   </div>
-  <div class="bg-base flex min-h-[600px] w-full flex-1 flex-col overflow-hidden">
+  <div class="flex min-h-[600px] w-full flex-1 flex-col overflow-hidden">
     <header class="flex shrink-0 items-center gap-2 px-4">
       <span class="opacity-65">Settings</span>
       <ChevronRight size={16} class="opacity-65" />

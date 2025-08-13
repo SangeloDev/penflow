@@ -1,0 +1,10 @@
+@import "./config.css";
+
+.splitpanes.dark-theme .splitpanes__splitter {
+  @apply bg-base-200! border-l-base-400!;
+}
+
+.splitpanes.dark-theme .splitpanes__splitter::before,
+.splitpanes.dark-theme .splitpanes__splitter::after {
+  @apply bg-base-500!;
+}

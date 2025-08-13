@@ -2,6 +2,7 @@
   import "../app.css";
   import { pwaInfo } from "virtual:pwa-info";
   import { pwaAssetsHead } from "virtual:pwa-assets/head";
+  import { ModeWatcher } from "mode-watcher";
 
   interface Props {
     children?: import("svelte").Snippet;
@@ -14,11 +15,13 @@
   {#if pwaAssetsHead.themeColor}
     <meta name="theme-color" content={pwaAssetsHead.themeColor.content} />
   {/if}
-  {#each pwaAssetsHead.links as link}
+  {#each pwaAssetsHead.links as link (link.href)}
     <link {...link} />
   {/each}
   {@html webManifest}
 </svelte:head>
+
+<ModeWatcher />
 
 <div class="flex min-h-svh flex-col">
   <main>

@@ -27,9 +27,11 @@
 
 <dialog
   class="
-    bg-base
+    bg-base-100
+    dark:bg-base-200
     open:backdrop:animate-fade
     open:animate-zoom
+    border-base-500/30
     absolute
     top-1/2
     left-1/2
@@ -39,7 +41,6 @@
     -translate-1/2
     rounded-sm
     border
-    border-gray-400/30
     p-0
     backdrop:bg-black
     backdrop:opacity-25 md:min-h-[16rem] md:min-w-[24rem]
@@ -54,11 +55,11 @@
   <div class="p-4">
     {#if header}
       <h1 class="flex items-center gap-2 font-semibold">{@render header?.()}</h1>
-      <hr class="my-4 text-gray-200" />
+      <hr class="text-base-300 my-4" />
     {/if}
     {@render children?.()}
     {#if footer}
-      <hr class="my-4 text-gray-200" />
+      <hr class="text-base-300 my-4" />
     {/if}
     {@render footer?.()}
   </div>

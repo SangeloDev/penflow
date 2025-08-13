@@ -23,3 +23,15 @@ li.task-list-item input {
   @apply mr-2;
   cursor: pointer;
 }
+
+.splitpanes {
+  @apply bg-base-100;
+}
+
+.splitpanes__splitter {
+  @apply bg-base-300;
+}
+
+.splitpanes__splitter:before {
+  @apply bg-base-400;
+}

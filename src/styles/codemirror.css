@@ -2,6 +2,8 @@
   reference: true
 );
 
+@import "./config.css";
+
 .cm-editor {
   @apply h-full;
   font-size: 16px;
@@ -29,7 +31,7 @@
 }
 
 .cm-gutters {
-  @apply border-r-gray-200 select-none;
+  @apply border-r-base-300 select-none;
 }
 
 .cm-gutter .cm-gutterElement {
