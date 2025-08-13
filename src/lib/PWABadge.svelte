@@ -55,10 +55,10 @@
   );
 
   // test alerts in dev mode
-  if (import.meta.env.DEV) {
-    // offlineReady.set(true);
-    needRefresh.set(true);
-  }
+  // if (import.meta.env.DEV) {
+  //   offlineReady.set(true);
+  //   needRefresh.set(true);
+  // }
 </script>
 
 {#if toast}
