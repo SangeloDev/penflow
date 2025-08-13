@@ -18,7 +18,6 @@
 
 <div class="flex flex-col gap-2">
   <div class="flex gap-2">
-    <!-- Light Theme -->
     <input
       class="peer/light hidden"
       type="radio"
@@ -33,7 +32,6 @@
       <span class="sr-only">Light</span>
     </label>
 
-    <!-- Dark Theme -->
     <input class="peer/dark hidden" type="radio" id="dark-theme" name="theme" value="dark" bind:group={selectedTheme} />
     <label
       for="dark-theme"
