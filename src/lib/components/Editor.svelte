@@ -77,6 +77,7 @@
   import { tags as t } from "@lezer/highlight";
   import twemoji from "@twemoji/api";
   import { createTheme } from "thememirror";
+  import { imagePasteDrop } from "$lib/utils/codemirrorUpload.ts";
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
@@ -364,6 +365,7 @@
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         placeholderExtension(placeholder),
         autocompletion({ override: [emojiCompletionSource] }),
+        imagePasteDrop,
         Prec.highest(editorKeymap),
         Prec.default(keymap.of(defaultKeymap)),
         EditorView.lineWrapping,
