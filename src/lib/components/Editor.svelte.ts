@@ -12,7 +12,7 @@ let content: string = $state("");
 let shortcutModalVisible = $state(false);
 let settingsModalVisible = $state(false);
 let activeFilename: string | undefined = $state(undefined);
-let activeFileHandle: FileSystemHandle | undefined = $state(undefined);
+let activeFileHandle: FileSystemFileHandle | undefined = $state(undefined);
 let isDirty = $state(false);
 
 /**

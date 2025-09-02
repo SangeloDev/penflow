@@ -25,7 +25,7 @@ function replaceImagePlaceholder(view: EditorView, placeholder: string, url: str
 
 function uploadImageToS3(file: File): Promise<string> {
   const fileName = encodeURIComponent(file.name);
-  const url = settings.general.s3AttachmentEndpoint + fileName; // URL for uploading to S3 bucket
+  const url = settings.general.s3AttachmentEndpoint + "/images/" + fileName; // URL for uploading to S3 bucket
   return fetch(url, {
     method: "PUT",
     headers: {
