@@ -97,4 +97,17 @@
   .text-link {
     @apply text-primary hover:underline;
   }
+
+  .input {
+    @apply w-full rounded-md border;
+    @apply border-base-500 focus:border-primary focus:hover:border-primary bg-transparent;
+    @apply px-3 py-2 text-sm transition duration-300 hover:border-gray-600 focus:shadow focus:outline-none dark:hover:border-gray-400;
+    @apply placeholder-transparent placeholder:transition-all focus:placeholder-gray-400 [&:not(:placeholder-shown)]:placeholder-transparent;
+  }
+
+  .label {
+    @apply bg-base-100 dark:bg-base-200 absolute top-2 left-2 origin-left transform cursor-text px-1 text-sm transition-all select-none;
+    @apply peer-placeholder-shown:top-2 peer-placeholder-shown:scale-100 peer-focus:-top-2 peer-focus:scale-90 peer-focus:text-black/80;
+    @apply peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:scale-90 dark:peer-focus:text-white/80;
+  }
 }

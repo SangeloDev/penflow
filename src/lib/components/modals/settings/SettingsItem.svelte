@@ -12,7 +12,7 @@
   } = $props();
 </script>
 
-<div class="flex flex-col gap-2">
+<div class="flex flex-col gap-4">
   {#if title || description}
     <div>
       {#if title}
