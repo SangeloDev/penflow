@@ -59,7 +59,7 @@ export const getActiveFileHandle = () => {
  * Sets the active file handle
  * @param handle - the file handle to be set active
  */
-export function setActiveFileHandle(handle: FileSystemHandle | undefined) {
+export function setActiveFileHandle(handle: FileSystemFileHandle | undefined) {
   activeFileHandle = handle;
 }
 

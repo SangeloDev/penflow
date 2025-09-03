@@ -49,11 +49,4 @@
     title="Preview">
     <Eye size={20} />
   </button>
-  <!-- <button class="btn" onclick={onFullscreenToggle}>
-    {#if isFullscreen}
-      <Minimize size={20} />
-    {:else}
-      <Maximize size={20} />
-    {/if}
-  </button> -->
 </div>
