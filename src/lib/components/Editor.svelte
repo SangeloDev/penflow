@@ -77,6 +77,7 @@
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
+  import { getFirstVisit, setFirstVisit, settings } from "./modals/Settings.svelte.ts";
 
   let {
     autosaveId = "my-markdown-editor",
@@ -110,6 +111,7 @@
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
   let isWelcomeMessageActive = $state(false);
+  let firstVisit = getFirstVisit();
 
   // codemirror
   let editorView: EditorView | undefined = $state();
@@ -174,12 +176,12 @@
   const globalHotkeys = constructedGlobalHotkeys(hotkeys);
 
   // check if this is the first visit or not
-  const isFirstVisit = typeof window !== "undefined" && !localStorage.getItem(welcome.key);
+  const isFirstVisit = typeof window !== "undefined" && firstVisit === "false";
   if (isFirstVisit) {
     // first time user content.
     setContent(welcome.text);
     // set flag in localStorage to ensure this block only runs once.
-    localStorage.setItem(welcome.key, "true");
+    setFirstVisit("true");
     isWelcomeMessageActive = true;
   }
 
