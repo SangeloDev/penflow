@@ -1,15 +1,15 @@
 <script lang="ts">
   import { settings } from "./Settings.svelte.ts";
 
-  // import General from "./settings/General.svelte";
+  import General from "./settings/General.svelte";
   // import Home from "./settings/Home.svelte";
   import Appearance from "./settings/Appearance.svelte";
   // import LanguageAndRegion from "./settings/LanguageAndRegion.svelte";
   // import Accessibility from "./settings/Accessibility.svelte";
   // import Plugins from "./settings/Plugins.svelte";
   import About from "./settings/About.svelte";
-  // import { AccessibilityIcon, ChevronRight, Globe, House, Info, Paintbrush, Puzzle, Wrench } from "lucide-svelte";
-  import { ChevronRight, Info, Paintbrush } from "lucide-svelte";
+  // import { AccessibilityIcon, ChevronRight, Globe, House, Info, Paintbrush, Puzzle } from "lucide-svelte";
+  import { ChevronRight, Info, Paintbrush, Wrench } from "lucide-svelte";
 
   interface TabItem {
     id: string;
@@ -24,7 +24,7 @@
     footer: TabItem[];
   } = {
     nav: [
-      // { id: "general", name: "General", icon: Wrench, component: General },
+      { id: "general", name: "General", icon: Wrench, component: General },
       { id: "appearance", name: "Appearance", icon: Paintbrush, component: Appearance },
       // { id: "languageAndRegion", name: "Language & region", icon: Globe, component: LanguageAndRegion },
       // { id: "accessibility", name: "Accessibility", icon: AccessibilityIcon, component: Accessibility },

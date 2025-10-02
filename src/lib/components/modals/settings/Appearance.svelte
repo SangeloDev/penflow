@@ -18,12 +18,8 @@
 </script>
 
 <SettingsItem>
-  {#snippet title()}
-    Appearance
-  {/snippet}
-  {#snippet description()}
-    Set Penpot's UI theme.
-  {/snippet}
+  {#snippet title()}Appearance{/snippet}
+  {#snippet description()}Set Penflow's UI theme{/snippet}
   <div class="flex flex-col gap-2">
     <div class="flex gap-2">
       <input

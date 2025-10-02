@@ -87,11 +87,11 @@
   }
 
   .btn.btn-primary {
-    @apply bg-primary border-b-3 border-white/30 text-white hover:opacity-85 active:translate-y-0.5;
+    @apply bg-primary border-primary border border-b-3 border-b-white/30 text-white hover:opacity-85 active:translate-y-0.5;
   }
 
   .btn.btn-primary.btn-outline {
-    @apply text-primary bg-transparent;
+    @apply text-primary border-primary border-b bg-transparent;
   }
 
   .text-link {

@@ -9,7 +9,8 @@ export interface Block {
 }
 
 export interface ToolbarItem {
-  id: number;
+  id: string;
+  order?: number;
   title?: string;
   action?: (textarea: HTMLTextAreaElement | undefined) => void;
   icon?: Component;

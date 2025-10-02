@@ -12,11 +12,20 @@
     getSettingsModalVisibility,
     setSettingsModalVisibility,
   } from "$lib/components/Editor.svelte.ts";
+  import { getEnabledToolbarItems } from "$lib/components/modals/Settings.svelte.ts";
 
-  const items: ToolbarItem[] = [
-    { id: 0, enabled: true },
-    { id: 9, enabled: false },
-  ];
+  // const items: ToolbarItem[] = [{ id: 9, enabled: false }];
+
+  // Get enabled toolbar items from settings
+  let enabledItems = $derived(getEnabledToolbarItems());
+
+  // Convert to the format expected by your Editor component
+  let toolbarItems = $derived(
+    enabledItems.map((item: ToolbarItem) => ({
+      id: parseInt(item.id) || 0,
+      enabled: item.enabled,
+    }))
+  );
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
@@ -33,7 +42,7 @@
 <Editor
   placeholder="Let your mind flow..."
   fullscreen={true}
-  toolbarItems={items}
+  {toolbarItems}
   autosaveDelay={2000}
   autosaveId="penflow-app-website"
   bind:shortcutModalVisible />
@@ -66,7 +75,7 @@
       </ul>
     </div>
     <div>
-      <h1 class="mb-2 font-semibold">Editing Hotkeys</h1>
+      <h1 class="mb-2 font-semibold">Editor Hotkeys</h1>
       <ul>
         {#each editorHotkeys as s (s.id)}
           {#if !s.hidden}

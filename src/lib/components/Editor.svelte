@@ -1,3 +1,4 @@
+<!-- Editor.svelte -->
 <script module>
   import emojiList from "../data/emoji.json";
 </script>
@@ -39,6 +40,7 @@
     getActiveFileHandle,
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
+  import type { Component } from "svelte";
   import type { ToolbarItem } from "$lib/types";
   import {
     Bold,
@@ -54,6 +56,7 @@
     CheckSquare,
   } from "lucide-svelte";
   import { welcome } from "../data/welcome";
+  import { getEnabledToolbarItems } from "./modals/Settings.svelte.ts";
 
   // codemirror imports
   import {
@@ -85,7 +88,6 @@
     fullscreen = false,
     defaultMode = "side-by-side",
     placeholder = "Write your markdown here...",
-    toolbarItems = [],
     shortcutModalVisible = $bindable(getShortcutModalVisibility()),
     settingsModalVisible = $bindable(getSettingsModalVisibility()),
   }: {
@@ -95,7 +97,6 @@
     fullscreen?: boolean;
     defaultMode?: EditorMode;
     placeholder?: string;
-    toolbarItems?: Array<ToolbarItem>;
     shortcutModalVisible?: boolean;
     settingsModalVisible?: boolean;
   } = $props();
@@ -125,30 +126,84 @@
   let lastSplitterClick = 0;
 
   const doubleClickThreshold = 300; // in ms since last click
-  const defaultItems = [
-    { id: 0, title: "Bold", icon: Bold, action: () => f.toggleBold(editorView) },
-    { id: 1, title: "Italic", icon: Italic, action: () => f.toggleItalic(editorView) },
-    { id: 2, title: "Heading", icon: Heading, action: () => toggleHeadingCycle(editorView) },
-    { id: 3, title: "List", icon: List, action: () => f.toggleList(editorView) },
-    { id: 4, title: "Ordered List", icon: ListOrdered, action: () => f.toggleOrderedList(editorView) },
-    { id: 10, title: "Checklist", icon: CheckSquare, action: () => f.toggleCheckList(editorView) },
-    { id: 5, title: "Quote", icon: Quote, action: () => f.toggleQuote(editorView) },
-    { id: 6, title: "Code", icon: Code, action: () => f.toggleCodeBlock(editorView) },
-    { id: 7, title: "Link", icon: Link, action: () => f.wrapLink(editorView) },
-    { id: 8, title: "Image", icon: Image, action: () => f.wrapImage(editorView) },
-    { id: 9, title: "Table", icon: Table, action: () => f.insertTable(editorView) },
-  ];
 
-  const finalToolbarItems = $derived(() => {
-    const overridesMap = new Map(toolbarItems.map((item) => [item.id, item]));
+  // Define toolbar actions map - this maps string IDs to their corresponding actions and icons
+  const toolbarActionsMap = {
+    bold: {
+      icon: Bold,
+      action: () => f.toggleBold(editorView),
+      order: 1,
+    },
+    italic: {
+      icon: Italic,
+      action: () => f.toggleItalic(editorView),
+      order: 2,
+    },
+    heading: {
+      icon: Heading,
+      action: () => toggleHeadingCycle(editorView),
+      order: 3,
+    },
+    orderedList: {
+      icon: ListOrdered,
+      action: () => f.toggleOrderedList(editorView),
+      order: 4,
+    },
+    list: {
+      icon: List,
+      action: () => f.toggleList(editorView),
+      order: 5,
+    },
+    checklist: {
+      icon: CheckSquare,
+      action: () => f.toggleCheckList(editorView),
+      order: 6,
+    },
+    link: {
+      icon: Link,
+      action: () => f.wrapLink(editorView),
+      order: 7,
+    },
+    quote: {
+      icon: Quote,
+      action: () => f.toggleQuote(editorView),
+      order: 8,
+    },
+    table: {
+      icon: Table,
+      action: () => f.insertTable(editorView),
+      order: 9,
+    },
+    image: {
+      icon: Image,
+      action: () => f.wrapImage(editorView),
+      order: 10,
+    },
+  };
 
-    return defaultItems
-      .map((defaultItem) => {
-        const override = overridesMap.get(defaultItem.id);
-        const mergedItem = { ...defaultItem, enabled: true, ...override };
-        return mergedItem as ToolbarItem;
+  // Get enabled toolbar items from settings and map them to the toolbar format
+  let finalToolbarItems = $derived(() => {
+    const enabledSettings = getEnabledToolbarItems();
+
+    return enabledSettings
+      .map((settingItem: ToolbarItem) => {
+        const actionConfig = toolbarActionsMap[settingItem.id as keyof typeof toolbarActionsMap];
+        if (!actionConfig) {
+          console.warn(`No action found for toolbar item: ${settingItem.id}`);
+          return null;
+        }
+
+        return {
+          id: settingItem.id,
+          title: settingItem.title,
+          icon: actionConfig.icon as unknown as Component | undefined,
+          action: actionConfig.action,
+          enabled: settingItem.enabled,
+          order: settingItem.order || actionConfig.order,
+        };
       })
-      .filter((item) => item.enabled); // filter out items where `enabled` is explicitly `false`.
+      .filter((item) => item !== null)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
   });
 
   const getView = () => {
