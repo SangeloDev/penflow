@@ -5,7 +5,9 @@ const STORAGE_KEY = "penflow.settings";
 
 const defaults: Options = {
   version: 1,
-  general: { visited: "false", s3: {} },
+  general: {
+    visited: "false",
+  },
 };
 
 // Reactive shared state for the whole app
@@ -36,22 +38,4 @@ export function getFirstVisit() {
 }
 export function setFirstVisit(value: typeof settings.general.visited) {
   settings.general.visited = value;
-}
-
-export function setS3Endpoint(value: typeof settings.general.s3.endpoint) {
-  settings.general.s3.endpoint = value;
-}
-
-export function setS3Bucket(value: typeof settings.general.s3.bucket) {
-  settings.general.s3.bucket = value;
-}
-
-export function setS3Credentials(
-  accessKey: typeof settings.general.s3.accessKey,
-  secretKey: typeof settings.general.s3.secretKey,
-  region: typeof settings.general.s3.region
-) {
-  settings.general.s3.accessKey = accessKey;
-  settings.general.s3.secretKey = secretKey;
-  settings.general.s3.region = region;
 }

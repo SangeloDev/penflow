@@ -73,11 +73,10 @@
   import { highlightSelectionMatches } from "@codemirror/search";
   import twemoji from "@twemoji/api";
   import { darkThemes, lightThemes } from "$lib/codemirror/themes.ts";
-  import { imagePasteDrop } from "$lib/codemirror/uploadS3.ts";
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
-  import { getFirstVisit, setFirstVisit, settings } from "./modals/Settings.svelte.ts";
+  import { getFirstVisit, setFirstVisit } from "./modals/Settings.svelte.ts";
 
   let {
     autosaveId = "my-markdown-editor",
@@ -221,7 +220,6 @@
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         placeholderExtension(placeholder),
         autocompletion({ override: [emojiCompletionSource] }),
-        imagePasteDrop,
         Prec.highest(editorKeymap),
         Prec.default(keymap.of(defaultKeymap)),
         EditorView.lineWrapping,
