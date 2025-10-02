@@ -5,7 +5,7 @@ const STORAGE_KEY = "penflow.settings";
 
 const defaults: Options = {
   version: 1,
-  general: { visited: false, s3AttachmentEndpoint: "" },
+  general: { visited: false, s3: {} },
 };
 
 // Reactive shared state for the whole app
@@ -31,5 +31,15 @@ if (browser) {
 
 // Optional helper updaters for ergonomics
 export function setS3Endpoint(value: string) {
-  settings.general.s3AttachmentEndpoint = value;
+  settings.general.s3.endpoint = value;
+}
+
+export function setS3Bucket(value: string) {
+  settings.general.s3.bucket = value;
+}
+
+export function setS3Credentials(accessKey: string, secretKey: string, region: string) {
+  settings.general.s3.accessKey = accessKey;
+  settings.general.s3.secretKey = secretKey;
+  settings.general.s3.region = region;
 }
