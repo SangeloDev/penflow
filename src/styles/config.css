@@ -71,7 +71,7 @@
 
 @layer utilities {
   .btn {
-    @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1;
+    @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 transition-all;
     @apply hover:backdrop-brightness-95 dark:hover:backdrop-brightness-150;
     @apply aria-pressed:cursor-default aria-pressed:backdrop-brightness-95 dark:aria-pressed:backdrop-brightness-150;
     @apply disabled:cursor-default disabled:opacity-50 disabled:hover:backdrop-brightness-100;
@@ -83,11 +83,11 @@
   }
 
   .btn.btn-outline {
-    @apply border border-gray-500 text-black;
+    @apply border border-gray-500 text-black active:translate-y-0.5;
   }
 
   .btn.btn-primary {
-    @apply bg-primary border-primary text-white hover:opacity-85;
+    @apply bg-primary border-b-3 border-white/30 text-white hover:opacity-85 active:translate-y-0.5;
   }
 
   .btn.btn-primary.btn-outline {
@@ -103,11 +103,13 @@
     @apply border-base-500 focus:border-primary focus:hover:border-primary bg-transparent;
     @apply px-3 py-2 text-sm transition duration-300 hover:border-gray-600 focus:shadow focus:outline-none dark:hover:border-gray-400;
     @apply placeholder-transparent placeholder:transition-all focus:placeholder-gray-400 [&:not(:placeholder-shown)]:placeholder-transparent;
+    @apply disabled:opacity-65;
   }
 
   .label {
     @apply bg-base-100 dark:bg-base-200 absolute top-2 left-2 origin-left transform cursor-text px-1 text-sm transition-all select-none;
     @apply peer-placeholder-shown:top-2 peer-placeholder-shown:scale-100 peer-focus:-top-2 peer-focus:scale-90 peer-focus:text-black/80;
     @apply peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:scale-90 dark:peer-focus:text-white/80;
+    @apply aria-disabled:opacity-65;
   }
 }
