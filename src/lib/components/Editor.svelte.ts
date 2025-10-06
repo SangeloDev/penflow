@@ -226,23 +226,12 @@ export function loadFileContent(
 }
 
 /**
- * Clears the editor view and removes autosaved
- * content. Essentially, this creates a new document.
+ * Clears the editor view content.
+ * Essentially, this creates a new document.
  */
-export function newFile(
-  view: EditorView | undefined | undefined,
-  content: string,
-  autosaveId: string,
-  activeFilename: string | undefined | null,
-  isDirty: boolean
-) {
+export function newFile(view: EditorView | undefined | undefined, isDirty: boolean) {
   if (isDirty && !confirm("You have unsaved changes. Discard them and create a new file?")) {
     return;
-  }
-
-  // remove from localStorage if autosaveId is set
-  if (autosaveId) {
-    localStorage.removeItem(autosaveId);
   }
 
   // reset editor

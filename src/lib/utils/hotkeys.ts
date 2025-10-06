@@ -100,16 +100,9 @@ export type HotkeyContext = {
   cycleEditMode: (mode: EditorMode | undefined, reverse?: boolean) => void;
   saveFile: (content: string, filename?: string) => void;
   openFile: (view: EditorView | undefined) => void;
-  newFile: (
-    view: EditorView | undefined,
-    content: string,
-    autosaveId: string,
-    filename: string | undefined,
-    isDirty: boolean
-  ) => void;
+  newFile: (view: EditorView | undefined, content: string, filename: string | undefined, isDirty: boolean) => void;
   content: string;
   activeFilename?: string;
-  autosaveId: string;
   view?: EditorView;
   getDirtyness: () => boolean;
 };
@@ -156,14 +149,7 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
     id: 6,
     desc: "New File",
     shortcut: "Ctrl+Shift+O",
-    action: () =>
-      context?.newFile(
-        context?.view,
-        context?.content,
-        context?.autosaveId,
-        context?.activeFilename,
-        context?.getDirtyness()
-      ),
+    action: () => context?.newFile(context?.view, context?.content, context?.activeFilename, context?.getDirtyness()),
   },
 ];
 

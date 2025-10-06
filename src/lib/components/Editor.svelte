@@ -68,8 +68,6 @@
   import type { ToolbarItem } from "$lib/types/index.ts";
 
   let {
-    autosaveId = "my-markdown-editor",
-    autosaveDelay = 10000,
     autofocus = true,
     fullscreen = false,
     defaultMode = "side-by-side",
@@ -77,8 +75,6 @@
     shortcutModalVisible = $bindable(getShortcutModalVisibility()),
     settingsModalVisible = $bindable(getSettingsModalVisibility()),
   }: {
-    autosaveId?: string;
-    autosaveDelay?: number;
     autofocus?: boolean;
     fullscreen?: boolean;
     defaultMode?: EditorMode;
@@ -90,7 +86,6 @@
   // States
   let content = $derived(getContent());
   let mode = $derived(getMode());
-  let autosaveTimer: number | null = null;
   let isFullscreen = $state(fullscreen);
   let isDirty = $derived(getDirtyness());
   let activeFilename: string | undefined = $state(getActiveFilename());
@@ -193,10 +188,9 @@
     cycleEditMode: cycleEditMode,
     saveFile: () => saveFile(content, getActiveFilename(), getActiveFileHandle()),
     openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
-    newFile: () => newFile(editorView, content, autosaveId, getActiveFilename(), getDirtyness()),
+    newFile: () => newFile(editorView, getDirtyness()),
     content: getContent(),
     activeFilename: getActiveFilename(),
-    autosaveId,
     view: getView(),
     getDirtyness,
   };
@@ -320,24 +314,6 @@
     }
   });
 
-  // timer for autosave
-  $effect(() => {
-    if (autosaveTimer) {
-      // clean up any previous timer
-      clearInterval(autosaveTimer);
-    }
-    if (autosaveDelay > 0) {
-      autosaveTimer = setInterval(() => {
-        if (isDirty && !isWelcomeMessageActive) {
-          saveToLocalStorage();
-        }
-      }, autosaveDelay);
-    }
-    return () => {
-      if (autosaveTimer) clearInterval(autosaveTimer);
-    };
-  });
-
   function emojiCompletionSource(context: CompletionContext) {
     // match a ':' followed by at least two word characters
     let word = context.matchBefore(/:\w+$/);
@@ -401,40 +377,6 @@
     }
   }
 
-  // autosave
-  function saveToLocalStorage() {
-    if (!autosaveId) return;
-    localStorage.setItem(
-      autosaveId,
-      JSON.stringify({
-        content,
-        activeFilename,
-        timestamp: Date.now(),
-      })
-    );
-  }
-
-  // load content from localStorage (optional, e.g. on mount)
-  function loadFromLocalStorage() {
-    if (!autosaveId) return;
-    const data = localStorage.getItem(autosaveId);
-    if (data) {
-      try {
-        const { content: savedContent, activeFilename: savedFilename } = JSON.parse(data);
-        loadFileContent(
-          editorView,
-          content,
-          activeFilename,
-          savedFilename ?? documentTitle(),
-          savedContent,
-          historyCompartment
-        );
-      } catch (err) {
-        console.error("error loading file content from localStorage: ", err);
-      }
-    }
-  }
-
   let documentTitle = $derived(() => {
     const dirtyIndicator = isDirty ? "• " : "";
     let fileName = getActiveFilename();
@@ -492,10 +434,6 @@
   }
 
   onMount(() => {
-    if (!isFirstVisit) {
-      loadFromLocalStorage();
-    }
-
     globalHotkeyCleanup = globalHotkey(globalHotkeys);
 
     // observe the body tag for class attribute changes
