@@ -84,7 +84,7 @@ body.dark {
 
 @layer utilities {
   .btn {
-    @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 transition-all;
+    @apply flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 transition-all;
     @apply hover:backdrop-brightness-95 dark:hover:backdrop-brightness-150;
     @apply aria-pressed:cursor-default aria-pressed:backdrop-brightness-95 dark:aria-pressed:backdrop-brightness-150;
     @apply disabled:cursor-default disabled:opacity-50 disabled:hover:backdrop-brightness-100;

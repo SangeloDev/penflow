@@ -39,7 +39,7 @@
     max-w-[64rem]
     min-w-full
     -translate-1/2
-    rounded-sm
+    rounded-md
     border
     p-0
     backdrop:bg-black

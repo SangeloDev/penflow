@@ -127,7 +127,7 @@
   prose-code:bg-base-400
   prose-code:py-1
   prose-code:px-2
-  prose-code:rounded-sm
+  prose-code:rounded-md
   prose-code:before:content-none
   prose-code:after:content-none
   prose-code:font-medium
