@@ -22,12 +22,12 @@
 </script>
 
 <label
-  class="relative inline-block h-7 w-[48px] cursor-pointer rounded-full [-webkit-tap-highlight-color:_transparent]"
+  class="relative inline-block h-7 w-[48px] cursor-pointer rounded-md [-webkit-tap-highlight-color:_transparent]"
   class:bg-primary={checked}
   class:bg-base-400={!checked}>
   <input class="peer sr-only" type="checkbox" {id} bind:checked {...props} />
   <span
-    class="absolute inset-y-0 m-1 rounded-full ring-white ring-inset"
+    class="absolute inset-y-0 m-1 rounded-md ring-white ring-inset"
     class:bg-white={checked}
     class:bg-base-400={!checked}
     style="
