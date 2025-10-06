@@ -3,7 +3,6 @@
   import Modal from "$lib/components/Modal.svelte";
   import Settings from "$lib/components/modals/Settings.svelte";
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
-  import type { ToolbarItem } from "$lib/types";
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
   import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/utils/hotkeys";
   import {
@@ -12,20 +11,6 @@
     getSettingsModalVisibility,
     setSettingsModalVisibility,
   } from "$lib/components/Editor.svelte.ts";
-  import { getEnabledToolbarItems } from "$lib/components/modals/Settings.svelte.ts";
-
-  // const items: ToolbarItem[] = [{ id: 9, enabled: false }];
-
-  // Get enabled toolbar items from settings
-  let enabledItems = $derived(getEnabledToolbarItems());
-
-  // Convert to the format expected by your Editor component
-  let toolbarItems = $derived(
-    enabledItems.map((item: ToolbarItem) => ({
-      id: parseInt(item.id) || 0,
-      enabled: item.enabled,
-    }))
-  );
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
