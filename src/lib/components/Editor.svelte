@@ -553,12 +553,6 @@
 
   {#if mode === "edit"}
     <div class="min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
-  {:else if mode === "preview"}
-    <div class="bg-base-150 flex flex-1 justify-center overflow-y-auto p-4">
-      <div class="w-full md:w-[90ch] lg:w-[90ch]">
-        <Preview {content} onContentChange={updateEditorContent} />
-      </div>
-    </div>
   {:else if mode === "side-by-side"}
     <div class="flex flex-1 overflow-hidden">
       <Splitpanes
@@ -578,6 +572,12 @@
           </div>
         </Pane>
       </Splitpanes>
+    </div>
+  {:else if mode === "preview"}
+    <div class="bg-base-150 flex flex-1 justify-center overflow-y-auto p-4">
+      <div class="w-full md:w-[90ch] lg:w-[90ch]">
+        <Preview {content} onContentChange={updateEditorContent} />
+      </div>
     </div>
   {/if}
 
