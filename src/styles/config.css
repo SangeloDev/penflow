@@ -69,6 +69,19 @@
   }
 }
 
+body {
+  accent-color: var(--color-primary);
+}
+
+body.dark {
+  accent-color: var(--color-primary-dark);
+}
+
+[aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed;
+}
+
 @layer utilities {
   .btn {
     @apply flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 transition-all;

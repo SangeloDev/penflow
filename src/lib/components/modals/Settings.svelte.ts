@@ -23,6 +23,11 @@ const defaults: Options = {
       ],
     },
   },
+  appearance: {
+    editor: {
+      wrapping: false,
+    },
+  },
 };
 
 // Helper function to merge toolbar items while preserving user preferences
@@ -67,6 +72,10 @@ if (browser) {
             ),
           },
         },
+        appearance: {
+          ...defaults.appearance,
+          ...parsed.appearance,
+        },
       });
     } catch {
       // ignore bad JSON; keep defaults
@@ -81,6 +90,14 @@ export function getFirstVisit() {
 }
 export function setFirstVisit(value: typeof settings.general.visited) {
   settings.general.visited = value;
+}
+
+export function getLineWrappingEnabled() {
+  return settings.appearance.editor.wrapping;
+}
+
+export function setLineWrappingEnabled(value: typeof settings.appearance.editor.wrapping) {
+  settings.appearance.editor.wrapping = value;
 }
 
 // Helper functions for toolbar management
