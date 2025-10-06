@@ -25,7 +25,7 @@ const defaults: Options = {
   },
   appearance: {
     editor: {
-      wrapping: false,
+      wrapping: true,
     },
   },
 };
