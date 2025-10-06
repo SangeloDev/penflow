@@ -1,10 +1,13 @@
 <script lang="ts">
   import { setMode, mode, type SystemModeValue } from "mode-watcher";
+  import { getLineWrappingEnabled, setLineWrappingEnabled } from "../Settings.svelte.ts";
   import { Sun, Moon, RotateCcw } from "lucide-svelte";
   import SettingsItem from "./SettingsItem.svelte";
+  import ToggleSwitch from "$lib/components/ui/ToggleSwitch.svelte";
 
   let selectedTheme: SystemModeValue | "system" = $state(mode.current);
   let lastTheme: SystemModeValue | "system" = $state(undefined);
+  let lineWrapping: boolean = $derived(getLineWrappingEnabled());
 
   $effect(() => {
     if (selectedTheme !== lastTheme) {
@@ -66,5 +69,19 @@
       <RotateCcw size={16} />
       Reset to system preferences
     </label>
+  </div>
+</SettingsItem>
+
+<SettingsItem>
+  {#snippet title()}Editor{/snippet}
+  {#snippet description()}Configure Editor appearance and behaviour{/snippet}
+
+  <div class="flex items-center gap-4">
+    <ToggleSwitch id="line-wrapping" checked={lineWrapping} onchange={() => setLineWrappingEnabled(!lineWrapping)} />
+
+    <div class="flex flex-col justify-center gap-0">
+      <label class="font-medium" for="line-wrapping">Line Wrapping</label>
+      <label for="line-wrapping">Toggles whether lines in the editor should automatically break</label>
+    </div>
   </div>
 </SettingsItem>

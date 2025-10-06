@@ -41,7 +41,7 @@
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
   import { welcome } from "../data/welcome";
-  import { getEnabledToolbarItems } from "./modals/Settings.svelte.ts";
+  import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
 
   // codemirror imports
   import {
@@ -104,6 +104,7 @@
   let editorContainer: HTMLDivElement | undefined = $state();
   const historyCompartment = new Compartment();
   const themeCompartment = new Compartment();
+  const lineWrappingCompartment = new Compartment();
 
   // panes
   let previewElement: HTMLDivElement | undefined = $state();
@@ -251,7 +252,7 @@
         autocompletion({ override: [emojiCompletionSource] }),
         Prec.highest(editorKeymap),
         Prec.default(keymap.of(defaultKeymap)),
-        EditorView.lineWrapping,
+        lineWrappingCompartment.of(getLineWrappingEnabled() ? EditorView.lineWrapping : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             setContent(update.state.doc.toString());
@@ -297,6 +298,16 @@
     const isDark = uiTheme.current === "dark";
     editorView.dispatch({
       effects: themeCompartment.reconfigure(isDark ? darkThemes : lightThemes),
+    });
+  });
+
+  // line wrapping effect
+  $effect(() => {
+    if (!editorView) return;
+
+    const wrappingEnabled = getLineWrappingEnabled();
+    editorView.dispatch({
+      effects: lineWrappingCompartment.reconfigure(wrappingEnabled ? EditorView.lineWrapping : []),
     });
   });
 
@@ -542,12 +553,6 @@
 
   {#if mode === "edit"}
     <div class="min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
-  {:else if mode === "preview"}
-    <div class="bg-base-150 flex flex-1 justify-center overflow-y-auto p-4">
-      <div class="w-full md:w-[90ch] lg:w-[90ch]">
-        <Preview {content} onContentChange={updateEditorContent} />
-      </div>
-    </div>
   {:else if mode === "side-by-side"}
     <div class="flex flex-1 overflow-hidden">
       <Splitpanes
@@ -567,6 +572,12 @@
           </div>
         </Pane>
       </Splitpanes>
+    </div>
+  {:else if mode === "preview"}
+    <div class="bg-base-150 flex flex-1 justify-center overflow-y-auto p-4">
+      <div class="w-full md:w-[90ch] lg:w-[90ch]">
+        <Preview {content} onContentChange={updateEditorContent} />
+      </div>
     </div>
   {/if}
 

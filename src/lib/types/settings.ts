@@ -8,6 +8,11 @@ interface Options {
       toolbarItems: ToolbarItem[];
     };
   };
+  appearance: {
+    editor: {
+      wrapping: boolean;
+    };
+  };
 }
 
 export type { Options };
