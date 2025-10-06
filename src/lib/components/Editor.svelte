@@ -40,21 +40,6 @@
     getActiveFileHandle,
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
-  import type { Component } from "svelte";
-  import type { ToolbarItem } from "$lib/types";
-  import {
-    Bold,
-    Code,
-    Italic,
-    Link,
-    List,
-    ListOrdered,
-    Quote,
-    Image,
-    Heading,
-    Table,
-    CheckSquare,
-  } from "lucide-svelte";
   import { welcome } from "../data/welcome";
   import { getEnabledToolbarItems } from "./modals/Settings.svelte.ts";
 
@@ -80,6 +65,7 @@
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
   import { getFirstVisit, setFirstVisit } from "./modals/Settings.svelte.ts";
+  import type { ToolbarItem } from "$lib/types/index.ts";
 
   let {
     autosaveId = "my-markdown-editor",
@@ -130,59 +116,47 @@
   // Define toolbar actions map - this maps string IDs to their corresponding actions and icons
   const toolbarActionsMap = {
     bold: {
-      icon: Bold,
       action: () => f.toggleBold(editorView),
-      order: 1,
     },
     italic: {
-      icon: Italic,
       action: () => f.toggleItalic(editorView),
-      order: 2,
     },
     heading: {
-      icon: Heading,
       action: () => toggleHeadingCycle(editorView),
-      order: 3,
     },
     orderedList: {
-      icon: ListOrdered,
       action: () => f.toggleOrderedList(editorView),
-      order: 4,
     },
     list: {
-      icon: List,
       action: () => f.toggleList(editorView),
-      order: 5,
     },
     checklist: {
-      icon: CheckSquare,
       action: () => f.toggleCheckList(editorView),
-      order: 6,
     },
     link: {
-      icon: Link,
       action: () => f.wrapLink(editorView),
-      order: 7,
     },
     quote: {
-      icon: Quote,
       action: () => f.toggleQuote(editorView),
-      order: 8,
     },
     table: {
-      icon: Table,
       action: () => f.insertTable(editorView),
-      order: 9,
     },
     image: {
-      icon: Image,
       action: () => f.wrapImage(editorView),
-      order: 10,
     },
   };
 
+  // check if we're mounted
+  let mounted = $state(false);
+  onMount(() => {
+    mounted = true;
+  });
+
   // Get enabled toolbar items from settings and map them to the toolbar format
   let finalToolbarItems = $derived(() => {
+    if (!mounted) return []; // do not render icons until we're mounted
+
     const enabledSettings = getEnabledToolbarItems();
 
     return enabledSettings
@@ -196,10 +170,10 @@
         return {
           id: settingItem.id,
           title: settingItem.title,
-          icon: actionConfig.icon as unknown as Component | undefined,
+          // icon: actionConfig.icon as unknown as Component | undefined,
           action: actionConfig.action,
           enabled: settingItem.enabled,
-          order: settingItem.order || actionConfig.order,
+          order: settingItem.order,
         };
       })
       .filter((item) => item !== null)

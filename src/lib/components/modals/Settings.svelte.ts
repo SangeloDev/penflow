@@ -28,11 +28,20 @@ const defaults: Options = {
 // Helper function to merge toolbar items while preserving user preferences
 function mergeToolbarItems(defaultItems: ToolbarItem[], userItems: ToolbarItem[]): ToolbarItem[] {
   const userItemsMap = new Map(userItems.map((item) => [item.id, item]));
+  const defaultItemsMap = new Map(defaultItems.map((item) => [item.id, item]));
 
-  return defaultItems.map((defaultItem) => {
-    const userItem = userItemsMap.get(defaultItem.id);
-    return userItem ? { ...defaultItem, ...userItem } : defaultItem;
+  const result = userItems.map((userItem) => {
+    const defaultItem = defaultItemsMap.get(userItem.id);
+    return defaultItem ? { ...defaultItem, ...userItem } : userItem;
   });
+
+  defaultItems.forEach((defaultItem) => {
+    if (!userItemsMap.has(defaultItem.id)) {
+      result.push(defaultItem);
+    }
+  });
+
+  return result;
 }
 
 // Reactive shared state for the whole app
@@ -75,6 +84,10 @@ export function setFirstVisit(value: typeof settings.general.visited) {
 }
 
 // Helper functions for toolbar management
+export function getToolbarItems() {
+  return settings.general.editor.toolbarItems;
+}
+
 export function getEnabledToolbarItems(): ToolbarItem[] {
   return settings.general.editor.toolbarItems
     .filter((item) => item.enabled)
@@ -86,4 +99,15 @@ export function toggleToolbarItem(itemId: string, enabled: boolean) {
   if (item) {
     item.enabled = enabled;
   }
+}
+
+export function updateToolbarItemOrder(itemId: string, order: number) {
+  const item = settings.general.editor.toolbarItems.find((item) => item.id === itemId);
+  if (item) {
+    item.order = order;
+  }
+}
+
+export function resetToolbarItems() {
+  settings.general.editor.toolbarItems = defaults.general.editor.toolbarItems;
 }

@@ -42,7 +42,6 @@
 <Editor
   placeholder="Let your mind flow..."
   fullscreen={true}
-  {toolbarItems}
   autosaveDelay={2000}
   autosaveId="penflow-app-website"
   bind:shortcutModalVisible />

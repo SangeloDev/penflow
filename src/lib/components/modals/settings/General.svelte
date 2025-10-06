@@ -1,64 +1,74 @@
 <script lang="ts">
   import type { ToolbarItem } from "$lib/types";
-  import { settings, toggleToolbarItem } from "../Settings.svelte.ts";
+  import { getIcon } from "$lib/utils/toolbarIcons.ts";
+  import { RotateCcw } from "lucide-svelte";
+  import { toggleToolbarItem, getToolbarItems, updateToolbarItemOrder, resetToolbarItems } from "../Settings.svelte.ts";
   import SettingsItem from "./SettingsItem.svelte";
-  import {
-    Bold,
-    Code,
-    Italic,
-    Link,
-    List,
-    ListOrdered,
-    Quote,
-    Image,
-    Heading,
-    Table,
-    CheckSquare,
-  } from "lucide-svelte";
+  import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
+  import { onMount } from "svelte";
 
-  let toolbarItems: ToolbarItem[] = $derived(settings.general.editor.toolbarItems);
+  let mounted = $state(false);
+  onMount(() => {
+    mounted = true;
+  });
 
-  // Create the same icon mapping as in the editor
-  const iconMap: Record<string, any> = {
-    bold: Bold,
-    italic: Italic,
-    heading: Heading,
-    orderedList: ListOrdered,
-    list: List,
-    checklist: CheckSquare,
-    link: Link,
-    quote: Quote,
-    table: Table,
-    image: Image,
-    code: Code,
-  };
+  let toolbarItems: ToolbarItem[] = $derived.by(() => {
+    if (!mounted) return [];
+    return getToolbarItems();
+  });
 
   function handleToggle(itemId: string, event: Event) {
     const target = event.target as HTMLInputElement;
     toggleToolbarItem(itemId, target.checked);
   }
 
-  function getIcon(itemId: string): any | undefined {
-    return iconMap[itemId];
+  // Simplified drop handling for reordering
+  function handleDrop(state: DragDropState<ToolbarItem>) {
+    const { draggedItem, targetContainer } = state;
+    const dragIndex = toolbarItems.findIndex((item: ToolbarItem) => item.id === draggedItem.id);
+    const dropIndex = parseInt(targetContainer ?? "0");
+
+    if (dragIndex !== -1 && !isNaN(dropIndex)) {
+      const [item] = toolbarItems.splice(dragIndex, 1);
+      toolbarItems.splice(dropIndex, 0, item);
+
+      toolbarItems.forEach((item, index) => {
+        updateToolbarItemOrder(item.id, index);
+      });
+    }
   }
 </script>
 
 <SettingsItem>
   {#snippet title()}Toolbar Items{/snippet}
-  {#snippet description()}Configure the items in your toolbar{/snippet}
+  {#snippet description()}Configure and reorder the items in your toolbar{/snippet}
 
   <div class="space-y-3">
-    <div class="flex gap-4">
-      {#each toolbarItems as item (item.id)}
-        <label title={item.title} class="btn btn-square {item.enabled ? 'btn-primary' : 'btn-outline'}">
+    <!-- Single droppable container -->
+    <div class="flex flex-wrap gap-4">
+      {#each toolbarItems as item, index (item.id)}
+        <label
+          title={item.title}
+          class="btn btn-square size-10 {item.enabled
+            ? 'btn-primary'
+            : 'btn-outline'} cursor-grab active:cursor-grabbing"
+          use:draggable={{ container: index.toString(), dragData: item }}
+          use:droppable={{
+            container: index.toString(),
+            callbacks: { onDrop: handleDrop },
+          }}>
           <input type="checkbox" class="hidden" checked={item.enabled} onchange={(e) => handleToggle(item.id, e)} />
 
-          {#if getIcon(item.id)}
+          {#if item}
             {@const IconComponent = getIcon(item.id)}
-            <IconComponent size={16} class="text-base-600 dark:text-base-400" />
+            <IconComponent size={16} class="pointer-events-none" />
           {/if}
         </label>
       {/each}
     </div>
   </div>
+  <button class="btn flex w-fit items-center gap-1 select-none" onclick={resetToolbarItems}>
+    <RotateCcw size={16} />
+    Reset to default
+  </button>
 </SettingsItem>

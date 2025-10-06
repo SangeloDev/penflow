@@ -4,6 +4,7 @@
   import Eye from "lucide-svelte/icons/eye";
   import Columns from "lucide-svelte/icons/columns-2";
   import type { ToolbarItem } from "$lib/types";
+  import { getIcon } from "$lib/utils/toolbarIcons";
 
   // exports
   let {
@@ -20,7 +21,7 @@
 <div class="border-base-400 bg-base-200 flex items-center gap-2 border-b p-2">
   {#each toolbarItems as item (item.id)}
     {#if item}
-      {@const Component = item.icon}
+      {@const Component = getIcon(item.id)}
       <button
         disabled={mode === "preview"}
         class="btn btn-square"

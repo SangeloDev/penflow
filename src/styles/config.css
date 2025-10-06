@@ -79,11 +79,11 @@
   }
 
   .btn-square {
-    @apply p-2;
+    @apply justify-center p-2;
   }
 
   .btn.btn-outline {
-    @apply border border-gray-500 text-black active:translate-y-0.5;
+    @apply border border-gray-500 text-black active:translate-y-0.5 dark:text-white;
   }
 
   .btn.btn-primary {
