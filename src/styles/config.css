@@ -130,12 +130,16 @@ body.dark {
   }
 
   .card {
-    @apply bg-base-100 dark:bg-base-200 border-base-400 cursor-pointer rounded-md border p-4;
+    @apply bg-base-100 dark:bg-base-200 border-base-400 rounded-md border p-4;
     /*@apply transition-shadow hover:shadow-md dark:hover:shadow-none;*/
-    @apply hover:border-base-500 transition-all duration-300;
   }
 
-  .card.card-primary {
+  .card.card-link {
+    @apply hover:border-base-500 transition-all duration-300;
+    @apply cursor-pointer;
+  }
+
+  .card.card-link.card-primary {
     @apply hover:border-primary hover:text-primary;
   }
 }

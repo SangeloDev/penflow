@@ -66,7 +66,7 @@
     <h1 class="text-3xl font-bold">Library</h1>
     <div class="relative mt-3 mb-4">
       <input class="input peer" id="search" type="text" placeholder=" " />
-      <label for="search" class="label peer">Search library...</label>
+      <label for="search" class="label peer dark:!bg-base-150">Search library...</label>
     </div>
     <hr class="text-base-400" />
   </div>
@@ -85,11 +85,13 @@
         <h2 class="text-xl">Your notes ({Object.keys(files).length})</h2>
       </div>
       {#if Object.keys(files).length === 0}
-        <p class="p-12 pb-4 text-center italic opacity-50">No notes yet. Create your first note now!</p>
-        <button class="btn btn-primary mx-auto pb-12" onclick={onNewFile}>Create note</button>
+        <div class="card p-12">
+          <p class="pb-4 text-center italic opacity-50">No notes yet. Create your first note now!</p>
+          <button class="btn btn-primary mx-auto pb-12" onclick={onNewFile}>Create note</button>
+        </div>
       {:else}
         <div class="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6">
-          <button class="card card-primary" onclick={onNewFile}>
+          <button class="card card-link card-primary" onclick={onNewFile}>
             <div class="flex w-full items-center justify-center gap-2 text-xl"><Plus size={24} /> New Note</div>
           </button>
           {#each Object.entries(files) as [id, file] (id)}
@@ -102,7 +104,7 @@
                   onOpenFile(id);
                 }
               }}
-              class="card relative flex h-32 flex-col gap-2"
+              class="card card-link relative flex h-32 flex-col gap-2"
               onclick={() => onOpenFile(id)}>
               <div class="mt-auto">
                 <h3 class="text-center">{generateDocumentTitle(file.content) || "Untitled"}</h3>

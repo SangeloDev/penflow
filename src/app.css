@@ -3,6 +3,11 @@
 
 @import "./styles/config.css";
 
+body,
+main {
+  @apply dark:bg-base-150;
+}
+
 ::selection {
   @apply bg-selection;
 }
