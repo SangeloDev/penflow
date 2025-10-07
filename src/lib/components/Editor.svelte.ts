@@ -287,19 +287,17 @@ export async function exportFile(content: string, activeFilename: string | undef
 
   // save as
   const baseFilename = activeFilename ?? generateFilename(content);
-  if ("showSaveFilePicker" in window) {
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
 
-    link.href = url;
-    link.download = baseFilename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  link.href = url;
+  link.download = baseFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
-    URL.revokeObjectURL(url);
-    setActiveFilename(baseFilename);
-    setDirty(false);
-  }
+  URL.revokeObjectURL(url);
+  setActiveFilename(baseFilename);
+  setDirty(false);
 }
