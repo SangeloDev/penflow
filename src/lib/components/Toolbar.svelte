@@ -3,6 +3,7 @@
   import Pencil from "lucide-svelte/icons/pencil";
   import Eye from "lucide-svelte/icons/eye";
   import Columns from "lucide-svelte/icons/columns-2";
+  import Library from "lucide-svelte/icons/library";
   import type { ToolbarItem } from "$lib/types";
   import { getIcon } from "$lib/utils/toolbarIcons";
 
@@ -11,14 +12,20 @@
     mode,
     onModeChange,
     toolbarItems,
+    onBack,
   }: {
     mode: "edit" | "preview" | "side-by-side";
     onModeChange: any;
     toolbarItems: Array<ToolbarItem>;
+    onBack: () => void;
   } = $props();
 </script>
 
 <div class="border-base-400 bg-base-200 flex items-center gap-2 border-b p-2">
+  <button class="btn btn-square" onclick={onBack} title="Back to Library">
+    <Library size={20} />
+  </button>
+
   {#each toolbarItems as item (item.id)}
     {#if item}
       {@const Component = getIcon(item.id)}

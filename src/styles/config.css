@@ -4,6 +4,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --base-font: var(--color-black);
   --base-100: var(--color-white);
   --base-150: var(--color-gray-50);
   --base-200: var(--color-gray-100);
@@ -20,6 +21,7 @@
 }
 
 .dark {
+  --base-font: var(--color-white);
   --base-100: var(--color-gray-950);
   --base-150: var(--color-gray-900);
   --base-200: var(--color-gray-800);
@@ -34,6 +36,7 @@
 }
 
 @theme inline {
+  --color-base-font: var(--base-font);
   --color-base-100: var(--base-100);
   --color-base-150: var(--base-150);
   --color-base-200: var(--base-200);
@@ -113,8 +116,8 @@ body.dark {
 
   .input {
     @apply w-full rounded-md border;
-    @apply border-base-500 focus:border-primary focus:hover:border-primary bg-transparent;
-    @apply px-3 py-2 text-sm transition duration-300 hover:border-gray-600 focus:shadow focus:outline-none dark:hover:border-gray-400;
+    @apply border-base-400 focus:border-primary focus:hover:border-primary bg-transparent;
+    @apply px-3 py-2 text-sm transition duration-300 hover:border-gray-500 focus:shadow focus:outline-none;
     @apply placeholder-transparent placeholder:transition-all focus:placeholder-gray-400 [&:not(:placeholder-shown)]:placeholder-transparent;
     @apply disabled:opacity-65;
   }
@@ -124,5 +127,15 @@ body.dark {
     @apply peer-placeholder-shown:top-2 peer-placeholder-shown:scale-100 peer-focus:-top-2 peer-focus:scale-90 peer-focus:text-black/80;
     @apply peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:scale-90 dark:peer-focus:text-white/80;
     @apply aria-disabled:opacity-65;
+  }
+
+  .card {
+    @apply bg-base-100 dark:bg-base-200 border-base-400 cursor-pointer rounded-md border p-4;
+    /*@apply transition-shadow hover:shadow-md dark:hover:shadow-none;*/
+    @apply hover:border-base-500 transition-all duration-300;
+  }
+
+  .card.card-primary {
+    @apply hover:border-primary hover:text-primary;
   }
 }

@@ -60,6 +60,7 @@
     "@thisux/sveltednd": "^0.0.20",
     "@twemoji/api": "^16.0.1",
     "@types/wicg-file-system-access": "^2023.10.6",
+    "date-fns": "^4.1.0",
     "highlight.js": "^11.11.1",
     "isomorphic-dompurify": "^2.28.0",
     "lucide-svelte": "^0.515.0",
@@ -70,6 +71,7 @@
     "mode-watcher": "^1.1.0",
     "svelte-splitpanes": "^8.0.9",
     "thememirror": "^2.0.1",
+    "tinybase": "^6.7.0",
     "vite-plugin-commit-hash": "^1.0.8"
   },
   "pnpm": {
@@ -83,5 +85,5 @@
     "sharp": "0.32.6",
     "sharp-ico": "0.1.5"
   },
-  "packageManager": "pnpm@10.15.1"
+  "packageManager": "pnpm@10.18.1+sha512.77a884a165cbba2d8d1c19e3b4880eee6d2fcabd0d879121e282196b80042351d5eb3ca0935fa599da1dc51265cc68816ad2bddd2a2de5ea9fdf92adbec7cd34"
 }

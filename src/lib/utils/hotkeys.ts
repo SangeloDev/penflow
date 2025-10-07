@@ -98,13 +98,15 @@ export type HotkeyContext = {
   setShortcutModalVisibility: (arg0: boolean) => void;
   getMode: () => EditorMode | undefined;
   cycleEditMode: (mode: EditorMode | undefined, reverse?: boolean) => void;
-  saveFile: (content: string, filename?: string) => void;
+  saveFile: () => void;
+  exportFile: (content: string, filename?: string) => void;
   openFile: (view: EditorView | undefined) => void;
-  newFile: (view: EditorView | undefined, content: string, filename: string | undefined, isDirty: boolean) => void;
+  newFile: (view: EditorView | undefined | undefined, onNewFile: any, isDirty: boolean) => void;
   content: string;
   activeFilename?: string;
   view?: EditorView;
   getDirtyness: () => boolean;
+  onNewFile: any;
 };
 
 export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[] => [
@@ -137,19 +139,25 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
     id: 4,
     desc: "Save File",
     shortcut: "Ctrl+S",
-    action: () => context?.saveFile(context?.content, context?.activeFilename),
+    action: () => context?.saveFile(),
   },
   {
     id: 5,
+    desc: "Export File",
+    shortcut: "Ctrl+Shift+S",
+    action: () => context?.exportFile(context?.content, context?.activeFilename),
+  },
+  {
+    id: 6,
     desc: "Open File",
     shortcut: "Ctrl+O",
     action: () => context?.openFile(context?.view),
   },
   {
-    id: 6,
+    id: 7,
     desc: "New File",
     shortcut: "Ctrl+Shift+O",
-    action: () => context?.newFile(context?.view, context?.content, context?.activeFilename, context?.getDirtyness()),
+    action: () => context?.newFile(context?.view, context?.onNewFile, context?.getDirtyness()),
   },
 ];
 

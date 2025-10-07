@@ -36,12 +36,13 @@
     getSettingsModalVisibility,
     setSettingsModalVisibility,
     getActiveFilename,
-    setActiveFileHandle,
-    getActiveFileHandle,
+    exportFile,
+    generateDocumentTitle,
   } from "./Editor.svelte.ts";
   import { onDestroy, onMount, untrack } from "svelte";
   import { welcome } from "../data/welcome";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
+  import { debounce } from "$lib/utils/debounce";
 
   // codemirror imports
   import {
@@ -74,14 +75,20 @@
     placeholder = "Write your markdown here...",
     shortcutModalVisible = $bindable(getShortcutModalVisibility()),
     settingsModalVisible = $bindable(getSettingsModalVisibility()),
-  }: {
+    onNewFile,
+    onSave,
+    onBack,
+  } = $props<{
     autofocus?: boolean;
     fullscreen?: boolean;
     defaultMode?: EditorMode;
     placeholder?: string;
     shortcutModalVisible?: boolean;
     settingsModalVisible?: boolean;
-  } = $props();
+    onNewFile: () => void;
+    onSave: (content: string) => void;
+    onBack: () => void;
+  }>();
 
   // States
   let content = $derived(getContent());
@@ -108,6 +115,8 @@
   let lastSplitterClick = 0;
 
   const doubleClickThreshold = 300; // in ms since last click
+
+  const debouncedSave = debounce(onSave, 1000);
 
   // Define toolbar actions map - this maps string IDs to their corresponding actions and icons
   const toolbarActionsMap = {
@@ -186,13 +195,15 @@
     setShortcutModalVisibility,
     getMode,
     cycleEditMode: cycleEditMode,
-    saveFile: () => saveFile(content, getActiveFilename(), getActiveFileHandle()),
+    saveFile: () => saveFile(onSave, content),
+    exportFile: () => exportFile(content, getActiveFilename()),
     openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
-    newFile: () => newFile(editorView, getDirtyness()),
+    newFile: () => newFile(editorView, onNewFile, getDirtyness()),
     content: getContent(),
     activeFilename: getActiveFilename(),
     view: getView(),
     getDirtyness,
+    onNewFile,
   };
 
   const hotkeys = createGlobalHotkeys(hotkeyContext);
@@ -249,8 +260,10 @@
         lineWrappingCompartment.of(getLineWrappingEnabled() ? EditorView.lineWrapping : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            setContent(update.state.doc.toString());
+            const newContent = update.state.doc.toString();
+            setContent(newContent);
             setDirty(true);
+            debouncedSave(newContent);
             // activate message saving on edit
             if (isWelcomeMessageActive) {
               isWelcomeMessageActive = false;
@@ -357,7 +370,6 @@
         const [fileHandle] = await window.showOpenFilePicker({
           types: [{ description: "Markdown", accept: { "text/markdown": [".md", ".markdown"] } }],
         });
-        setActiveFileHandle(fileHandle);
         const file = await fileHandle.getFile();
         const newContent = await file.text();
         loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
@@ -367,8 +379,6 @@
         }
       }
     } else {
-      // no need to store file handle in fallback mode
-      setActiveFileHandle(undefined);
       try {
         fileInput.click();
       } catch {
@@ -470,7 +480,7 @@
   {#if isWelcomeMessageActive}
     <title>Welcome to Penflow!</title>
   {:else}
-    <title>{documentTitle()} - Penflow</title>
+    <title>{generateDocumentTitle(content)} - Penflow</title>
   {/if}
 </svelte:head>
 
@@ -487,7 +497,7 @@
     flex w-full flex-col rounded-lg bg-white
     ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full shadow-none" : "mx-auto max-h-fit max-w-3xl shadow"}
   `}>
-  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} />
+  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} {onBack} />
 
   {#if mode === "edit"}
     <div class="min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
