@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { MarkdownFile } from "$lib/types";
-  import { Clock, Eye, Paperclip, PencilIcon, Plus, Trash2Icon, X } from "lucide-svelte";
+  import { Clock, Eye, Paperclip, PencilIcon, Plus, Settings, Trash2Icon, X } from "lucide-svelte";
   import Modal from "./Modal.svelte";
   import { generateDocumentTitle } from "./Editor.svelte.ts";
   import { formatDistanceStrict } from "date-fns";
+  import { setSettingsModalVisibility } from "./Editor.svelte.ts";
 
   let {
     files,
@@ -57,8 +58,13 @@
 
 <div class="border-base-400 bg-base-200 flex items-center gap-2 border-b p-2 select-none">
   <div class="flex items-center gap-1">
-    <img draggable={false} class="ml-1 size-10" src="/assets/icon/hd_hi.ico" alt="logo" />
+    <img draggable={false} class="ml-1 size-8" src="/assets/icon/hd_hi.ico" alt="logo" />
     <span class="py-1 align-middle text-xl font-bold">penflow</span>
+  </div>
+  <div class="ml-auto flex items-center gap-1">
+    <button class="btn btn-square" onclick={() => setSettingsModalVisibility(true)} title="Settings">
+      <Settings size={20} />
+    </button>
   </div>
 </div>
 <div class="text-base-font mx-auto max-w-[1200px] p-8">
