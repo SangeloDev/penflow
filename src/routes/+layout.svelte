@@ -18,7 +18,14 @@
   let webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 
   onMount(() => {
+    let cleanup: { destroy: () => void } | undefined;
+
     const unsubscribe = hotkeyContext.subscribe((context) => {
+      // If there's an existing hotkey listener, destroy it before creating a new one.
+      if (cleanup) {
+        cleanup.destroy();
+      }
+
       const hotkeys = createGlobalHotkeys(
         context || {
           setSettingsModalVisibility: setSettingsModalVisibility,
@@ -37,15 +44,15 @@
         }
       );
       const globalHotkeys = constructedGlobalHotkeys(hotkeys);
-      const cleanup = globalHotkey(globalHotkeys);
-
-      return () => {
-        cleanup.destroy();
-      };
+      cleanup = globalHotkey(globalHotkeys);
     });
 
     return () => {
+      // When the component is destroyed, unsubscribe from the store and clean up the last listener.
       unsubscribe();
+      if (cleanup) {
+        cleanup.destroy();
+      }
     };
   });
 </script>
