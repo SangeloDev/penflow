@@ -33,7 +33,8 @@
         disabled={mode === "preview"}
         class="btn btn-square"
         onclick={item.action as () => void}
-        title={item.title}>
+        title={item.title}
+      >
         <Component size={20} />
       </button>
     {/if}
@@ -47,14 +48,16 @@
     class="btn btn-square"
     onclick={() => onModeChange("side-by-side")}
     aria-pressed={mode === "side-by-side"}
-    title="Side by Side">
+    title="Side by Side"
+  >
     <Columns size={20} />
   </button>
   <button
     class="btn btn-square"
     onclick={() => onModeChange("preview")}
     aria-pressed={mode === "preview"}
-    title="Preview">
+    title="Preview"
+  >
     <Eye size={20} />
   </button>
 </div>

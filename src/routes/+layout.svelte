@@ -3,12 +3,51 @@
   import { pwaInfo } from "virtual:pwa-info";
   import { pwaAssetsHead } from "virtual:pwa-assets/head";
   import { ModeWatcher } from "mode-watcher";
+  import { onMount } from "svelte";
+  import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/utils/hotkeys";
+  import { hotkeyContext } from "$lib/store/hotkeys";
+  import {
+    setSettingsModalVisibility,
+    setShortcutModalVisibility,
+  } from "$lib/components/Editor.svelte.ts";
 
   interface Props {
     children?: import("svelte").Snippet;
   }
   let { children }: Props = $props();
   let webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
+
+  onMount(() => {
+    const unsubscribe = hotkeyContext.subscribe((context) => {
+      const hotkeys = createGlobalHotkeys(
+        context || {
+          setSettingsModalVisibility: setSettingsModalVisibility,
+          setShortcutModalVisibility: setShortcutModalVisibility,
+          getMode: () => undefined,
+          cycleEditMode: () => {},
+          saveFile: () => {},
+          exportFile: () => {},
+          openFile: () => {},
+          newFile: () => {},
+          content: "",
+          activeFilename: undefined,
+          view: undefined,
+          getDirtyness: () => false,
+          onNewFile: () => {},
+        }
+      );
+      const globalHotkeys = constructedGlobalHotkeys(hotkeys);
+      const cleanup = globalHotkey(globalHotkeys);
+
+      return () => {
+        cleanup.destroy();
+      };
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  });
 </script>
 
 <svelte:head>

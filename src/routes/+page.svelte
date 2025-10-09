@@ -113,7 +113,8 @@
   <meta name="title" content="Penflow – A distraction-free Markdown editor." />
   <meta
     name="description"
-    content="A simple, clean, distraction-free and open-source Markdown Editor webapp that works offline." />
+    content="A simple, clean, distraction-free and open-source Markdown Editor webapp that works offline."
+  />
 </svelte:head>
 
 {#if isEditorVisible}
@@ -123,14 +124,16 @@
     bind:shortcutModalVisible
     onNewFile={() => showEditor(null)}
     onSave={handleSave}
-    onBack={showLibrary} />
+    onBack={showLibrary}
+  />
 {:else}
   <Library
     files={library}
     onNewFile={() => showEditor(null)}
     onOpenFile={showEditor}
     onDeleteFile={handleDelete}
-    {isLoading} />
+    {isLoading}
+  />
 {/if}
 
 <Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
@@ -181,7 +184,8 @@
       class="flex items-center gap-2 hover:[&>span]:underline"
       href="https://www.markdownguide.org/basic-syntax/"
       target="_blank"
-      rel="noopener noreferrer">
+      rel="noopener noreferrer"
+    >
       <Notebook size={18} />
       <span class="text-link">Need help with Markdown?</span>
     </a>

@@ -10,13 +10,8 @@
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import * as f from "$lib/utils/formattingActions";
   import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-  import {
-    globalHotkey,
-    editorKeymap,
-    constructedGlobalHotkeys,
-    createGlobalHotkeys,
-    type HotkeyContext,
-  } from "$lib/utils/hotkeys";
+  import { editorKeymap, type HotkeyContext } from "$lib/utils/hotkeys";
+  import { hotkeyContext } from "$lib/store/hotkeys";
   import {
     type EditorMode,
     getDirtyness,
@@ -190,7 +185,7 @@
   };
 
   // hotkeys
-  const hotkeyContext: HotkeyContext = {
+  const hotkeyContextValue: HotkeyContext = {
     setSettingsModalVisibility,
     setShortcutModalVisibility,
     getMode,
@@ -205,9 +200,6 @@
     getDirtyness,
     onNewFile,
   };
-
-  const hotkeys = createGlobalHotkeys(hotkeyContext);
-  const globalHotkeys = constructedGlobalHotkeys(hotkeys);
 
   // check if this is the first visit or not
   const isFirstVisit = typeof window !== "undefined" && firstVisit === "false";
@@ -399,8 +391,6 @@
     return `${dirtyIndicator}${fileName}`;
   });
 
-  let globalHotkeyCleanup: { destroy: () => void };
-
   // Autoscroll
   function syncScroll(source: "editor" | "preview") {
     if (!editorView || !previewElement) return;
@@ -444,7 +434,7 @@
   }
 
   onMount(() => {
-    globalHotkeyCleanup = globalHotkey(globalHotkeys);
+    hotkeyContext.set(hotkeyContextValue);
 
     // observe the body tag for class attribute changes
     const observer = new MutationObserver((mutations) => {
@@ -465,13 +455,12 @@
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      globalHotkeyCleanup?.destroy();
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   });
 
   onDestroy(() => {
-    globalHotkeyCleanup?.destroy();
+    hotkeyContext.set(undefined);
     editorView?.destroy();
   });
 </script>
@@ -489,14 +478,16 @@
   bind:this={fileInput}
   onchange={() => handleFileSelect(event, editorView, activeFilename, content, historyCompartment)}
   style="display: none;"
-  accept=".md, .markdown, text/markdown" />
+  accept=".md, .markdown, text/markdown"
+/>
 
 <div
   class:fullscreen={isFullscreen}
   class={`
     flex w-full flex-col rounded-lg bg-white
     ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full shadow-none" : "mx-auto max-h-fit max-w-3xl shadow"}
-  `}>
+  `}
+>
   <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} {onBack} />
 
   {#if mode === "edit"}
@@ -507,7 +498,8 @@
         class="default-theme"
         theme={uiTheme.current === "dark" ? "dark-theme" : "default-theme"}
         dblClickSplitter={false}
-        on:splitter-click={handleSplitterClick}>
+        on:splitter-click={handleSplitterClick}
+      >
         <Pane bind:size={editorPaneSize} minSize={20}>
           <div class="h-full w-full" bind:this={editorContainer}></div>
         </Pane>
@@ -515,7 +507,8 @@
           <div
             class="bg-base-150 h-full w-full overflow-y-auto p-4"
             bind:this={previewElement}
-            onscroll={() => syncScroll("preview")}>
+            onscroll={() => syncScroll("preview")}
+          >
             <Preview {content} onContentChange={updateEditorContent} />
           </div>
         </Pane>

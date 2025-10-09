@@ -23,7 +23,8 @@
       class="text-link"
       target="_blank"
       rel="noopener noreferrer"
-      href="https://github.com/SangeloDev/penflow">
+      href="https://github.com/SangeloDev/penflow"
+    >
       GitHub
     </a>
   </span>

@@ -56,7 +56,8 @@
           use:droppable={{
             container: index.toString(),
             callbacks: { onDrop: handleDrop },
-          }}>
+          }}
+        >
           <input type="checkbox" class="hidden" checked={item.enabled} onchange={(e) => handleToggle(item.id, e)} />
 
           {#if item}

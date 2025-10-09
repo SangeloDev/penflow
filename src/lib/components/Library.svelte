@@ -80,8 +80,8 @@
   {#if isLoading}
     <p class="flex items-center gap-2">
       <span
-        class="border-b-base-font border-r-base-font block size-4 animate-spin rounded-full border-2 border-transparent">
-      </span>
+        class="border-b-base-font border-r-base-font block size-4 animate-spin rounded-full border-2 border-transparent"
+      ></span>
       Loading library...
     </p>
   {:else}
@@ -111,7 +111,8 @@
                 }
               }}
               class="card card-link relative flex h-32 flex-col gap-2"
-              onclick={() => onOpenFile(id)}>
+              onclick={() => onOpenFile(id)}
+            >
               <div class="mt-auto">
                 <h3 class="text-center">{generateDocumentTitle(file.content) || "Untitled"}</h3>
                 <button
@@ -120,7 +121,8 @@
                     handleDeleteClick(id);
                   }}
                   class="btn btn-square absolute top-0 right-0"
-                  title="Delete">
+                  title="Delete"
+                >
                   <X size={16} />
                 </button>
               </div>

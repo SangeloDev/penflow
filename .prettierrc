@@ -1,7 +1,6 @@
 {
   "htmlWhitespaceSensitivity": "ignore",
   "endOfLine": "lf",
-  "insertFinalNewline": true,
   "useTabs": false,
   "tabWidth": 2,
   "printWidth": 120,
@@ -14,14 +13,13 @@
   "svelteSortOrder": "options-scripts-markup-styles",
   "svelteStrictMode": false,
   "svelteIndentScriptAndStyle": true,
-  "svelteBracketNewLine": false,
-	"plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
-	"overrides": [
-		{
-			"files": "*.svelte",
-			"options": {
-				"parser": "svelte"
-			}
-		}
-	]
+  "plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
+  "overrides": [
+    {
+      "files": "*.svelte",
+      "options": {
+        "parser": "svelte"
+      }
+    }
+  ]
 }
