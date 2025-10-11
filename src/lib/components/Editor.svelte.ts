@@ -11,7 +11,10 @@ let mode: EditorMode = $state("edit");
 let content: string = $state("");
 let shortcutModalVisible = $state(false);
 let settingsModalVisible = $state(false);
-let activeFilename: string | undefined = $state(undefined);
+import { writable, get } from "svelte/store";
+
+export const activeFilename = writable<string | undefined>(undefined);
+export const activeFileId = writable<string | null | undefined>(undefined);
 let isDirty = $state(false);
 
 /**
@@ -29,22 +32,6 @@ export async function setMode(newMode: EditorMode) {
 export function getMode() {
   return mode;
 }
-
-/**
- * Sets the active filename
- * @param filename - new filename
- */
-export const setActiveFilename = (filename: string | undefined) => {
-  activeFilename = filename;
-};
-
-/**
- * Gets the current active filename
- * @returns activeFilename
- */
-export const getActiveFilename = () => {
-  return activeFilename;
-};
 
 /**
  * Gets the visibility of the shortcut modal.
@@ -157,6 +144,7 @@ export function handleFileSelect(
   view: EditorView | undefined,
   activeFilename: string | undefined,
   oldContent: string,
+  fileId: string | null | undefined,
   historyCompartment: Compartment
 ) {
   if (!event) return;
@@ -167,7 +155,7 @@ export function handleFileSelect(
   const reader = new FileReader();
   reader.onload = (e) => {
     const newContent = e.target?.result as string;
-    loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
+    loadFileContent(view, oldContent, file.name, newContent, fileId, historyCompartment);
     if (view) resetUndoHistory(view, historyCompartment);
     setDirty(false);
   };
@@ -188,14 +176,15 @@ export function handleFileSelect(
 export function loadFileContent(
   view: EditorView | undefined,
   content: string,
-  activeFilename: string | undefined,
   fileName: string,
   fileContent: string,
+  fileId: string | null | undefined,
   historyCompartment: Compartment
 ) {
   // update svelte state for preview and other ui elements
   setContent(fileContent);
-  setActiveFilename(fileName);
+  activeFilename.set(fileName);
+  activeFileId.set(fileId);
   setDirty(false);
 
   // directly update the editor view if it exists
@@ -218,7 +207,8 @@ export function newFile(view: EditorView | undefined | undefined, onNewFile: () 
 
   // reset editor
   onNewFile();
-  setActiveFilename(undefined);
+  activeFilename.set(undefined);
+  activeFileId.set(undefined);
   isDirty = false;
 
   // clear the editor view if it exists
@@ -273,20 +263,21 @@ export function generateDocumentTitle(markdownContent: string): string {
 /**
  * Saves the file.
  */
-export async function saveFile(onSave: (content: string) => void, content: string) {
+export async function saveFile(onSave: (content: string) => Promise<void>, content: string) {
   if (!content) return;
-  onSave(content);
+  await onSave(content);
   setDirty(false);
 }
 
 /**
  * Exports the file.
  */
-export async function exportFile(content: string, activeFilename: string | undefined) {
-  if (!content && !activeFilename) return; // Don't save empty, untitled files
+export async function exportFile(content: string) {
+  const activeFile = get(activeFilename);
+  if (!content && !activeFile) return; // Don't save empty, untitled files
 
   // save as
-  const baseFilename = activeFilename ?? generateFilename(content);
+  const baseFilename = activeFile ?? generateFilename(content);
   const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -298,6 +289,6 @@ export async function exportFile(content: string, activeFilename: string | undef
   document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
-  setActiveFilename(baseFilename);
+  activeFilename.set(baseFilename);
   setDirty(false);
 }

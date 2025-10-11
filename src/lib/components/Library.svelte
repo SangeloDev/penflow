@@ -56,7 +56,7 @@
 
   function handleDeleteClick(id: string) {
     fileToDelete = id;
-    setDeleteModalVisible(true);
+    deleteModalVisible = true;
   }
 
   function confirmDelete() {
@@ -64,16 +64,12 @@
       onDeleteFile(fileToDelete);
       fileToDelete = null;
     }
-    setDeleteModalVisible(false);
+    deleteModalVisible = false;
   }
 
   function cancelDelete() {
     fileToDelete = null;
-    setDeleteModalVisible(false);
-  }
-
-  function setDeleteModalVisible(value: boolean) {
-    deleteModalVisible = value;
+    deleteModalVisible = false;
   }
 </script>
 
@@ -207,24 +203,20 @@
   {/if}
 </div>
 
-<Modal bind:show={deleteModalVisible} onclose={cancelDelete}>
-  {#snippet header()}
-    <Trash2Icon size={18} />
-    <span>Confirm Deletion</span>
-  {/snippet}
-
-  <p class="mb-4">Are you sure you want to delete this file? This action cannot be undone.</p>
-  {#if fileToDelete && files[fileToDelete]}
-    <p class="mb-4 text-sm text-gray-600">
-      <strong>File preview</strong>
-      <br />
-      {files[fileToDelete].content.substring(0, 50) || "Untitled"}...
-    </p>
-  {/if}
-  <div class="flex justify-end gap-2">
-    <button onclick={() => cancelDelete()} class="rounded border px-4 py-2 hover:bg-gray-100">Cancel</button>
-    <button onclick={() => confirmDelete()} class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600">
-      Delete
-    </button>
-  </div>
-</Modal>
+{#if fileToDelete && files[fileToDelete]}
+  <Modal bind:show={deleteModalVisible} onclose={cancelDelete} className="!min-h-max">
+    {#snippet header()}
+      <Trash2Icon size={18} />
+      {#if fileToDelete && files[fileToDelete]}
+        <span>Confirm deletion of "{generateDocumentTitle(files[fileToDelete].content) || "Untitled"}"</span>
+      {/if}
+    {/snippet}
+    <p class="mb-4">Are you sure you want to delete this file? This action cannot be undone.</p>
+    <br />
+    <br />
+    <div class="absolute right-4 bottom-4 flex justify-end gap-2">
+      <button onclick={() => cancelDelete()} class="btn btn-outline">Cancel</button>
+      <button onclick={() => confirmDelete()} class="btn bg-red-500 hover:brightness-150">Delete</button>
+    </div>
+  </Modal>
+{/if}

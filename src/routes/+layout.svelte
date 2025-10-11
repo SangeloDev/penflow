@@ -6,10 +6,7 @@
   import { onMount } from "svelte";
   import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/utils/hotkeys";
   import { hotkeyContext } from "$lib/store/hotkeys";
-  import {
-    setSettingsModalVisibility,
-    setShortcutModalVisibility,
-  } from "$lib/components/Editor.svelte.ts";
+  import { setSettingsModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
 
   interface Props {
     children?: import("svelte").Snippet;

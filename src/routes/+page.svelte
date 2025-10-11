@@ -12,8 +12,10 @@
     getSettingsModalVisibility,
     setSettingsModalVisibility,
     setContent,
+    activeFileId,
   } from "$lib/components/Editor.svelte.ts";
   import { createStore, type Store } from "tinybase";
+  import { get } from "svelte/store";
   import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
   import type { MarkdownFile } from "$lib/types";
 
@@ -22,7 +24,7 @@
 
   // App state
   let isEditorVisible = $state(false);
-  let activeFileId = $state<string | null | undefined>(null);
+
 
   // TinyBase state
   let store = $state<Store | null>(null);
@@ -58,7 +60,7 @@
   }
 
   function showEditor(fileId: string | null) {
-    activeFileId = fileId;
+    activeFileId.set(fileId);
     if (fileId && store) {
       const file = store.getRow("library", fileId);
       setContent(file.content as string);
@@ -71,27 +73,30 @@
 
   function showLibrary() {
     isEditorVisible = false;
-    activeFileId = null;
+    activeFileId.set(null);
   }
 
-  function handleSave(content: string) {
+  async function handleSave(content: string) {
     if (!store) return;
 
-    if (activeFileId) {
-      store.setPartialRow("library", activeFileId, {
+    const fileId = get(activeFileId);
+
+    if (fileId) {
+      store.setPartialRow("library", fileId, {
         content,
         updatedAt: Date.now(),
         visitedAt: Date.now(),
       });
     } else {
       // Create new file
-      const newFileId = store.addRow("library", {
+      const newFileId = crypto.randomUUID();
+      store.setRow("library", newFileId, {
         content,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         visitedAt: Date.now(),
       });
-      activeFileId = newFileId;
+      activeFileId.set(newFileId);
     }
   }
 
@@ -123,8 +128,9 @@
     fullscreen={true}
     bind:shortcutModalVisible
     onNewFile={() => showEditor(null)}
-    onSave={handleSave}
+    onSave={(content) => handleSave(content)}
     onBack={showLibrary}
+
   />
 {:else}
   <Library

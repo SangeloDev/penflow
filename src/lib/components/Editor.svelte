@@ -30,7 +30,8 @@
     setShortcutModalVisibility,
     getSettingsModalVisibility,
     setSettingsModalVisibility,
-    getActiveFilename,
+    activeFilename as activeFilenameStore,
+    activeFileId as activeFileIdStore,
     exportFile,
     generateDocumentTitle,
   } from "./Editor.svelte.ts";
@@ -38,6 +39,8 @@
   import { welcome } from "../data/welcome";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
   import { debounce } from "$lib/utils/debounce";
+
+  let activeFileId = $derived(activeFileIdStore);
 
   // codemirror imports
   import {
@@ -85,12 +88,18 @@
     onBack: () => void;
   }>();
 
+  function handleBack() {
+    debouncedSave.cancel();
+    onSave(content);
+    onBack();
+  }
+
   // States
   let content = $derived(getContent());
   let mode = $derived(getMode());
   let isFullscreen = $state(fullscreen);
   let isDirty = $derived(getDirtyness());
-  let activeFilename: string | undefined = $state(getActiveFilename());
+
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
   let isWelcomeMessageActive = $state(false);
@@ -111,7 +120,7 @@
 
   const doubleClickThreshold = 300; // in ms since last click
 
-  const debouncedSave = debounce(onSave, 1000);
+  const debouncedSave = $derived(debounce((content: string) => onSave(content), 1000));
 
   // Define toolbar actions map - this maps string IDs to their corresponding actions and icons
   const toolbarActionsMap = {
@@ -190,12 +199,12 @@
     setShortcutModalVisibility,
     getMode,
     cycleEditMode: cycleEditMode,
-    saveFile: () => saveFile(onSave, content),
-    exportFile: () => exportFile(content, getActiveFilename()),
+    saveFile: () => saveFile((content: string) => onSave(content), content),
+    exportFile: () => exportFile(content),
     openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
     newFile: () => newFile(editorView, onNewFile, getDirtyness()),
     content: getContent(),
-    activeFilename: getActiveFilename(),
+    activeFilename: $activeFilenameStore,
     view: getView(),
     getDirtyness,
     onNewFile,
@@ -364,7 +373,7 @@
         });
         const file = await fileHandle.getFile();
         const newContent = await file.text();
-        loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
+        loadFileContent(view, oldContent, file.name, newContent, file.name, historyCompartment);
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("Error opening file:", err);
@@ -381,7 +390,7 @@
 
   let documentTitle = $derived(() => {
     const dirtyIndicator = isDirty ? "• " : "";
-    let fileName = getActiveFilename();
+    let fileName = $activeFilenameStore;
 
     if (!fileName) {
       const generated = generateFilename(content);
@@ -433,6 +442,8 @@
     lastSplitterClick = now;
   }
 
+
+
   onMount(() => {
     hotkeyContext.set(hotkeyContextValue);
 
@@ -476,7 +487,7 @@
 <input
   type="file"
   bind:this={fileInput}
-  onchange={() => handleFileSelect(event, editorView, activeFilename, content, historyCompartment)}
+  onchange={() => handleFileSelect(event, editorView, $activeFilenameStore, content, activeFileId, historyCompartment)}
   style="display: none;"
   accept=".md, .markdown, text/markdown"
 />
@@ -488,7 +499,7 @@
     ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full shadow-none" : "mx-auto max-h-fit max-w-3xl shadow"}
   `}
 >
-  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} {onBack} />
+  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} onBack={handleBack} />
 
   {#if mode === "edit"}
     <div class="min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
