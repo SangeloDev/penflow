@@ -169,7 +169,7 @@
               onclick={() => onOpenFile(id)}
             >
               <div class="mt-auto">
-                <h3 class="text-center">{generateDocumentTitle(file.content) || "Untitled"}</h3>
+                <h3 class="line-clamp-1 text-center">{generateDocumentTitle(file.content) || "Untitled"}</h3>
                 <button
                   onclick={(e) => {
                     e.stopPropagation();
