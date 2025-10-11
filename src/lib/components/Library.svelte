@@ -216,7 +216,7 @@
     <br />
     <div class="absolute right-4 bottom-4 flex justify-end gap-2">
       <button onclick={() => cancelDelete()} class="btn btn-outline">Cancel</button>
-      <button onclick={() => confirmDelete()} class="btn bg-red-500 hover:brightness-150">Delete</button>
+      <button onclick={() => confirmDelete()} class="btn btn-danger">Delete</button>
     </div>
   </Modal>
 {/if}

@@ -15,6 +15,10 @@
   /* --aside: #959694; */
   --aside: var(--color-gray-400);
   --primary: #df7126;
+  --info: var(--color-blue-600);
+  --success: var(--color-green-600);
+  --warning: var(--color-yellow-600);
+  --danger: var(--color-red-600);
   --primary-selection: rgba(223, 113, 38, 0.25);
 
   --black: #080502;
@@ -32,6 +36,10 @@
   /* --aside: #4e4f4e; */
   --aside: var(--color-gray-200);
   --primary: #ffa007;
+  --info: var(--color-blue-400);
+  --success: var(--color-green-400);
+  --warning: var(--color-yellow-400);
+  --danger: var(--color-red-400);
   --primary-selection: rgba(223, 113, 38, 0.35);
 }
 
@@ -46,6 +54,10 @@
 
   --color-aside: var(--aside);
   --color-primary: var(--primary);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --color-selection: var(--primary-selection);
 
   --color-black: var(--black);
@@ -99,11 +111,15 @@ body.dark {
   }
 
   .btn.btn-outline {
-    @apply border border-gray-500 text-black active:translate-y-0.5 dark:text-white;
+    @apply text-base-font border border-gray-500 active:translate-y-0.5;
   }
 
   .btn.btn-primary {
     @apply bg-primary border-primary border border-b-3 border-b-white/30 text-white hover:opacity-85 active:translate-y-0.5;
+  }
+
+  .btn.btn-danger {
+    @apply border-danger bg-danger border border-b-3 border-b-white/30 text-white hover:opacity-85;
   }
 
   .btn.btn-primary.btn-outline {
