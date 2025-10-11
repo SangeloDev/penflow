@@ -31,10 +31,12 @@
         id="light-theme"
         name="theme"
         value="light"
-        bind:group={selectedTheme} />
+        bind:group={selectedTheme}
+      />
       <label
         for="light-theme"
-        class="peer-checked/light:border-primary border-base-500 flex size-10 cursor-pointer items-center justify-center rounded-full border bg-white text-black peer-checked/light:border-2">
+        class="peer-checked/light:border-primary border-base-500 flex size-10 cursor-pointer items-center justify-center rounded-full border bg-white text-black peer-checked/light:border-2"
+      >
         <Sun class="size-6" />
         <span class="sr-only">Light</span>
       </label>
@@ -45,10 +47,12 @@
         id="dark-theme"
         name="theme"
         value="dark"
-        bind:group={selectedTheme} />
+        bind:group={selectedTheme}
+      />
       <label
         for="dark-theme"
-        class="peer-checked/dark:border-primary border-base-500 flex size-10 cursor-pointer items-center justify-center rounded-full border bg-gray-800 text-white peer-checked/dark:border-2">
+        class="peer-checked/dark:border-primary border-base-500 flex size-10 cursor-pointer items-center justify-center rounded-full border bg-gray-800 text-white peer-checked/dark:border-2"
+      >
         <Moon class="size-6" />
         <span class="sr-only">Dark</span>
       </label>
@@ -61,11 +65,13 @@
       name="theme"
       value="system"
       disabled={selectedTheme === "system" || !selectedTheme}
-      bind:group={selectedTheme} />
+      bind:group={selectedTheme}
+    />
     <label
       for="system-theme"
       class="btn flex w-fit items-center gap-1 select-none"
-      aria-disabled={selectedTheme === "system" || !selectedTheme}>
+      aria-disabled={selectedTheme === "system" || !selectedTheme}
+    >
       <RotateCcw size={16} />
       Reset to system preferences
     </label>

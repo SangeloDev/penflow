@@ -50,7 +50,8 @@
   onclose={() => onclose()}
   onclick={(e) => {
     if (e.target === dialog) dialog.close();
-  }}>
+  }}
+>
   <button onclick={() => dialog?.close()} class="btn btn-square absolute top-0 right-0"><X size={16} /></button>
   <div class="p-4">
     {#if header}

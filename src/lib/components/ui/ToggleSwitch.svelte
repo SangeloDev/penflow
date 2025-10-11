@@ -24,7 +24,8 @@
 <label
   class="relative inline-block h-7 w-[48px] cursor-pointer rounded-md [-webkit-tap-highlight-color:_transparent]"
   class:bg-primary={checked}
-  class:bg-base-400={!checked}>
+  class:bg-base-400={!checked}
+>
   <input class="peer sr-only" type="checkbox" {id} bind:checked {...props} />
   <span
     class="absolute inset-y-0 m-1 rounded-md ring-white ring-inset"
@@ -38,6 +39,6 @@
       --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
       --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc({ringSize.current}px + var(--tw-ring-offset-width)) var(--tw-ring-color);
       box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-    ">
-  </span>
+    "
+  ></span>
 </label>

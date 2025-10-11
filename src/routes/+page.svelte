@@ -1,5 +1,6 @@
 <script lang="ts">
   import Editor from "$lib/components/Editor.svelte";
+  import Library from "$lib/components/Library.svelte";
   import Modal from "$lib/components/Modal.svelte";
   import Settings from "$lib/components/modals/Settings.svelte";
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
@@ -10,10 +11,106 @@
     setShortcutModalVisibility,
     getSettingsModalVisibility,
     setSettingsModalVisibility,
+    setContent,
+    activeFileId,
   } from "$lib/components/Editor.svelte.ts";
+  import { createStore, type Store } from "tinybase";
+  import { get } from "svelte/store";
+  import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
+  import type { MarkdownFile } from "$lib/types";
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
+
+  // App state
+  let isEditorVisible = $state(false);
+
+
+  // TinyBase state
+  let store = $state<Store | null>(null);
+  let persister = $state<IndexedDbPersister | null>(null);
+  let library = $state<Record<string, MarkdownFile>>({});
+  let isLoading = $state(true);
+
+  const librarySchema = {
+    library: {
+      content: { type: "string", default: "" },
+      createdAt: { type: "number", default: 0 },
+      updatedAt: { type: "number", default: 0 },
+      visitedAt: { type: "number", default: 0 },
+    },
+  } as const;
+
+  async function initStore() {
+    const newStore = createStore().setTablesSchema(librarySchema);
+    const newPersister = createIndexedDbPersister(newStore, "penflow");
+
+    await newPersister.load();
+    await newPersister.startAutoSave();
+
+    newStore.addTableListener("library", () => {
+      library = newStore.getTable("library") as unknown as Record<string, MarkdownFile>;
+    });
+
+    library = newStore.getTable("library") as unknown as Record<string, MarkdownFile>;
+
+    store = newStore;
+    persister = newPersister;
+    isLoading = false;
+  }
+
+  function showEditor(fileId: string | null) {
+    activeFileId.set(fileId);
+    if (fileId && store) {
+      const file = store.getRow("library", fileId);
+      setContent(file.content as string);
+      store.setPartialRow("library", fileId, { visitedAt: Date.now() });
+    } else {
+      setContent(""); // New file
+    }
+    isEditorVisible = true;
+  }
+
+  function showLibrary() {
+    isEditorVisible = false;
+    activeFileId.set(null);
+  }
+
+  async function handleSave(content: string) {
+    if (!store) return;
+
+    const fileId = get(activeFileId);
+
+    if (fileId) {
+      store.setPartialRow("library", fileId, {
+        content,
+        updatedAt: Date.now(),
+        visitedAt: Date.now(),
+      });
+    } else {
+      // Create new file
+      const newFileId = crypto.randomUUID();
+      store.setRow("library", newFileId, {
+        content,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        visitedAt: Date.now(),
+      });
+      activeFileId.set(newFileId);
+    }
+  }
+
+  function handleDelete(fileId: string) {
+    if (!store) return;
+    store.delRow("library", fileId);
+  }
+
+  $effect(() => {
+    initStore();
+    return () => {
+      persister?.destroy();
+    };
+  });
 </script>
 
 <svelte:head>
@@ -21,15 +118,29 @@
   <meta name="title" content="Penflow – A distraction-free Markdown editor." />
   <meta
     name="description"
-    content="A simple, clean, distraction-free and open-source Markdown Editor webapp that works offline." />
+    content="A simple, clean, distraction-free and open-source Markdown Editor webapp that works offline."
+  />
 </svelte:head>
 
-<Editor
-  placeholder="Let your mind flow..."
-  fullscreen={true}
-  autosaveDelay={2000}
-  autosaveId="penflow-app-website"
-  bind:shortcutModalVisible />
+{#if isEditorVisible}
+  <Editor
+    placeholder="Let your mind flow..."
+    fullscreen={true}
+    bind:shortcutModalVisible
+    onNewFile={() => showEditor(null)}
+    onSave={(content) => handleSave(content)}
+    onBack={showLibrary}
+
+  />
+{:else}
+  <Library
+    files={library}
+    onNewFile={() => showEditor(null)}
+    onOpenFile={showEditor}
+    onDeleteFile={handleDelete}
+    {isLoading}
+  />
+{/if}
 
 <Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
   {#snippet header()}
@@ -79,7 +190,8 @@
       class="flex items-center gap-2 hover:[&>span]:underline"
       href="https://www.markdownguide.org/basic-syntax/"
       target="_blank"
-      rel="noopener noreferrer">
+      rel="noopener noreferrer"
+    >
       <Notebook size={18} />
       <span class="text-link">Need help with Markdown?</span>
     </a>

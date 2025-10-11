@@ -65,7 +65,8 @@
   <div
     class="bg-base-100 dark:bg-base-200 border-base-400/30 fixed right-0 bottom-0 z-[999] m-4 rounded-md border text-left shadow-md"
     role="alert"
-    aria-labelledby="toast-message">
+    aria-labelledby="toast-message"
+  >
     <div class="m-3 mr-10">
       <span id="toast-message">
         {message}

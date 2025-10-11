@@ -25,3 +25,12 @@ export interface Hotkey {
   hidden?: boolean;
   action: (arg0: any) => void;
 }
+
+export interface MarkdownFile {
+  filename: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+  visitedAt: number;
+  tags: string;
+}

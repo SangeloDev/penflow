@@ -139,7 +139,8 @@
   max-w-none
   flex-1
   p-4
-  break-words">
+  break-words"
+>
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   {@html DOMPurify.sanitize(renderedHtml as string)}
 </div>

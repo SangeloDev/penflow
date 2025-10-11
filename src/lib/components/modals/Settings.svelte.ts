@@ -22,6 +22,12 @@ const defaults: Options = {
         { id: "image", title: "Image", enabled: true, order: 10 },
       ],
     },
+    library: {
+      sort: {
+        by: "visitedAt",
+        order: "desc",
+      },
+    },
   },
   appearance: {
     editor: {
@@ -70,6 +76,14 @@ if (browser) {
               defaults.general.editor.toolbarItems,
               parsed.general?.editor?.toolbarItems || []
             ),
+          },
+          library: {
+            ...defaults.general.library,
+            ...(parsed.general?.library || {}),
+            sort: {
+              ...defaults.general.library.sort,
+              ...(parsed.general?.library?.sort || {}),
+            },
           },
         },
         appearance: {
