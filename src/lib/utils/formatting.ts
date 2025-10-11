@@ -24,7 +24,7 @@ function executeFormatAction(view: EditorView, action: (view: EditorView) => Cha
  * @param view The CodeMirror EditorView instance.
  */
 export function insertAtCursor(text: string, view: EditorView) {
-  executeFormatAction(view, () => view.state.replaceSelection(text));
+  view.dispatch(view.state.replaceSelection(text));
 }
 
 /**

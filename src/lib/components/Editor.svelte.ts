@@ -142,7 +142,6 @@ export function resetUndoHistory(view: EditorView | undefined, historyCompartmen
 export function handleFileSelect(
   event: Event | undefined,
   view: EditorView | undefined,
-  activeFilename: string | undefined,
   oldContent: string,
   fileId: string | null | undefined,
   historyCompartment: Compartment

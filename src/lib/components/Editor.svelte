@@ -35,12 +35,11 @@
     exportFile,
     generateDocumentTitle,
   } from "./Editor.svelte.ts";
+  import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
   import { welcome } from "../data/welcome";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
   import { debounce } from "$lib/utils/debounce";
-
-  let activeFileId = $derived(activeFileIdStore);
 
   // codemirror imports
   import {
@@ -442,8 +441,6 @@
     lastSplitterClick = now;
   }
 
-
-
   onMount(() => {
     hotkeyContext.set(hotkeyContextValue);
 
@@ -487,7 +484,7 @@
 <input
   type="file"
   bind:this={fileInput}
-  onchange={() => handleFileSelect(event, editorView, $activeFilenameStore, content, activeFileId, historyCompartment)}
+  onchange={(event) => handleFileSelect(event, editorView, content, get(activeFileIdStore), historyCompartment)}
   style="display: none;"
   accept=".md, .markdown, text/markdown"
 />
