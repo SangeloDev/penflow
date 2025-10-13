@@ -4,6 +4,7 @@
   import Modal from "$lib/components/Modal.svelte";
   import Settings from "$lib/components/modals/Settings.svelte";
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
+  import WelcomeModal from "$lib/components/modals/WelcomeModal.svelte";
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
   import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/utils/hotkeys";
   import {
@@ -14,6 +15,7 @@
     setContent,
     activeFileId,
   } from "$lib/components/Editor.svelte.ts";
+  import { getFirstVisit, setFirstVisit } from "$lib/components/modals/Settings.svelte.ts";
   import { createStore, type Store } from "tinybase";
   import { get } from "svelte/store";
   import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
@@ -21,10 +23,10 @@
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
+  let welcomeModalVisible = $state(false);
 
   // App state
   let isEditorVisible = $state(false);
-
 
   // TinyBase state
   let store = $state<Store | null>(null);
@@ -107,10 +109,21 @@
 
   $effect(() => {
     initStore();
+
+    const isFirstVisit = getFirstVisit() === "false";
+    if (isFirstVisit) {
+      welcomeModalVisible = true;
+    }
+
     return () => {
       persister?.destroy();
     };
   });
+
+  function handleWelcomeFinish() {
+    welcomeModalVisible = false;
+    setFirstVisit("true");
+  }
 </script>
 
 <svelte:head>
@@ -130,7 +143,6 @@
     onNewFile={() => showEditor(null)}
     onSave={(content) => handleSave(content)}
     onBack={showLibrary}
-
   />
 {:else}
   <Library
@@ -141,6 +153,8 @@
     {isLoading}
   />
 {/if}
+
+<WelcomeModal show={welcomeModalVisible} onclose={() => handleWelcomeFinish()} />
 
 <Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
   {#snippet header()}

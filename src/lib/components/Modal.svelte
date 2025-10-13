@@ -4,6 +4,8 @@
 
   let {
     show = $bindable(),
+    closeButton = true,
+    closable = true,
     header,
     footer,
     children,
@@ -11,6 +13,8 @@
     className,
   }: {
     show: boolean;
+    closeButton?: boolean;
+    closable?: boolean;
     header?: Snippet;
     footer?: Snippet;
     children?: Snippet;
@@ -23,6 +27,10 @@
   $effect(() => {
     if (show && dialog) dialog.showModal();
   });
+
+  export function close() {
+    dialog?.close();
+  }
 </script>
 
 <dialog
@@ -49,10 +57,12 @@
   bind:this={dialog}
   onclose={() => onclose()}
   onclick={(e) => {
-    if (e.target === dialog) dialog.close();
+    if (e.target === dialog && closable) dialog.close();
   }}
 >
-  <button onclick={() => dialog?.close()} class="btn btn-square absolute top-0 right-0"><X size={16} /></button>
+  {#if closeButton}
+    <button onclick={() => dialog?.close()} class="btn btn-square absolute top-0 right-0"><X size={16} /></button>
+  {/if}
   <div class="p-4">
     {#if header}
       <h1 class="flex items-center gap-2 font-semibold">{@render header?.()}</h1>
