@@ -10,13 +10,8 @@
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import * as f from "$lib/utils/formattingActions";
   import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-  import {
-    globalHotkey,
-    editorKeymap,
-    constructedGlobalHotkeys,
-    createGlobalHotkeys,
-    type HotkeyContext,
-  } from "$lib/utils/hotkeys";
+  import { editorKeymap, type HotkeyContext } from "$lib/utils/hotkeys";
+  import { hotkeyContext } from "$lib/store/hotkeys";
   import {
     type EditorMode,
     getDirtyness,
@@ -35,13 +30,16 @@
     setShortcutModalVisibility,
     getSettingsModalVisibility,
     setSettingsModalVisibility,
-    getActiveFilename,
-    setActiveFileHandle,
-    getActiveFileHandle,
+    activeFilename as activeFilenameStore,
+    activeFileId as activeFileIdStore,
+    exportFile,
+    generateDocumentTitle,
   } from "./Editor.svelte.ts";
+  import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
   import { welcome } from "../data/welcome";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
+  import { debounce } from "$lib/utils/debounce";
 
   // codemirror imports
   import {
@@ -68,32 +66,39 @@
   import type { ToolbarItem } from "$lib/types/index.ts";
 
   let {
-    autosaveId = "my-markdown-editor",
-    autosaveDelay = 10000,
     autofocus = true,
     fullscreen = false,
     defaultMode = "side-by-side",
     placeholder = "Write your markdown here...",
     shortcutModalVisible = $bindable(getShortcutModalVisibility()),
     settingsModalVisible = $bindable(getSettingsModalVisibility()),
-  }: {
-    autosaveId?: string;
-    autosaveDelay?: number;
+    onNewFile,
+    onSave,
+    onBack,
+  } = $props<{
     autofocus?: boolean;
     fullscreen?: boolean;
     defaultMode?: EditorMode;
     placeholder?: string;
     shortcutModalVisible?: boolean;
     settingsModalVisible?: boolean;
-  } = $props();
+    onNewFile: () => void;
+    onSave: (content: string) => void;
+    onBack: () => void;
+  }>();
+
+  function handleBack() {
+    debouncedSave.cancel();
+    onSave(content);
+    onBack();
+  }
 
   // States
   let content = $derived(getContent());
   let mode = $derived(getMode());
-  let autosaveTimer: number | null = null;
   let isFullscreen = $state(fullscreen);
   let isDirty = $derived(getDirtyness());
-  let activeFilename: string | undefined = $state(getActiveFilename());
+
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
   let isWelcomeMessageActive = $state(false);
@@ -113,6 +118,8 @@
   let lastSplitterClick = 0;
 
   const doubleClickThreshold = 300; // in ms since last click
+
+  const debouncedSave = $derived(debounce((content: string) => onSave(content), 1000));
 
   // Define toolbar actions map - this maps string IDs to their corresponding actions and icons
   const toolbarActionsMap = {
@@ -186,23 +193,21 @@
   };
 
   // hotkeys
-  const hotkeyContext: HotkeyContext = {
+  const hotkeyContextValue: HotkeyContext = {
     setSettingsModalVisibility,
     setShortcutModalVisibility,
     getMode,
     cycleEditMode: cycleEditMode,
-    saveFile: () => saveFile(content, getActiveFilename(), getActiveFileHandle()),
+    saveFile: () => saveFile((content: string) => onSave(content), content),
+    exportFile: () => exportFile(content),
     openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
-    newFile: () => newFile(editorView, content, autosaveId, getActiveFilename(), getDirtyness()),
+    newFile: () => newFile(editorView, onNewFile, getDirtyness()),
     content: getContent(),
-    activeFilename: getActiveFilename(),
-    autosaveId,
+    activeFilename: $activeFilenameStore,
     view: getView(),
     getDirtyness,
+    onNewFile,
   };
-
-  const hotkeys = createGlobalHotkeys(hotkeyContext);
-  const globalHotkeys = constructedGlobalHotkeys(hotkeys);
 
   // check if this is the first visit or not
   const isFirstVisit = typeof window !== "undefined" && firstVisit === "false";
@@ -255,8 +260,10 @@
         lineWrappingCompartment.of(getLineWrappingEnabled() ? EditorView.lineWrapping : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            setContent(update.state.doc.toString());
+            const newContent = update.state.doc.toString();
+            setContent(newContent);
             setDirty(true);
+            debouncedSave(newContent);
             // activate message saving on edit
             if (isWelcomeMessageActive) {
               isWelcomeMessageActive = false;
@@ -320,24 +327,6 @@
     }
   });
 
-  // timer for autosave
-  $effect(() => {
-    if (autosaveTimer) {
-      // clean up any previous timer
-      clearInterval(autosaveTimer);
-    }
-    if (autosaveDelay > 0) {
-      autosaveTimer = setInterval(() => {
-        if (isDirty && !isWelcomeMessageActive) {
-          saveToLocalStorage();
-        }
-      }, autosaveDelay);
-    }
-    return () => {
-      if (autosaveTimer) clearInterval(autosaveTimer);
-    };
-  });
-
   function emojiCompletionSource(context: CompletionContext) {
     // match a ':' followed by at least two word characters
     let word = context.matchBefore(/:\w+$/);
@@ -381,18 +370,15 @@
         const [fileHandle] = await window.showOpenFilePicker({
           types: [{ description: "Markdown", accept: { "text/markdown": [".md", ".markdown"] } }],
         });
-        setActiveFileHandle(fileHandle);
         const file = await fileHandle.getFile();
         const newContent = await file.text();
-        loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
+        loadFileContent(view, oldContent, file.name, newContent, file.name, historyCompartment);
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("Error opening file:", err);
         }
       }
     } else {
-      // no need to store file handle in fallback mode
-      setActiveFileHandle(undefined);
       try {
         fileInput.click();
       } catch {
@@ -401,43 +387,9 @@
     }
   }
 
-  // autosave
-  function saveToLocalStorage() {
-    if (!autosaveId) return;
-    localStorage.setItem(
-      autosaveId,
-      JSON.stringify({
-        content,
-        activeFilename,
-        timestamp: Date.now(),
-      })
-    );
-  }
-
-  // load content from localStorage (optional, e.g. on mount)
-  function loadFromLocalStorage() {
-    if (!autosaveId) return;
-    const data = localStorage.getItem(autosaveId);
-    if (data) {
-      try {
-        const { content: savedContent, activeFilename: savedFilename } = JSON.parse(data);
-        loadFileContent(
-          editorView,
-          content,
-          activeFilename,
-          savedFilename ?? documentTitle(),
-          savedContent,
-          historyCompartment
-        );
-      } catch (err) {
-        console.error("error loading file content from localStorage: ", err);
-      }
-    }
-  }
-
   let documentTitle = $derived(() => {
     const dirtyIndicator = isDirty ? "• " : "";
-    let fileName = getActiveFilename();
+    let fileName = $activeFilenameStore;
 
     if (!fileName) {
       const generated = generateFilename(content);
@@ -446,8 +398,6 @@
 
     return `${dirtyIndicator}${fileName}`;
   });
-
-  let globalHotkeyCleanup: { destroy: () => void };
 
   // Autoscroll
   function syncScroll(source: "editor" | "preview") {
@@ -492,11 +442,7 @@
   }
 
   onMount(() => {
-    if (!isFirstVisit) {
-      loadFromLocalStorage();
-    }
-
-    globalHotkeyCleanup = globalHotkey(globalHotkeys);
+    hotkeyContext.set(hotkeyContextValue);
 
     // observe the body tag for class attribute changes
     const observer = new MutationObserver((mutations) => {
@@ -517,13 +463,12 @@
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      globalHotkeyCleanup?.destroy();
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   });
 
   onDestroy(() => {
-    globalHotkeyCleanup?.destroy();
+    hotkeyContext.set(undefined);
     editorView?.destroy();
   });
 </script>
@@ -532,24 +477,26 @@
   {#if isWelcomeMessageActive}
     <title>Welcome to Penflow!</title>
   {:else}
-    <title>{documentTitle()} - Penflow</title>
+    <title>{generateDocumentTitle(content)} - Penflow</title>
   {/if}
 </svelte:head>
 
 <input
   type="file"
   bind:this={fileInput}
-  onchange={() => handleFileSelect(event, editorView, activeFilename, content, historyCompartment)}
+  onchange={(event) => handleFileSelect(event, editorView, content, get(activeFileIdStore), historyCompartment)}
   style="display: none;"
-  accept=".md, .markdown, text/markdown" />
+  accept=".md, .markdown, text/markdown"
+/>
 
 <div
   class:fullscreen={isFullscreen}
   class={`
     flex w-full flex-col rounded-lg bg-white
     ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full shadow-none" : "mx-auto max-h-fit max-w-3xl shadow"}
-  `}>
-  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} />
+  `}
+>
+  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} onBack={handleBack} />
 
   {#if mode === "edit"}
     <div class="min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>
@@ -559,7 +506,8 @@
         class="default-theme"
         theme={uiTheme.current === "dark" ? "dark-theme" : "default-theme"}
         dblClickSplitter={false}
-        on:splitter-click={handleSplitterClick}>
+        on:splitter-click={handleSplitterClick}
+      >
         <Pane bind:size={editorPaneSize} minSize={20}>
           <div class="h-full w-full" bind:this={editorContainer}></div>
         </Pane>
@@ -567,7 +515,8 @@
           <div
             class="bg-base-150 h-full w-full overflow-y-auto p-4"
             bind:this={previewElement}
-            onscroll={() => syncScroll("preview")}>
+            onscroll={() => syncScroll("preview")}
+          >
             <Preview {content} onContentChange={updateEditorContent} />
           </div>
         </Pane>

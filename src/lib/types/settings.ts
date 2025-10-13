@@ -7,6 +7,12 @@ interface Options {
     editor: {
       toolbarItems: ToolbarItem[];
     };
+    library: {
+      sort: {
+        by: "createdAt" | "updatedAt" | "visitedAt" | "name";
+        order: "asc" | "desc";
+      };
+    };
   };
   appearance: {
     editor: {

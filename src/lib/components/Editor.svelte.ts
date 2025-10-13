@@ -11,8 +11,10 @@ let mode: EditorMode = $state("edit");
 let content: string = $state("");
 let shortcutModalVisible = $state(false);
 let settingsModalVisible = $state(false);
-let activeFilename: string | undefined = $state(undefined);
-let activeFileHandle: FileSystemFileHandle | undefined = $state(undefined);
+import { writable, get } from "svelte/store";
+
+export const activeFilename = writable<string | undefined>(undefined);
+export const activeFileId = writable<string | null | undefined>(undefined);
 let isDirty = $state(false);
 
 /**
@@ -29,38 +31,6 @@ export async function setMode(newMode: EditorMode) {
  */
 export function getMode() {
   return mode;
-}
-
-/**
- * Sets the active filename
- * @param filename - new filename
- */
-export const setActiveFilename = (filename: string | undefined) => {
-  activeFilename = filename;
-};
-
-/**
- * Gets the current active filename
- * @returns activeFilename
- */
-export const getActiveFilename = () => {
-  return activeFilename;
-};
-
-/**
- * Gets the currently set file handle
- * @returns activeFileHandle
- */
-export const getActiveFileHandle = () => {
-  return activeFileHandle;
-};
-
-/**
- * Sets the active file handle
- * @param handle - the file handle to be set active
- */
-export function setActiveFileHandle(handle: FileSystemFileHandle | undefined) {
-  activeFileHandle = handle;
 }
 
 /**
@@ -172,8 +142,8 @@ export function resetUndoHistory(view: EditorView | undefined, historyCompartmen
 export function handleFileSelect(
   event: Event | undefined,
   view: EditorView | undefined,
-  activeFilename: string | undefined,
   oldContent: string,
+  fileId: string | null | undefined,
   historyCompartment: Compartment
 ) {
   if (!event) return;
@@ -184,7 +154,7 @@ export function handleFileSelect(
   const reader = new FileReader();
   reader.onload = (e) => {
     const newContent = e.target?.result as string;
-    loadFileContent(view, oldContent, activeFilename, file.name, newContent, historyCompartment);
+    loadFileContent(view, oldContent, file.name, newContent, fileId, historyCompartment);
     if (view) resetUndoHistory(view, historyCompartment);
     setDirty(false);
   };
@@ -205,14 +175,15 @@ export function handleFileSelect(
 export function loadFileContent(
   view: EditorView | undefined,
   content: string,
-  activeFilename: string | undefined,
   fileName: string,
   fileContent: string,
+  fileId: string | null | undefined,
   historyCompartment: Compartment
 ) {
   // update svelte state for preview and other ui elements
   setContent(fileContent);
-  setActiveFilename(fileName);
+  activeFilename.set(fileName);
+  activeFileId.set(fileId);
   setDirty(false);
 
   // directly update the editor view if it exists
@@ -226,28 +197,17 @@ export function loadFileContent(
 }
 
 /**
- * Clears the editor view and removes autosaved
- * content. Essentially, this creates a new document.
+ * Clears the editor view content and creates a new document.
  */
-export function newFile(
-  view: EditorView | undefined | undefined,
-  content: string,
-  autosaveId: string,
-  activeFilename: string | undefined | null,
-  isDirty: boolean
-) {
+export function newFile(view: EditorView | undefined | undefined, onNewFile: () => void, isDirty: boolean) {
   if (isDirty && !confirm("You have unsaved changes. Discard them and create a new file?")) {
     return;
   }
 
-  // remove from localStorage if autosaveId is set
-  if (autosaveId) {
-    localStorage.removeItem(autosaveId);
-  }
-
   // reset editor
-  setContent("");
-  setActiveFilename(undefined);
+  onNewFile();
+  activeFilename.set(undefined);
+  activeFileId.set(undefined);
   isDirty = false;
 
   // clear the editor view if it exists
@@ -256,8 +216,6 @@ export function newFile(
       changes: { from: 0, to: view.state.doc.length, insert: "" },
     });
   }
-
-  setMode("edit");
 }
 
 /**
@@ -284,68 +242,52 @@ export function generateFilename(markdownContent: string): string {
 }
 
 /**
- * Prompts the user to download the current editor content.
- * Uses the File System Access API if available, with a fallback to the traditional download method.
+ * Reads a Markdown string until it finds an h1 heading. Then it transforms it into a title.
+ * @param markdownContent
+ * @returns string
  */
-export async function saveFile(
-  content: string,
-  activeFilename: string | undefined,
-  activeFileHandle: FileSystemFileHandle | undefined
-) {
-  if (!content && !activeFilename) return; // Don't save empty, untitled files
+export function generateDocumentTitle(markdownContent: string): string {
+  const headingMatch = markdownContent.match(/^# (.*)/m);
+  let baseName = "Untitled";
 
-  // if a file handle exists, try to save directly to it
-  if (activeFileHandle) {
-    try {
-      const writable = await activeFileHandle.createWritable();
-      await writable.write(content);
-      await writable.close();
-      setDirty(false);
-      return;
-    } catch (error) {
-      console.error("Error saving to existing file handle:", error);
-      // if saving fails, fall through to the save as logic below
-    }
+  if (headingMatch && headingMatch[1]) {
+    baseName = headingMatch[1].trim();
   }
+
+  const sanitizedName = baseName.replace(/\s+/g, " ").replace(/^-+|-+$/g, "");
+
+  return sanitizedName || "Untitled";
+}
+
+/**
+ * Saves the file.
+ */
+export async function saveFile(onSave: (content: string) => Promise<void>, content: string) {
+  if (!content) return;
+  await onSave(content);
+  setDirty(false);
+}
+
+/**
+ * Exports the file.
+ */
+export async function exportFile(content: string) {
+  const activeFile = get(activeFilename);
+  if (!content && !activeFile) return; // Don't save empty, untitled files
 
   // save as
-  const baseFilename = activeFilename ?? generateFilename(content);
+  const baseFilename = activeFile ?? generateFilename(content);
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
 
-  if ("showSaveFilePicker" in window) {
-    try {
-      const options: SaveFilePickerOptions = {
-        suggestedName: baseFilename,
-        types: [{ description: "Markdown Files", accept: { "text/markdown": [".md", ".markdown"] } }],
-      };
+  link.href = url;
+  link.download = baseFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
-      const newHandle = await window.showSaveFilePicker(options);
-      const writable = await newHandle.createWritable();
-      await writable.write(content);
-      await writable.close();
-
-      setActiveFileHandle(newHandle);
-      setActiveFilename(newHandle.name);
-      setDirty(false);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        console.log("File save dialog cancelled by user.");
-      } else {
-        console.error("Error with showSaveFilePicker:", error);
-      }
-    }
-  } else {
-    // fallback for browsers that don't support/enable the file system api
-    console.log("Using fallback download method.");
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = baseFilename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setActiveFilename(baseFilename);
-    setDirty(false);
-  }
+  URL.revokeObjectURL(url);
+  activeFilename.set(baseFilename);
+  setDirty(false);
 }
