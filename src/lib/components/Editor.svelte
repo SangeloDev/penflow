@@ -37,7 +37,6 @@
   } from "./Editor.svelte.ts";
   import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
-  import { welcome } from "../data/welcome";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
   import { debounce } from "$lib/utils/debounce";
 
@@ -62,7 +61,6 @@
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
-  import { getFirstVisit, setFirstVisit } from "./modals/Settings.svelte.ts";
   import type { ToolbarItem } from "$lib/types/index.ts";
 
   let {
@@ -101,8 +99,6 @@
 
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
-  let isWelcomeMessageActive = $state(false);
-  let firstVisit = getFirstVisit();
 
   // codemirror
   let editorView: EditorView | undefined = $state();
@@ -209,16 +205,6 @@
     onNewFile,
   };
 
-  // check if this is the first visit or not
-  const isFirstVisit = typeof window !== "undefined" && firstVisit === "false";
-  if (isFirstVisit) {
-    // first time user content.
-    setContent(welcome.text);
-    // set flag in localStorage to ensure this block only runs once.
-    setFirstVisit("true");
-    isWelcomeMessageActive = true;
-  }
-
   function updateEditorContent(newContent: string) {
     if (!editorView) return;
 
@@ -264,10 +250,6 @@
             setContent(newContent);
             setDirty(true);
             debouncedSave(newContent);
-            // activate message saving on edit
-            if (isWelcomeMessageActive) {
-              isWelcomeMessageActive = false;
-            }
           }
         }),
         themeCompartment.of(lightThemes),
@@ -474,11 +456,7 @@
 </script>
 
 <svelte:head>
-  {#if isWelcomeMessageActive}
-    <title>Welcome to Penflow!</title>
-  {:else}
-    <title>{generateDocumentTitle(content)} - Penflow</title>
-  {/if}
+  <title>{generateDocumentTitle(content)} - Penflow</title>
 </svelte:head>
 
 <input
