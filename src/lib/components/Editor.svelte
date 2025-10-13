@@ -238,6 +238,25 @@
         closeBrackets(),
         highlightSelectionMatches(),
         markdownExt({ base: markdownLanguage, codeLanguages: languages }),
+        markdownLanguage.data.of({
+          closeBrackets: {
+            brackets: [
+              //default brackets
+              "(",
+              "[",
+              "{",
+              "'",
+              '"',
+              //markdown extras
+              "`",
+              "*",
+              "_",
+              "~",
+              "<",
+              "|",
+            ],
+          },
+        }),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         placeholderExtension(placeholder),
         autocompletion({ override: [emojiCompletionSource] }),
