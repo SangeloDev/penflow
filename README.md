@@ -42,7 +42,7 @@ Penflow offers a simple feature-set to make sure you stay focused on editing and
 
 ## Development
 
-To compile penflow locally on your machine, first clone the repository, and run the following commands:
+To compile Penflow locally on your machine, first clone the repository, and run the following commands:
 
 ```bash
 # install dependencies
