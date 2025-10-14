@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fontsource/noto-color-emoji";
 @plugin "@tailwindcss/typography";
 
 @import "./styles/config.css";
@@ -12,8 +13,11 @@ main {
   @apply bg-selection;
 }
 
-img.emoji {
-  @apply m-0 inline-block h-5 cursor-text;
+span.emoji,
+.cm-completionDetail {
+  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  font-style: normal !important;
+  display: inline-block;
 }
 
 ul.task-list {
