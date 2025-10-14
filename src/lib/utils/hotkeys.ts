@@ -6,6 +6,23 @@ import { toggleHeadingCycle } from "$lib/utils/formatting.js";
 import { EditorView, keymap, type KeyBinding } from "@codemirror/view";
 import { type EditorMode } from "$lib/components/Editor.svelte.ts";
 import type { Hotkey } from "$lib/types";
+import * as prettier from "prettier";
+import markdown from "prettier/plugins/markdown";
+
+/**
+ * Formats the editor content using Prettier.
+ * @param view The EditorView instance.
+ */
+async function formatDocument(view: EditorView) {
+  const content = view.state.doc.toString();
+  const formattedContent = await prettier.format(content, {
+    parser: "markdown",
+    plugins: [markdown],
+  });
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: formattedContent },
+  });
+}
 
 /**
  * Creates a reusable keydown event handler for hotkeys.
@@ -352,6 +369,16 @@ export const editorHotkeys: Hotkey[] = [
     key: "Mod-Shift-t",
     action: (view: EditorView) => {
       f.insertTable(view);
+      return true;
+    },
+  },
+  {
+    id: 17,
+    desc: "Format Document",
+    shortcut: "Ctrl+Shift+I",
+    key: "Mod-Shift-i",
+    action: (view: EditorView) => {
+      formatDocument(view);
       return true;
     },
   },
