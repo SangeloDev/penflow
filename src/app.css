@@ -13,11 +13,13 @@ main {
   @apply bg-selection;
 }
 
-span.emoji,
-.cm-completionDetail {
-  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-  font-style: normal !important;
+/*.cm-completionDetail,*/
+.emoji {
   display: inline-block;
+  height: 1.2em;
+  width: 1.2em;
+  vertical-align: -0.2em;
+  margin: 0 0.05em 0 0.1em;
 }
 
 ul.task-list {

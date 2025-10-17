@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "node scripts/preinstall/execute.cjs && vite build",
     "preview": "vite preview",
+    "preinstall": "node scripts/preinstall/execute.cjs",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -60,6 +61,7 @@
     "@fontsource/noto-color-emoji": "^5.2.10",
     "@inlang/paraglide-js": "^2.4.0",
     "@lezer/highlight": "^1.2.1",
+    "@lezer/markdown": "^1.4.3",
     "@mdit/plugin-alert": "^0.22.2",
     "@thisux/sveltednd": "^0.0.20",
     "@types/markdown-it": "^14.1.2",

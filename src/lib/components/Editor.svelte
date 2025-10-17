@@ -52,13 +52,13 @@
   import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
   import { closeBrackets, autocompletion, CompletionContext } from "@codemirror/autocomplete";
   import { highlightSelectionMatches } from "@codemirror/search";
-  import twemoji from "@twemoji/api";
   import { darkThemes, lightThemes } from "$lib/codemirror/themes.ts";
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
   import type { ToolbarItem } from "$lib/types/index.ts";
   import emojiList from "../data/emoji.json";
+  import { EmojiExtension } from "$lib/codemirror/emojiHighlighting.ts";
 
   let {
     autofocus = true,
@@ -234,7 +234,11 @@
         bracketMatching(),
         closeBrackets(),
         highlightSelectionMatches(),
-        markdownExt({ base: markdownLanguage, codeLanguages: languages }),
+        markdownExt({
+          base: markdownLanguage,
+          codeLanguages: languages,
+          extensions: [EmojiExtension],
+        }),
         markdownLanguage.data.of({
           closeBrackets: {
             brackets: [
@@ -361,7 +365,7 @@
         type: "emoji",
         detail: item.emoji,
         render: (element: HTMLElement) => {
-          element.innerHTML = twemoji.parse(item.emoji);
+          element.innerHTML = item.emoji;
           element.appendChild(document.createTextNode(` ${item.shortcode}`));
         },
         apply: item.shortcode,

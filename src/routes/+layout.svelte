@@ -61,6 +61,7 @@
   {#each pwaAssetsHead.links as link (link.href)}
     <link {...link} />
   {/each}
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   {@html webManifest}
 </svelte:head>
 

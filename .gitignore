@@ -28,3 +28,7 @@ src/lib/paraglide
 # misc
 src/lib/data/commitHash.js
 .venv/
+
+# emoji
+static/assets/emoji/*
+!static/assets/emoji/.gitkeep

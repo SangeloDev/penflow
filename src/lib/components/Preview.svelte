@@ -64,11 +64,26 @@
       return "";
     }
 
-    // Render as unicode with Noto font applied via CSS class
-    return `<span class="emoji" role="img" aria-label="${token.markup || token.content}">${token.content}</span>`;
+    const filename = emojiToFilename(token.content);
+    const emojiName = token.markup || token.content;
+
+    return `<img src="/assets/emoji/noto/${filename}" alt="${emojiName}" class="emoji" role="img" aria-label="${emojiName}" />`;
   };
 
   md.core.ruler.push("source_line_injector", addSourceLineNumbers);
+
+  // Helper function to convert emoji character to filename
+  function emojiToFilename(emojiChar: string): string {
+    const codePoints = [];
+
+    // Convert emoji string to array of codepoints
+    for (const char of emojiChar) {
+      codePoints.push(char.codePointAt(0)!.toString(16));
+    }
+
+    // Join with underscore and add prefix
+    return `emoji_u${codePoints.join("_")}.svg`;
+  }
 
   function handleCheckboxClick(e: Event) {
     e.preventDefault();
