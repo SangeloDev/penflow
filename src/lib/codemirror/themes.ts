@@ -1,5 +1,6 @@
 import { tags as t } from "@lezer/highlight";
 import { createTheme } from "thememirror";
+import { emoji } from "./emojiHighlighting";
 
 // codemirror themes
 export const tomorrow = createTheme({
@@ -31,7 +32,7 @@ export const tomorrow = createTheme({
       color: "#C99E00",
     },
     {
-      tag: [t.string, t.special(t.brace)],
+      tag: [t.string, t.special(t.brace), t.regexp, emoji],
       color: "#718C00",
     },
     {
@@ -83,7 +84,7 @@ export const coolGlow = createTheme({
       color: "#AEAEAE",
     },
     {
-      tag: [t.string, t.special(t.brace), t.regexp],
+      tag: [t.string, t.special(t.brace), t.regexp, emoji],
       color: "#8DFF8E",
     },
     {

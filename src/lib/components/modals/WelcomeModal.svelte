@@ -96,7 +96,7 @@
       <div class="flex items-center gap-4">
         <!-- Dots for steps -->
         <div class="flex gap-2">
-          {#each tourSteps as _, i}
+          {#each tourSteps as _, i (i)}
             <button
               class="h-2 w-2 rounded-full transition-colors {currentStep === i
                 ? 'bg-primary'

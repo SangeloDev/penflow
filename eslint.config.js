@@ -10,6 +10,9 @@ import svelteConfig from "./svelte.config.js";
 const gitignorePath = fileURLToPath(new URL("./.gitignore", import.meta.url));
 
 export default ts.config(
+  {
+    ignores: ["submodules/", "static/"],
+  },
   includeIgnoreFile(gitignorePath),
   js.configs.recommended,
   ...ts.configs.recommended,
@@ -42,6 +45,12 @@ export default ts.config(
         parser: ts.parser,
         svelteConfig,
       },
+    },
+  },
+  {
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   }
 );

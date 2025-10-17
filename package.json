@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "node scripts/preinstall/execute.cjs && vite build",
     "preview": "vite preview",
+    "preinstall": "node scripts/preinstall/execute.cjs",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -57,11 +58,12 @@
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
+    "@fontsource/noto-color-emoji": "^5.2.10",
     "@inlang/paraglide-js": "^2.4.0",
     "@lezer/highlight": "^1.2.1",
+    "@lezer/markdown": "^1.4.3",
     "@mdit/plugin-alert": "^0.22.2",
     "@thisux/sveltednd": "^0.0.20",
-    "@twemoji/api": "^16.0.1",
     "@types/markdown-it": "^14.1.2",
     "@types/wicg-file-system-access": "^2023.10.7",
     "date-fns": "^4.1.0",
@@ -85,7 +87,6 @@
     ],
     "overrides": {
       "cookie": "0.7.0",
-      "glob": "11.0.3",
       "source-map": "0.7.6",
       "magic-string": "0.30.19"
     }

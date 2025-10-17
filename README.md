@@ -42,7 +42,19 @@ Penflow offers a simple feature-set to make sure you stay focused on editing and
 
 ## Development
 
-To compile Penflow locally on your machine, first clone the repository, and run the following commands:
+To compile Penflow locally on your machine, first clone the repository:
+
+```bash
+# clone the repository
+git pull git@github.com:SangeloDev/penflow.git
+# initialise submodules
+git submodule update --init --recursive
+
+# OR: clone the repository recursively
+git clone --recurse-submodules git@github.com:SangeloDev/penflow.git
+```
+
+And run the following commands:
 
 ```bash
 # install dependencies

@@ -1,8 +1,4 @@
 <!-- Editor.svelte -->
-<script module>
-  import emojiList from "../data/emoji.json";
-</script>
-
 <script lang="ts">
   import Toolbar from "./Toolbar.svelte";
   import StatusBar from "./StatusBar.svelte";
@@ -56,12 +52,13 @@
   import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
   import { closeBrackets, autocompletion, CompletionContext } from "@codemirror/autocomplete";
   import { highlightSelectionMatches } from "@codemirror/search";
-  import twemoji from "@twemoji/api";
   import { darkThemes, lightThemes } from "$lib/codemirror/themes.ts";
   import { mode as uiTheme } from "mode-watcher";
   import "../../styles/codemirror.css";
   import "../../styles/splitpanes.css";
   import type { ToolbarItem } from "$lib/types/index.ts";
+  import emojiList from "../data/emoji.json";
+  import { EmojiExtension } from "$lib/codemirror/emojiHighlighting.ts";
 
   let {
     autofocus = true,
@@ -237,7 +234,11 @@
         bracketMatching(),
         closeBrackets(),
         highlightSelectionMatches(),
-        markdownExt({ base: markdownLanguage, codeLanguages: languages }),
+        markdownExt({
+          base: markdownLanguage,
+          codeLanguages: languages,
+          extensions: [EmojiExtension],
+        }),
         markdownLanguage.data.of({
           closeBrackets: {
             brackets: [
@@ -333,20 +334,41 @@
     let word = context.matchBefore(/:\w+$/);
     if (!word || (word.from == word.to && !context.explicit)) return null;
 
-    // Filter emoji list by shortcode or name
-    let query = word.text; //.slice(1); // Remove ':'
+    // Filter emoji list by shortcode
+    // let query = word.text.toLowerCase();
+    let query = word.text.slice(1).toLowerCase();
 
-    let options = emojiList.emojis
-      .filter((e) => e.shortname.startsWith(query))
-      .map((e) => ({
-        label: `${e.shortname}`,
+    // Flatten metadata structure
+    let flatEmojis = emojiList.flatMap((group) =>
+      group.emoji.map((e) => ({
+        emoji: String.fromCodePoint(...e.base),
+        shortcodes: e.shortcodes || [],
+        emoticons: e.emoticons || [],
+      }))
+    );
+
+    let options = flatEmojis
+      .flatMap((e) =>
+        // Map each shortcode to a completion option
+        e.shortcodes.map((shortcode) => ({
+          emoji: e.emoji,
+          shortcode: shortcode,
+        }))
+      )
+      .filter((item) => {
+        // Strip colons from the shortcode for comparison
+        const cleanShortcode = item.shortcode.replace(/^:/, "").replace(/:$/, "");
+        return cleanShortcode.startsWith(query);
+      })
+      .map((item) => ({
+        label: item.shortcode,
         type: "emoji",
-        detail: e.emoji,
+        detail: item.emoji,
         render: (element: HTMLElement) => {
-          element.innerHTML = twemoji.parse(e.emoji);
-          element.appendChild(document.createTextNode(` ${e.shortname}`));
+          element.innerHTML = item.emoji;
+          element.appendChild(document.createTextNode(` ${item.shortcode}`));
         },
-        apply: e.shortname,
+        apply: item.shortcode,
       }));
 
     return {

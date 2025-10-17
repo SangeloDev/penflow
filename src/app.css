@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fontsource/noto-color-emoji";
 @plugin "@tailwindcss/typography";
 
 @import "./styles/config.css";
@@ -12,8 +13,13 @@ main {
   @apply bg-selection;
 }
 
-img.emoji {
-  @apply m-0 inline-block h-5 cursor-text;
+/*.cm-completionDetail,*/
+.emoji {
+  display: inline-block;
+  height: 1.2em;
+  width: 1.2em;
+  vertical-align: -0.2em;
+  margin: 0 0.05em 0 0.1em;
 }
 
 ul.task-list {

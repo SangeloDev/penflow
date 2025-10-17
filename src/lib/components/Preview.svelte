@@ -5,11 +5,12 @@
   import checkboxes from "markdown-it-task-checkbox";
   import { alert } from "@mdit/plugin-alert";
   import footnote from "markdown-it-footnote";
-  import twemoji from "@twemoji/api";
   import DOMPurify from "isomorphic-dompurify";
   import { setContent } from "./Editor.svelte.ts";
+  import { emojiDefs, emojiShortcuts } from "$lib/utils/emoji.ts";
   import "highlight.js/styles/base16/dracula.min.css";
   import "../../styles/preview.css";
+
   let {
     content,
     onContentChange,
@@ -17,8 +18,10 @@
     content: string;
     onContentChange?: (newContent: string) => void;
   } = $props();
+
   let renderedHtml = $derived("");
 
+  // initialise markdown-it instance
   const md = new MarkdownIt("commonmark", {
     html: true,
     linkify: true,
@@ -34,8 +37,14 @@
 
       return ""; // use external default escaping
     },
-  })
-    .use(emoji)
+  });
+
+  // initialise plugins
+  md.use(footnote)
+    .use(emoji, {
+      defs: emojiDefs,
+      shortcuts: emojiShortcuts,
+    })
     .use(checkboxes, {
       disabled: false,
       divWrap: false,
@@ -45,9 +54,64 @@
       liClass: "task-list-item",
     })
     .use(alert)
-    .use(footnote)
     .enable("table")
     .enable("strikethrough");
+
+  // custom emoji renderer
+  md.renderer.rules.emoji = (tokens: Array<any>, idx: number) => {
+    const token = tokens[idx];
+    if (!token?.content) {
+      return "";
+    }
+
+    const filename = emojiToFilename(token.content);
+    const emojiName = token.markup || token.content;
+
+    return `<img src="/assets/emoji/noto/${filename}" alt="${emojiName}" class="emoji" role="img" aria-label="${emojiName}" />`;
+  };
+
+  md.core.ruler.push("source_line_injector", addSourceLineNumbers);
+
+  // Helper function to convert emoji character to filename
+  function emojiToFilename(emojiChar: string): string {
+    const codePoints = [];
+
+    // Convert emoji string to array of codepoints
+    for (const char of emojiChar) {
+      const codePoint = char.codePointAt(0)!;
+      // The noto-emoji SVG files don't include the variation selector in the filename.
+      if (codePoint !== 0xfe0f) {
+        codePoints.push(codePoint.toString(16));
+      }
+    }
+
+    // Join with underscore and add prefix
+    return `emoji_u${codePoints.join("_")}.svg`;
+  }
+
+  function handleCheckboxClick(e: Event) {
+    e.preventDefault();
+    const input = e.target as HTMLInputElement;
+    const line = input.getAttribute("data-source-line");
+    if (!line) return;
+
+    const lineNumber = parseInt(line, 10);
+    if (isNaN(lineNumber)) return;
+
+    const lines = content.split("\n");
+    const currentLine = lines[lineNumber];
+    if (!currentLine) return;
+
+    if (currentLine.includes("- [ ]")) {
+      lines[lineNumber] = currentLine.replace("- [ ]", "- [x]");
+    } else if (currentLine.includes("- [x]")) {
+      lines[lineNumber] = currentLine.replace("- [x]", "- [ ]");
+    }
+
+    content = lines.join("\n");
+    setContent(content);
+    onContentChange?.(content);
+  }
 
   function addSourceLineNumbers(state: any) {
     for (const token of state.tokens) {
@@ -64,15 +128,6 @@
       }
     }
   }
-
-  md.core.ruler.push("source_line_injector", addSourceLineNumbers);
-
-  md.renderer.rules.emoji = (token: Array<any>, idx: number) => {
-    return twemoji.parse(token[idx].content, {
-      folder: "svg",
-      ext: ".svg",
-    });
-  };
 
   $effect(() => {
     if (typeof content !== "string") {
@@ -92,27 +147,7 @@
     setTimeout(() => {
       const checkboxes = document.querySelectorAll("input[type='checkbox'][data-source-line]");
       checkboxes.forEach((checkbox) => {
-        checkbox.addEventListener("click", (e) => {
-          e.preventDefault();
-          const input = e.target as HTMLInputElement;
-          const line = input.getAttribute("data-source-line");
-          if (!line) return;
-
-          const lineNumber = parseInt(line);
-          const lines = content.split("\n");
-          const currentLine = lines[lineNumber];
-          if (!currentLine) return;
-
-          if (currentLine.includes("- [ ]")) {
-            lines[lineNumber] = currentLine.replace("- [ ]", "- [x]");
-          } else if (currentLine.includes("- [x]")) {
-            lines[lineNumber] = currentLine.replace("- [x]", "- [ ]");
-          }
-
-          content = lines.join("\n");
-          setContent(content);
-          onContentChange?.(content);
-        });
+        checkbox.addEventListener("click", handleCheckboxClick);
       });
     });
   });
