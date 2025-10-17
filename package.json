@@ -87,7 +87,6 @@
     ],
     "overrides": {
       "cookie": "0.7.0",
-      "glob": "11.0.3",
       "source-map": "0.7.6",
       "magic-string": "0.30.19"
     }

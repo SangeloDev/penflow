@@ -78,7 +78,11 @@
 
     // Convert emoji string to array of codepoints
     for (const char of emojiChar) {
-      codePoints.push(char.codePointAt(0)!.toString(16));
+      const codePoint = char.codePointAt(0)!;
+      // The noto-emoji SVG files don't include the variation selector in the filename.
+      if (codePoint !== 0xfe0f) {
+        codePoints.push(codePoint.toString(16));
+      }
     }
 
     // Join with underscore and add prefix

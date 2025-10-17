@@ -42,7 +42,7 @@ try {
       // to this process, making its logs visible in the console.
       execSync(`node "${scriptPath}"`, { stdio: "inherit" });
       console.log(`${scriptPrefix} --- Finished: ${script} ---`);
-    } catch (error) {
+    } catch (_error) {
       console.error(`\n${scriptPrefix} !!! Error executing script: ${script}. Halting execution. !!!`);
       // The error from the child process is already piped, so we just need to exit.
       process.exit(1);
@@ -50,8 +50,8 @@ try {
   }
 
   console.log(`\n${scriptPrefix} All scripts executed successfully.`);
-} catch (error) {
+} catch (_error) {
   console.error(`${scriptPrefix} A critical error occurred:`);
-  console.error(error);
+  console.error(_error);
   process.exit(1);
 }
