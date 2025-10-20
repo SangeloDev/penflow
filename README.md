@@ -46,7 +46,7 @@ To compile Penflow locally on your machine, first clone the repository:
 
 ```bash
 # clone the repository
-git pull git@github.com:SangeloDev/penflow.git
+git clone git@github.com:SangeloDev/penflow.git
 # initialise submodules
 git submodule update --init --recursive
 
