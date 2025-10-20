@@ -132,7 +132,7 @@ body.dark {
 
   .input {
     @apply w-full rounded-md border;
-    @apply border-base-400 focus:border-primary focus:hover:border-primary bg-transparent;
+    @apply border-base-400 ring-primary focus:border-primary focus:hover:border-primary bg-transparent ring-inset focus:ring-1;
     @apply px-3 py-2 text-sm transition duration-300 hover:border-gray-500 focus:shadow focus:outline-none;
     @apply placeholder-transparent placeholder:transition-all focus:placeholder-gray-400 [&:not(:placeholder-shown)]:placeholder-transparent;
     @apply disabled:opacity-65;

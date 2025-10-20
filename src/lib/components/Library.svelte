@@ -35,13 +35,19 @@
   const filteredFiles = $derived(
     Object.entries(files)
       .filter(([_id, file]) => {
-        const title = generateDocumentTitle(file.content) || "Untitled";
-        return title.toLowerCase().includes(searchTerm.toLowerCase());
+        const title = file.title || generateDocumentTitle(file.content) || "Untitled";
+        const tags = (file.tags as string) || "";
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+        const titleMatch = title.toLowerCase().includes(lowerCaseSearchTerm);
+        const tagsMatch = tags.toLowerCase().includes(lowerCaseSearchTerm);
+
+        return titleMatch || tagsMatch;
       })
       .sort(([_a, fileA], [_b, fileB]) => {
         if (settings.general.library.sort.by === "name") {
-          const titleA = generateDocumentTitle(fileA.content) || "Untitled";
-          const titleB = generateDocumentTitle(fileB.content) || "Untitled";
+          const titleA = fileA.title || generateDocumentTitle(fileA.content) || "Untitled";
+          const titleB = fileB.title || generateDocumentTitle(fileB.content) || "Untitled";
           return settings.general.library.sort.order === "asc"
             ? titleA.localeCompare(titleB)
             : titleB.localeCompare(titleA);
@@ -152,7 +158,7 @@
         </div>
       {:else}
         <div class="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6">
-          <button class="card card-link card-primary" onclick={onNewFile}>
+          <button class="card card-link card-primary h-min min-h-32" onclick={onNewFile}>
             <div class="flex w-full items-center justify-center gap-2 text-xl"><Plus size={24} /> New Note</div>
           </button>
           {#each filteredFiles as [id, file] (id)}
@@ -165,11 +171,13 @@
                   onOpenFile(id);
                 }
               }}
-              class="card card-link relative flex h-32 flex-col gap-2"
+              class="card card-link relative flex h-min min-h-32 flex-col gap-2 overflow-hidden"
               onclick={() => onOpenFile(id)}
             >
-              <div class="mt-auto">
-                <h3 class="line-clamp-1 text-center">{generateDocumentTitle(file.content) || "Untitled"}</h3>
+              <div class="mt-auto flex flex-col gap-2">
+                <h3 class="line-clamp-1 text-center">
+                  {file.title || generateDocumentTitle(file.content) || "Untitled"}
+                </h3>
                 <button
                   onclick={(e) => {
                     e.stopPropagation();
@@ -195,6 +203,14 @@
                   <Eye size={13} /> Visited: {formatDistanceStrict(file.visitedAt, new Date(), { addSuffix: true })}
                 </span>
               </div>
+
+              {#if file.tags}
+                <div class="flex flex-wrap justify-center gap-1">
+                  {#each [...new Set((file.tags as string).split(", "))] as tag (tag)}
+                    <span class="bg-primary rounded-full px-2 text-sm text-white">{tag}</span>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {/each}
         </div>
@@ -208,7 +224,11 @@
     {#snippet header()}
       <Trash2Icon size={18} />
       {#if fileToDelete && files[fileToDelete]}
-        <span>Confirm deletion of "{generateDocumentTitle(files[fileToDelete].content) || "Untitled"}"</span>
+        <span>
+          Confirm deletion of "{files[fileToDelete].title ||
+            generateDocumentTitle(files[fileToDelete].content) ||
+            "Untitled"}"
+        </span>
       {/if}
     {/snippet}
     <p class="mb-4">Are you sure you want to delete this file? This action cannot be undone.</p>
