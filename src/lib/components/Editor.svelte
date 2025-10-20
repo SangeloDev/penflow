@@ -48,6 +48,7 @@
   import { Prec, EditorState, Compartment } from "@codemirror/state";
   import { languages } from "@codemirror/language-data";
   import { markdown as markdownExt, markdownLanguage } from "@codemirror/lang-markdown";
+  import { yamlFrontmatter } from "@codemirror/lang-yaml";
   import { defaultKeymap, history } from "@codemirror/commands";
   import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
   import { closeBrackets, autocompletion, CompletionContext } from "@codemirror/autocomplete";
@@ -70,6 +71,7 @@
     onNewFile,
     onSave,
     onBack,
+    onFrontmatterChange,
   } = $props<{
     autofocus?: boolean;
     fullscreen?: boolean;
@@ -80,6 +82,7 @@
     onNewFile: () => void;
     onSave: (content: string) => void;
     onBack: () => void;
+    onFrontmatterChange: (data: { [key: string]: any }) => void;
   }>();
 
   function handleBack() {
@@ -234,10 +237,12 @@
         bracketMatching(),
         closeBrackets(),
         highlightSelectionMatches(),
-        markdownExt({
-          base: markdownLanguage,
-          codeLanguages: languages,
-          extensions: [EmojiExtension],
+        yamlFrontmatter({
+          content: markdownExt({
+            base: markdownLanguage,
+            codeLanguages: languages,
+            extensions: [EmojiExtension],
+          }),
         }),
         markdownLanguage.data.of({
           closeBrackets: {
@@ -531,12 +536,8 @@
           <div class="h-full w-full" bind:this={editorContainer}></div>
         </Pane>
         <Pane minSize={20}>
-          <div
-            class="bg-base-150 h-full w-full overflow-y-auto p-4"
-            bind:this={previewElement}
-            onscroll={() => syncScroll("preview")}
-          >
-            <Preview {content} onContentChange={updateEditorContent} />
+          <div class="bg-base-150 h-full w-full overflow-y-auto p-4" bind:this={previewElement}>
+            <Preview {content} onContentChange={updateEditorContent} {onFrontmatterChange} />
           </div>
         </Pane>
       </Splitpanes>

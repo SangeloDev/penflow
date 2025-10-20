@@ -27,10 +27,11 @@ export interface Hotkey {
 }
 
 export interface MarkdownFile {
-  filename: string;
+  id?: string;
   content: string;
   createdAt: number;
   updatedAt: number;
   visitedAt: number;
-  tags: string;
+  title?: string;
+  tags?: string;
 }
