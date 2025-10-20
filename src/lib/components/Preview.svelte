@@ -1,5 +1,6 @@
 <script lang="ts">
   import MarkdownIt from "markdown-it";
+  import matter from "gray-matter";
   import hljs from "highlight.js";
   import { full as emoji } from "markdown-it-emoji";
   import checkboxes from "markdown-it-task-checkbox";
@@ -14,9 +15,11 @@
   let {
     content,
     onContentChange,
+    onFrontmatterChange,
   }: {
     content: string;
     onContentChange?: (newContent: string) => void;
+    onFrontmatterChange?: (data: { [key: string]: any }) => void;
   } = $props();
 
   let renderedHtml = $derived("");
@@ -137,7 +140,9 @@
     }
 
     try {
-      renderedHtml = md.render(content);
+      const { data, content: markdownContent } = matter(content);
+      renderedHtml = md.render(markdownContent);
+      onFrontmatterChange?.(data);
     } catch (err) {
       console.error("Markdown rendering failed:", err);
       renderedHtml = "<pre style='color:red'>⚠️ Error while rendering markdown.</pre>";

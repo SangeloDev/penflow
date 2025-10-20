@@ -40,8 +40,12 @@
       createdAt: { type: "number", default: 0 },
       updatedAt: { type: "number", default: 0 },
       visitedAt: { type: "number", default: 0 },
+      title: { type: "string", default: "" },
+      tags: { type: "string", default: "" },
     },
   } as const;
+
+  let frontmatter = $state<{ [key: string]: any }>({});
 
   async function initStore() {
     const newStore = createStore().setTablesSchema(librarySchema);
@@ -64,11 +68,18 @@
   function showEditor(fileId: string | null) {
     activeFileId.set(fileId);
     if (fileId && store) {
+      // Load file
       const file = store.getRow("library", fileId);
       setContent(file.content as string);
+      frontmatter = {
+        title: file.title.toString(),
+        tags: [...new Set((file.tags as string).split(", "))],
+      };
       store.setPartialRow("library", fileId, { visitedAt: Date.now() });
     } else {
-      setContent(""); // New file
+      // New file
+      setContent("");
+      frontmatter = {};
     }
     isEditorVisible = true;
   }
@@ -82,12 +93,15 @@
     if (!store) return;
 
     const fileId = get(activeFileId);
+    const { title, tags } = frontmatter;
 
     if (fileId) {
       store.setPartialRow("library", fileId, {
         content,
         updatedAt: Date.now(),
         visitedAt: Date.now(),
+        title,
+        tags: tags?.join(", ") || "",
       });
     } else {
       // Create new file
@@ -97,6 +111,8 @@
         createdAt: Date.now(),
         updatedAt: Date.now(),
         visitedAt: Date.now(),
+        title,
+        tags: tags?.join(", ") || "",
       });
       activeFileId.set(newFileId);
     }
@@ -143,6 +159,7 @@
     onNewFile={() => showEditor(null)}
     onSave={(content) => handleSave(content)}
     onBack={showLibrary}
+    onFrontmatterChange={(data) => (frontmatter = data)}
   />
 {:else}
   <Library
