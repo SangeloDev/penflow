@@ -5,7 +5,7 @@
   import Columns from "lucide-svelte/icons/columns-2";
   import Library from "lucide-svelte/icons/library";
   import type { ToolbarItem } from "$lib/types";
-  import { getIcon } from "$lib/utils/toolbarIcons";
+  import { getIcon } from "$lib/editor/toolbarIcons";
 
   // exports
   let {

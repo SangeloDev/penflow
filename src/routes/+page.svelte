@@ -6,7 +6,7 @@
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
   import WelcomeModal from "$lib/components/modals/WelcomeModal.svelte";
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
-  import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/utils/hotkeys";
+  import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/hotkeys";
   import {
     getShortcutModalVisibility,
     setShortcutModalVisibility,

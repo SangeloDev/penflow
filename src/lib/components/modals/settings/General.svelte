@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ToolbarItem } from "$lib/types";
-  import { getIcon } from "$lib/utils/toolbarIcons.ts";
+  import { getIcon } from "$lib/editor/toolbarIcons.ts";
   import { RotateCcw } from "lucide-svelte";
   import { toggleToolbarItem, getToolbarItems, updateToolbarItemOrder, resetToolbarItems } from "../Settings.svelte.ts";
   import SettingsItem from "./SettingsItem.svelte";

@@ -4,9 +4,9 @@
   import StatusBar from "./StatusBar.svelte";
   import Preview from "./Preview.svelte";
   import { Splitpanes, Pane } from "svelte-splitpanes";
-  import * as f from "$lib/utils/formattingActions";
-  import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-  import { editorKeymap, type HotkeyContext } from "$lib/utils/hotkeys";
+  import * as f from "$lib/editor/formattingActions";
+  import { toggleHeadingCycle } from "$lib/editor/formatting.js";
+  import { editorKeymap, type HotkeyContext } from "$lib/hotkeys";
   import { hotkeyContext } from "$lib/store/hotkeys";
   import {
     type EditorMode,
@@ -34,7 +34,7 @@
   import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
-  import { debounce } from "$lib/utils/debounce";
+  import { debounce } from "$lib/editor/debounce";
 
   // codemirror imports
   import {

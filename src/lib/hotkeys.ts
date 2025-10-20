@@ -1,8 +1,8 @@
 import { historyKeymap, indentWithTab } from "@codemirror/commands";
 import { searchKeymap } from "@codemirror/search";
 import { closeBracketsKeymap } from "@codemirror/autocomplete";
-import * as f from "$lib/utils/formattingActions";
-import { toggleHeadingCycle } from "$lib/utils/formatting.js";
+import * as f from "$lib/editor/formattingActions";
+import { toggleHeadingCycle } from "$lib/editor/formatting.js";
 import { EditorView, keymap, type KeyBinding } from "@codemirror/view";
 import { type EditorMode } from "$lib/components/Editor.svelte.ts";
 import type { Hotkey } from "$lib/types";

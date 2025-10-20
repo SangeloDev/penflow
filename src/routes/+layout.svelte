@@ -4,7 +4,7 @@
   import { pwaAssetsHead } from "virtual:pwa-assets/head";
   import { ModeWatcher } from "mode-watcher";
   import { onMount } from "svelte";
-  import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/utils/hotkeys";
+  import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/hotkeys";
   import { hotkeyContext } from "$lib/store/hotkeys";
   import { setSettingsModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
 

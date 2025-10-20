@@ -8,7 +8,7 @@
   import footnote from "markdown-it-footnote";
   import DOMPurify from "isomorphic-dompurify";
   import { setContent } from "./Editor.svelte.ts";
-  import { emojiDefs, emojiShortcuts } from "$lib/utils/emoji.ts";
+  import { emojiDefs, emojiShortcuts } from "$lib/editor/emoji.ts";
   import "highlight.js/styles/base16/dracula.min.css";
   import "../../styles/preview.css";
 
