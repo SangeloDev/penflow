@@ -7,12 +7,23 @@
   import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/hotkeys";
   import { hotkeyContext } from "$lib/store/hotkeys";
   import { setSettingsModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
+  import { defineCustomClientStrategy } from "$paraglide/runtime";
+  import { getLanguage, setLanguage } from "$lib/settings.svelte";
 
   interface Props {
     children?: import("svelte").Snippet;
   }
   let { children }: Props = $props();
   let webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
+
+  defineCustomClientStrategy("custom-localStorage", {
+    getLocale: () => {
+      return getLanguage() ?? undefined;
+    },
+    setLocale: (locale) => {
+      setLanguage(locale);
+    },
+  });
 
   onMount(() => {
     let cleanup: { destroy: () => void } | undefined;

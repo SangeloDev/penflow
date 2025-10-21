@@ -1,0 +1,18 @@
+{
+  "bg": {
+    "name": "Български",
+    "flag": "🇧🇬"
+  },
+  "de-ch": {
+    "name": "Deutsch (Schweiz)",
+    "flag": "🇨🇭"
+  },
+  "en": {
+    "name": "English (GB)",
+    "flag": "🇬🇧"
+  },
+  "es": {
+    "name": "Español (España)",
+    "flag": "🇪🇸"
+  }
+}

@@ -19,6 +19,9 @@ interface Options {
       wrapping: boolean;
     };
   };
+  i18n: {
+    language: string;
+  };
 }
 
 export type { Options };

@@ -1,15 +1,16 @@
 <script lang="ts">
-  import { settings } from "./Settings.svelte.ts";
+  import { settings } from "$lib/settings.svelte.ts";
+  import { m } from "$paraglide/messages";
 
   import General from "./settings/General.svelte";
-  // import Home from "./settings/Home.svelte";
   import Appearance from "./settings/Appearance.svelte";
-  // import LanguageAndRegion from "./settings/LanguageAndRegion.svelte";
+  import LanguageAndRegion from "./settings/LanguageAndRegion.svelte";
   // import Accessibility from "./settings/Accessibility.svelte";
   // import Plugins from "./settings/Plugins.svelte";
   import About from "./settings/About.svelte";
-  // import { AccessibilityIcon, ChevronRight, Globe, House, Info, Paintbrush, Puzzle } from "lucide-svelte";
-  import { ChevronRight, Info, Paintbrush, Wrench } from "lucide-svelte";
+  // import { AccessibilityIcon, Puzzle } from "lucide-svelte";
+  import { ChevronRight, Info, Paintbrush, Wrench, Globe } from "lucide-svelte";
+  import { untrack } from "svelte";
 
   interface TabItem {
     id: string;
@@ -22,17 +23,33 @@
   const data: {
     nav: TabItem[];
     footer: TabItem[];
-  } = {
+  } = $derived({
     nav: [
-      { id: "general", name: "General", icon: Wrench, component: General },
-      { id: "appearance", name: "Appearance", icon: Paintbrush, component: Appearance },
-      // { id: "languageAndRegion", name: "Language & region", icon: Globe, component: LanguageAndRegion },
+      {
+        id: "general",
+        name: untrack(() => m.settings_general_section()),
+        icon: Wrench,
+        component: General,
+      },
+      {
+        id: "appearance",
+        name: untrack(() => m.settings_appearance_section()),
+        icon: Paintbrush,
+        component: Appearance,
+      },
+      {
+        id: "languageAndRegion",
+        name: untrack(() => m.settings_i18n_section()),
+        icon: Globe,
+        component: LanguageAndRegion,
+      },
       // { id: "accessibility", name: "Accessibility", icon: AccessibilityIcon, component: Accessibility },
       // { id: "plugins", name: "Plugins", icon: Puzzle, component: Plugins },
     ],
-    footer: [{ id: "about", name: "About", icon: Info, component: About }],
-  };
+    footer: [{ id: "about", name: m.settings_about_section(), icon: Info, component: About }],
+  });
 
+  // svelte-ignore state_referenced_locally
   let current: TabItem = $state(data.nav[0]);
   let initialized = $state(false);
 
@@ -72,7 +89,7 @@
   </div>
   <div class="flex min-h-[600px] w-full flex-1 flex-col overflow-hidden">
     <header class="flex shrink-0 items-center gap-2 px-4">
-      <span class="opacity-65">Settings</span>
+      <span class="opacity-65">{m.settings()}</span>
       <ChevronRight size={16} class="opacity-65" />
       <span>{current.name}</span>
     </header>

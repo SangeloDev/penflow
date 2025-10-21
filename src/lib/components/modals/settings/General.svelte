@@ -2,10 +2,16 @@
   import type { ToolbarItem } from "$lib/types";
   import { getIcon } from "$lib/editor/toolbarIcons.ts";
   import { RotateCcw } from "lucide-svelte";
-  import { toggleToolbarItem, getToolbarItems, updateToolbarItemOrder, resetToolbarItems } from "../Settings.svelte.ts";
+  import {
+    toggleToolbarItem,
+    getToolbarItems,
+    updateToolbarItemOrder,
+    resetToolbarItems,
+  } from "$lib/settings.svelte.ts";
   import SettingsItem from "./SettingsItem.svelte";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import { onMount } from "svelte";
+  import { m } from "$paraglide/messages";
 
   let mounted = $state(false);
   onMount(() => {
@@ -40,8 +46,8 @@
 </script>
 
 <SettingsItem>
-  {#snippet title()}Toolbar Items{/snippet}
-  {#snippet description()}Configure and reorder the items in your toolbar{/snippet}
+  {#snippet title()}{m.settings_general_toolbarItemsItem_name()}{/snippet}
+  {#snippet description()}{m.settings_general_toolbarItemsItem_description()}{/snippet}
 
   <div class="space-y-3">
     <!-- Single droppable container -->
@@ -70,6 +76,6 @@
   </div>
   <button class="btn flex w-fit items-center gap-1 select-none" onclick={resetToolbarItems}>
     <RotateCcw size={16} />
-    Reset to default
+    {m.settings_general_toolbarItemsItem_resetButton()}
   </button>
 </SettingsItem>

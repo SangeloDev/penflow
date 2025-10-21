@@ -15,7 +15,7 @@
     setContent,
     activeFileId,
   } from "$lib/components/Editor.svelte.ts";
-  import { getFirstVisit, setFirstVisit } from "$lib/components/modals/Settings.svelte.ts";
+  import { getFirstVisit, setFirstVisit } from "$lib/settings.svelte.ts";
   import { createStore, type Store } from "tinybase";
   import { get } from "svelte/store";
   import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";

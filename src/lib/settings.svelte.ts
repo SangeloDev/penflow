@@ -34,6 +34,9 @@ const defaults: Options = {
       wrapping: true,
     },
   },
+  i18n: {
+    language: navigator.language,
+  },
 };
 
 // Helper function to merge toolbar items while preserving user preferences
@@ -115,16 +118,28 @@ export function setLineWrappingEnabled(value: typeof settings.appearance.editor.
 }
 
 // Helper functions for toolbar management
+/**
+ * Return all toolbar items
+ */
 export function getToolbarItems() {
-  return settings.general.editor.toolbarItems;
+  return settings.general.editor.toolbarItems as typeof settings.general.editor.toolbarItems;
 }
 
-export function getEnabledToolbarItems(): ToolbarItem[] {
+/**
+ * Returns the enabled toolbar items
+ * @returns {typeof settings.general.editor.toolbarItems}
+ */
+export function getEnabledToolbarItems(): typeof settings.general.editor.toolbarItems {
   return settings.general.editor.toolbarItems
     .filter((item) => item.enabled)
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
+/**
+ * Toggle the visibility of a toolbar item.
+ * @param {string} itemId
+ * @param {boolean} enabled
+ */
 export function toggleToolbarItem(itemId: string, enabled: boolean) {
   const item = settings.general.editor.toolbarItems.find((item) => item.id === itemId);
   if (item) {
@@ -132,6 +147,11 @@ export function toggleToolbarItem(itemId: string, enabled: boolean) {
   }
 }
 
+/**
+ * Update specific toolbar item order using its ID and the order as parameters.
+ * @param {string} itemId
+ * @param {number} order
+ */
 export function updateToolbarItemOrder(itemId: string, order: number) {
   const item = settings.general.editor.toolbarItems.find((item) => item.id === itemId);
   if (item) {
@@ -139,6 +159,30 @@ export function updateToolbarItemOrder(itemId: string, order: number) {
   }
 }
 
+/**
+ * Reset toolbar items to default settings.
+ */
 export function resetToolbarItems() {
   settings.general.editor.toolbarItems = defaults.general.editor.toolbarItems;
+}
+
+// i18n
+
+/**
+ * To be used only internally, use Paraglide's setLocale() function instead.
+ *
+ * Sets locale in user settings.
+ * @param {typeof settings.i18n.language} locale
+ */
+export function setLanguage(locale: typeof settings.i18n.language) {
+  settings.i18n.language = locale;
+}
+
+/**
+ * To be used only internally, use Paraglide's getLocale() function instead.
+ *
+ * Gets locale from user settings.
+ */
+export function getLanguage() {
+  return settings.i18n.language as typeof settings.i18n.language;
 }

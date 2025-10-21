@@ -16,7 +16,7 @@ export default defineConfig({
     paraglideVitePlugin({
       project: "./penflow.inglang",
       outdir: "./src/lib/paraglide",
-      strategy: ["url", "cookie", "baseLocale"],
+      strategy: ["custom-localStorage", "preferredLanguage", "baseLocale"],
     }),
     SvelteKitPWA({
       registerType: "prompt",
