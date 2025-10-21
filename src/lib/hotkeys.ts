@@ -8,6 +8,7 @@ import { type EditorMode } from "$lib/components/Editor.svelte.ts";
 import type { Hotkey } from "$lib/types";
 import * as prettier from "prettier";
 import markdown from "prettier/plugins/markdown";
+import { m } from "$paraglide/messages";
 
 /**
  * Formats the editor content using Prettier.
@@ -129,19 +130,19 @@ export type HotkeyContext = {
 export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[] => [
   {
     id: 0,
-    desc: "Settings",
+    desc: m.settings(),
     shortcut: "Ctrl+Comma",
     action: () => context?.setSettingsModalVisibility(true),
   },
   {
     id: 1,
-    desc: "Help",
+    desc: m.help(),
     shortcut: "Ctrl+Alt+Slash",
     action: () => context?.setShortcutModalVisibility(true),
   },
   {
     id: 2,
-    desc: "Cycle Editing Mode",
+    desc: m.help_hotkeys_cycleEditingMode(),
     shortcut: "Ctrl+E",
     action: () => context?.cycleEditMode(context?.getMode()),
   },
@@ -154,25 +155,25 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
   },
   {
     id: 4,
-    desc: "Save File",
+    desc: m.help_hotkeys_saveFile(),
     shortcut: "Ctrl+S",
     action: () => context?.saveFile(),
   },
   {
     id: 5,
-    desc: "Export File",
+    desc: m.help_hotkeys_exportFile(),
     shortcut: "Ctrl+Shift+S",
     action: () => context?.exportFile(context?.content, context?.activeFilename),
   },
   {
     id: 6,
-    desc: "Open File",
+    desc: m.help_hotkeys_openFile(),
     shortcut: "Ctrl+O",
     action: () => context?.openFile(context?.view),
   },
   {
     id: 7,
-    desc: "New File",
+    desc: m.help_hotkeys_newFile(),
     shortcut: "Ctrl+Shift+O",
     action: () => context?.newFile(context?.view, context?.onNewFile, context?.getDirtyness()),
   },
@@ -201,10 +202,10 @@ export const constructedGlobalHotkeys = (hotkeys: Hotkey[]) => {
   }, {}); // The `{}` is the initial value – we start with an empty object.
 };
 
-export const editorHotkeys: Hotkey[] = [
+export const createEditorHotkeys = (): Hotkey[] => [
   {
     id: 0,
-    desc: "Bold",
+    desc: m.help_hotkeys_bold(),
     shortcut: "Ctrl+B",
     key: "Mod-b",
     action: (view: EditorView) => {
@@ -214,7 +215,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 1,
-    desc: "Italic",
+    desc: m.help_hotkeys_italic(),
     shortcut: "Ctrl+I",
     key: "Mod-i",
     action: (view: EditorView) => {
@@ -224,7 +225,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 2,
-    desc: "Cycle Headings",
+    desc: m.help_hotkeys_cycleHeadings(),
     shortcut: "Ctrl+Shift+H",
     key: "Mod-Shift-h",
     action: (view: EditorView) => {
@@ -234,7 +235,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 3,
-    desc: "Headings",
+    desc: m.help_hotkeys_headings(),
     shortcut: "Ctrl+Alt+1 -> 6",
     key: "Mod-Alt-1",
     action: (view: EditorView) => {
@@ -294,7 +295,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 9,
-    desc: "Blockquote",
+    desc: m.help_hotkeys_blockquote(),
     shortcut: "Ctrl+Shift+B",
     key: "Mod-Shift-b",
     action: (view: EditorView) => {
@@ -304,7 +305,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 10,
-    desc: "Code Block",
+    desc: m.help_hotkeys_codeBlock(),
     shortcut: "Ctrl+Shift+C",
     key: "Mod-Shift-c",
     action: (view: EditorView) => {
@@ -314,7 +315,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 11,
-    desc: "Inline Code",
+    desc: m.help_hotkeys_inlineCode(),
     shortcut: "Ctrl+Alt+C",
     key: "Mod-Alt-c",
     action: (view: EditorView) => {
@@ -324,7 +325,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 12,
-    desc: "Bulleted List",
+    desc: m.help_hotkeys_bulletedList(),
     shortcut: "Ctrl+L",
     key: "Mod-l",
     action: (view: EditorView) => {
@@ -334,7 +335,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 13,
-    desc: "Numbered List",
+    desc: m.help_hotkeys_orderedList(),
     shortcut: "Ctrl+Shift+L",
     key: "Mod-Shift-l",
     action: (view: EditorView) => {
@@ -344,7 +345,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 14,
-    desc: "Insert Link",
+    desc: m.help_hotkeys_link(),
     shortcut: "Ctrl+K",
     key: "Mod-k",
     action: (view: EditorView) => {
@@ -354,7 +355,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 15,
-    desc: "Insert Image",
+    desc: m.help_hotkeys_image(),
     shortcut: "Ctrl+Shift+K",
     key: "Mod-Shift-k",
     action: (view: EditorView) => {
@@ -364,7 +365,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 16,
-    desc: "Insert Table",
+    desc: m.help_hotkeys_table(),
     shortcut: "Ctrl+Shift+T",
     key: "Mod-Shift-t",
     action: (view: EditorView) => {
@@ -374,7 +375,7 @@ export const editorHotkeys: Hotkey[] = [
   },
   {
     id: 17,
-    desc: "Format Document",
+    desc: m.help_hotkeys_format(),
     shortcut: "Ctrl+Shift+I",
     key: "Mod-Shift-i",
     action: (view: EditorView) => {
@@ -384,18 +385,23 @@ export const editorHotkeys: Hotkey[] = [
   },
 ];
 
-const constructedEditorHotkeys = editorHotkeys.map(
-  (hotkey) =>
-    ({
-      key: hotkey.key,
-      run: hotkey.action,
-    }) as KeyBinding
-);
+const constructedEditorHotkeys = (getLocale: () => string) => {
+  // Access getLocale() to make this reactive to language changes
+  getLocale();
+  return createEditorHotkeys().map(
+    (hotkey) =>
+      ({
+        key: hotkey.key,
+        run: hotkey.action,
+      }) as KeyBinding
+  );
+};
 
-export const editorKeymap = keymap.of([
-  ...closeBracketsKeymap,
-  ...searchKeymap,
-  ...historyKeymap,
-  indentWithTab,
-  ...constructedEditorHotkeys,
-]);
+export const createEditorKeymap = (getLocale: () => string) =>
+  keymap.of([
+    ...closeBracketsKeymap,
+    ...searchKeymap,
+    ...historyKeymap,
+    indentWithTab,
+    ...constructedEditorHotkeys(getLocale),
+  ]);

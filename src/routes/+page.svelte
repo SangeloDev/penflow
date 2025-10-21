@@ -6,7 +6,7 @@
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
   import WelcomeModal from "$lib/components/modals/WelcomeModal.svelte";
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
-  import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/hotkeys";
+  import { createGlobalHotkeys as hotkeys, createEditorHotkeys } from "$lib/hotkeys";
   import {
     getShortcutModalVisibility,
     setShortcutModalVisibility,
@@ -25,6 +25,7 @@
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
   let settingsModalTitle = $derived("");
+  let helpModalTitle = $derived("");
   let welcomeModalVisible = $state(false);
 
   // App state
@@ -140,6 +141,7 @@
 
   $effect(() => {
     settingsModalTitle = m.settings();
+    helpModalTitle = m.help();
   });
 
   function handleWelcomeFinish() {
@@ -188,11 +190,11 @@
 
 <Modal bind:show={shortcutModalVisible} onclose={() => setShortcutModalVisibility(false)}>
   {#snippet header()}
-    <CircleHelp size={18} /> Help
+    <CircleHelp size={18} /> {helpModalTitle}
   {/snippet}
   <Shortcuts>
     <div>
-      <h1 class="mb-2 font-semibold">Hotkeys</h1>
+      <h1 class="mb-2 font-semibold">{m.help_hotkeys()}</h1>
       <ul>
         {#each hotkeys(undefined) as s (s.id)}
           {#if !s.hidden}
@@ -207,9 +209,9 @@
       </ul>
     </div>
     <div>
-      <h1 class="mb-2 font-semibold">Editor Hotkeys</h1>
+      <h1 class="mb-2 font-semibold">{m.help_editorHotkeys()}</h1>
       <ul>
-        {#each editorHotkeys as s (s.id)}
+        {#each createEditorHotkeys() as s (s.id)}
           {#if !s.hidden}
             <li class="mb-1 grid grid-cols-2">
               <span>{s.desc}</span>
@@ -230,7 +232,7 @@
       rel="noopener noreferrer"
     >
       <Notebook size={18} />
-      <span class="text-link">Need help with Markdown?</span>
+      <span class="text-link">{m.help_markdown()}</span>
     </a>
   {/snippet}
 </Modal>

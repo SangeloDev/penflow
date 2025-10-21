@@ -11,6 +11,7 @@
   import { emojiDefs, emojiShortcuts } from "$lib/editor/emoji.ts";
   import "highlight.js/styles/base16/dracula.min.css";
   import "../../styles/preview.css";
+  import { m } from "$paraglide/messages.js";
 
   let {
     content,
@@ -135,7 +136,7 @@
   $effect(() => {
     if (typeof content !== "string") {
       console.warn("Preview received invalid content:", content);
-      renderedHtml = "<pre style='color:red'>⚠️ Error: Content is not a string.</pre>";
+      renderedHtml = `<pre style='color:red'>⚠️ ${m.editor_preview_error_contentNotString()}</pre>`;
       return;
     }
 
@@ -145,7 +146,7 @@
       onFrontmatterChange?.(data);
     } catch (err) {
       console.error("Markdown rendering failed:", err);
-      renderedHtml = "<pre style='color:red'>⚠️ Error while rendering markdown.</pre>";
+      renderedHtml = `<pre style='color:red'>⚠️ ${m.editor_preview_error_markdownRender()}</pre>`;
     }
 
     // only use checkbox listener if dom is updated successfully

@@ -6,6 +6,7 @@
   import Library from "lucide-svelte/icons/library";
   import type { ToolbarItem } from "$lib/types";
   import { getIcon } from "$lib/editor/toolbarIcons";
+  import { m } from "$paraglide/messages";
 
   // exports
   let {
@@ -41,14 +42,19 @@
   {/each}
 
   <div class="flex-1"></div>
-  <button class="btn btn-square" onclick={() => onModeChange("edit")} aria-pressed={mode === "edit"} title="Edit">
+  <button
+    class="btn btn-square"
+    onclick={() => onModeChange("edit")}
+    aria-pressed={mode === "edit"}
+    title={m.editor_toolbar_mode_edit()}
+  >
     <Pencil size={20} />
   </button>
   <button
     class="btn btn-square"
     onclick={() => onModeChange("side-by-side")}
     aria-pressed={mode === "side-by-side"}
-    title="Side by Side"
+    title={m.editor_toolbar_mode_sideBySide()}
   >
     <Columns size={20} />
   </button>
@@ -56,7 +62,7 @@
     class="btn btn-square"
     onclick={() => onModeChange("preview")}
     aria-pressed={mode === "preview"}
-    title="Preview"
+    title={m.editor_toolbar_mode_preview()}
   >
     <Eye size={20} />
   </button>

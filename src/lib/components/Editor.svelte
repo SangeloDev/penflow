@@ -6,7 +6,8 @@
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import * as f from "$lib/editor/formattingActions";
   import { toggleHeadingCycle } from "$lib/editor/formatting.js";
-  import { editorKeymap, type HotkeyContext } from "$lib/hotkeys";
+  import { createEditorKeymap, type HotkeyContext } from "$lib/hotkeys";
+  import { getLocale } from "$paraglide/runtime";
   import { hotkeyContext } from "$lib/store/hotkeys";
   import {
     type EditorMode,
@@ -15,7 +16,6 @@
     setDirty,
     setMode,
     loadFileContent,
-    generateFilename,
     handleFileSelect,
     cycleEditMode,
     saveFile,
@@ -60,6 +60,7 @@
   import type { ToolbarItem } from "$lib/types/index.ts";
   import emojiList from "../data/emoji.json";
   import { EmojiExtension } from "$lib/codemirror/emojiHighlighting.ts";
+  import { m } from "$paraglide/messages.js";
 
   let {
     autofocus = true,
@@ -196,7 +197,7 @@
     cycleEditMode: cycleEditMode,
     saveFile: () => saveFile((content: string) => onSave(content), content),
     exportFile: () => exportFile(content),
-    openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
+    openFile: () => openFile(editorView, isDirty, content, historyCompartment),
     newFile: () => newFile(editorView, onNewFile, getDirtyness()),
     content: getContent(),
     activeFilename: $activeFilenameStore,
@@ -266,7 +267,7 @@
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         placeholderExtension(placeholder),
         autocompletion({ override: [emojiCompletionSource] }),
-        Prec.highest(editorKeymap),
+        Prec.highest(createEditorKeymap(getLocale)),
         Prec.default(keymap.of(defaultKeymap)),
         lineWrappingCompartment.of(getLineWrappingEnabled() ? EditorView.lineWrapping : []),
         EditorView.updateListener.of((update) => {
@@ -386,10 +387,9 @@
     view: EditorView | undefined,
     dirtyness: boolean,
     oldContent: string,
-    activeFilename: string | undefined,
     historyCompartment: Compartment
   ) {
-    if (dirtyness && !confirm("You have unsaved changes. Discard them and open a new file?")) {
+    if (dirtyness && !confirm(m.editor_unsavedChanges())) {
       return;
     }
 
@@ -414,18 +414,6 @@
       }
     }
   }
-
-  let documentTitle = $derived(() => {
-    const dirtyIndicator = isDirty ? "• " : "";
-    let fileName = $activeFilenameStore;
-
-    if (!fileName) {
-      const generated = generateFilename(content);
-      fileName = generated !== "note.md" ? generated : "Untitled";
-    }
-
-    return `${dirtyIndicator}${fileName}`;
-  });
 
   // Autoscroll
   function syncScroll(source: "editor" | "preview") {

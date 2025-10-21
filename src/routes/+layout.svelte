@@ -3,11 +3,10 @@
   import { pwaInfo } from "virtual:pwa-info";
   import { pwaAssetsHead } from "virtual:pwa-assets/head";
   import { ModeWatcher } from "mode-watcher";
-  import { onMount } from "svelte";
   import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/hotkeys";
   import { hotkeyContext } from "$lib/store/hotkeys";
   import { setSettingsModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
-  import { defineCustomClientStrategy } from "$paraglide/runtime";
+  import { defineCustomClientStrategy, getLocale } from "$paraglide/runtime";
   import { getLanguage, setLanguage } from "$lib/settings.svelte";
 
   interface Props {
@@ -25,8 +24,11 @@
     },
   });
 
-  onMount(() => {
-    let cleanup: { destroy: () => void } | undefined;
+  let cleanup: { destroy: () => void } | undefined;
+
+  $effect(() => {
+    // Access getLocale() to make this effect reactive to language changes
+    getLocale();
 
     const unsubscribe = hotkeyContext.subscribe((context) => {
       // If there's an existing hotkey listener, destroy it before creating a new one.
@@ -56,7 +58,7 @@
     });
 
     return () => {
-      // When the component is destroyed, unsubscribe from the store and clean up the last listener.
+      // When the component is destroyed or effect re-runs, unsubscribe from the store and clean up the last listener.
       unsubscribe();
       if (cleanup) {
         cleanup.destroy();
