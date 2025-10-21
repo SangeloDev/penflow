@@ -10,7 +10,6 @@
   import About from "./settings/About.svelte";
   // import { AccessibilityIcon, Puzzle } from "lucide-svelte";
   import { ChevronRight, Info, Paintbrush, Wrench, Globe } from "lucide-svelte";
-  import { untrack } from "svelte";
 
   interface TabItem {
     id: string;
@@ -20,37 +19,47 @@
     href?: string;
   }
 
-  const data: {
-    nav: TabItem[];
-    footer: TabItem[];
-  } = $derived({
-    nav: [
-      {
-        id: "general",
-        name: untrack(() => m.settings_general_section()),
-        icon: Wrench,
-        component: General,
-      },
-      {
-        id: "appearance",
-        name: untrack(() => m.settings_appearance_section()),
-        icon: Paintbrush,
-        component: Appearance,
-      },
-      {
-        id: "languageAndRegion",
-        name: untrack(() => m.settings_i18n_section()),
-        icon: Globe,
-        component: LanguageAndRegion,
-      },
-      // { id: "accessibility", name: "Accessibility", icon: AccessibilityIcon, component: Accessibility },
-      // { id: "plugins", name: "Plugins", icon: Puzzle, component: Plugins },
-    ],
-    footer: [{ id: "about", name: m.settings_about_section(), icon: Info, component: About }],
+  function buildDataObject() {
+    return {
+      nav: [
+        {
+          id: "general",
+          name: m.settings_general_section(),
+          icon: Wrench,
+          component: General,
+        },
+        {
+          id: "appearance",
+          name: m.settings_appearance_section(),
+          icon: Paintbrush,
+          component: Appearance,
+        },
+        {
+          id: "languageAndRegion",
+          name: m.settings_i18n_section(),
+          icon: Globe,
+          component: LanguageAndRegion,
+        },
+        // { id: "accessibility", name: "Accessibility", icon: AccessibilityIcon, component: Accessibility },
+        // { id: "plugins", name: "Plugins", icon: Puzzle, component: Plugins },
+      ] as TabItem[],
+      footer: [{ id: "about", name: m.settings_about_section(), icon: Info, component: About }] as TabItem[],
+    };
+  }
+
+  let data = $state(buildDataObject());
+
+  $effect(() => {
+    // By accessing a message, we ensure the effect re-runs on language change
+    m.settings();
+    const newData = buildDataObject();
+    data.nav = newData.nav;
+    data.footer = newData.footer;
   });
 
-  // svelte-ignore state_referenced_locally
-  let current: TabItem = $state(data.nav[0]);
+  let currentId = $state("general");
+  const allItems = $derived([...data.nav, ...data.footer]);
+  let current = $derived(allItems.find((item) => item.id === currentId) ?? allItems[0]);
   let initialized = $state(false);
 
   $effect(() => {
@@ -68,7 +77,7 @@
   <div class="border-base-300 flex min-w-1/5 flex-col gap-1 border-r pr-4">
     {#each data.nav as item (item.id)}
       {@const Icon = item.icon}
-      <button class="btn" onclick={() => (current = item)} aria-pressed={current.id === item.id}>
+      <button class="btn" onclick={() => (currentId = item.id)} aria-pressed={currentId === item.id}>
         {#if item.icon}
           <Icon size={16} />
         {/if}
@@ -78,7 +87,7 @@
     <div class="mt-auto flex flex-col gap-1">
       {#each data.footer as item (item.id)}
         {@const Icon = item.icon}
-        <button class="btn" onclick={() => (current = item)} aria-pressed={current.id === item.id}>
+        <button class="btn" onclick={() => (currentId = item.id)} aria-pressed={currentId === item.id}>
           {#if item.icon}
             <Icon size={16} />
           {/if}

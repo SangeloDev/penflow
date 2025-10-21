@@ -20,9 +20,11 @@
   import { get } from "svelte/store";
   import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
   import type { MarkdownFile } from "$lib/types";
+  import { m } from "$paraglide/messages";
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
+  let settingsModalTitle = $derived("");
   let welcomeModalVisible = $state(false);
 
   // App state
@@ -136,6 +138,10 @@
     };
   });
 
+  $effect(() => {
+    settingsModalTitle = m.settings();
+  });
+
   function handleWelcomeFinish() {
     welcomeModalVisible = false;
     setFirstVisit("true");
@@ -153,7 +159,7 @@
 
 {#if isEditorVisible}
   <Editor
-    placeholder="Let your mind flow..."
+    placeholder={m.editor_placeholder()}
     fullscreen={true}
     bind:shortcutModalVisible
     onNewFile={() => showEditor(null)}
@@ -175,7 +181,7 @@
 
 <Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
   {#snippet header()}
-    <SettingsIcon size={18} /> Settings
+    <SettingsIcon size={18} /> {settingsModalTitle}
   {/snippet}
   <Settings />
 </Modal>
