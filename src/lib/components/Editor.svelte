@@ -15,7 +15,6 @@
     setDirty,
     setMode,
     loadFileContent,
-    generateFilename,
     handleFileSelect,
     cycleEditMode,
     saveFile,
@@ -33,7 +32,7 @@
   } from "./Editor.svelte.ts";
   import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
-  import { getEnabledToolbarItems, getLineWrappingEnabled } from "./modals/Settings.svelte.ts";
+  import { getEnabledToolbarItems, getLineWrappingEnabled } from "$lib/settings/index.svelte.ts";
   import { debounce } from "$lib/utils/debounce";
 
   // codemirror imports
@@ -196,7 +195,7 @@
     cycleEditMode: cycleEditMode,
     saveFile: () => saveFile((content: string) => onSave(content), content),
     exportFile: () => exportFile(content),
-    openFile: () => openFile(editorView, isDirty, content, documentTitle(), historyCompartment),
+    openFile: () => openFile(editorView, isDirty, content, historyCompartment),
     newFile: () => newFile(editorView, onNewFile, getDirtyness()),
     content: getContent(),
     activeFilename: $activeFilenameStore,
@@ -386,7 +385,6 @@
     view: EditorView | undefined,
     dirtyness: boolean,
     oldContent: string,
-    activeFilename: string | undefined,
     historyCompartment: Compartment
   ) {
     if (dirtyness && !confirm("You have unsaved changes. Discard them and open a new file?")) {
@@ -414,18 +412,6 @@
       }
     }
   }
-
-  let documentTitle = $derived(() => {
-    const dirtyIndicator = isDirty ? "• " : "";
-    let fileName = $activeFilenameStore;
-
-    if (!fileName) {
-      const generated = generateFilename(content);
-      fileName = generated !== "note.md" ? generated : "Untitled";
-    }
-
-    return `${dirtyIndicator}${fileName}`;
-  });
 
   // Autoscroll
   function syncScroll(source: "editor" | "preview") {
