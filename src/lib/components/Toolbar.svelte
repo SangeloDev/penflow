@@ -8,6 +8,14 @@
   import { getIcon } from "$lib/editor/toolbarIcons";
   import { m } from "$paraglide/messages";
 
+  const getTranslatedTitle = $derived((titleKey: string | undefined): string => {
+    if (titleKey && m[titleKey as keyof typeof m] && typeof m[titleKey as keyof typeof m] === "function") {
+      console.log(m[titleKey as keyof typeof m]({ count: {}, item: {} }));
+      return m[titleKey as keyof typeof m]({ count: {}, item: {} });
+    }
+    return titleKey || "";
+  });
+
   // exports
   let {
     mode,
@@ -34,7 +42,7 @@
         disabled={mode === "preview"}
         class="btn btn-square"
         onclick={item.action as () => void}
-        title={item.title}
+        title={getTranslatedTitle(item.title)}
       >
         <Component size={20} />
       </button>
