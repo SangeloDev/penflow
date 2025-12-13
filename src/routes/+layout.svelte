@@ -7,7 +7,7 @@
   import { hotkeyContext } from "$lib/store/hotkeys";
   import { setSettingsModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
   import { defineCustomClientStrategy, getLocale } from "$paraglide/runtime";
-  import { getLanguage, setLanguage } from "$lib/settings.svelte";
+  import { getLanguage, setLanguage } from "$lib/settings/index.svelte.ts";
 
   interface Props {
     children?: import("svelte").Snippet;

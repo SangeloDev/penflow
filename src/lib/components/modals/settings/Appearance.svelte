@@ -1,6 +1,6 @@
 <script lang="ts">
   import { setMode, mode, type SystemModeValue } from "mode-watcher";
-  import { getLineWrappingEnabled, setLineWrappingEnabled } from "$lib/settings.svelte.ts";
+  import { getLineWrappingEnabled, setLineWrappingEnabled } from "$lib/settings/index.svelte.ts";
   import { Sun, Moon, RotateCcw } from "lucide-svelte";
   import SettingsItem from "./SettingsItem.svelte";
   import ToggleSwitch from "$lib/components/ui/ToggleSwitch.svelte";

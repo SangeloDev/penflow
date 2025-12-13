@@ -33,7 +33,7 @@
   } from "./Editor.svelte.ts";
   import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
-  import { getEnabledToolbarItems, getLineWrappingEnabled } from "$lib/settings.svelte.ts";
+  import { getEnabledToolbarItems, getLineWrappingEnabled } from "$lib/settings/index.svelte.ts";
   import { debounce } from "$lib/editor/debounce";
 
   // codemirror imports

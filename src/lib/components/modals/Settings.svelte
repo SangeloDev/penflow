@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { settings } from "$lib/settings.svelte.ts";
+  import { settings } from "$lib/settings/index.svelte.ts";
   import { m } from "$paraglide/messages";
 
   import General from "./settings/General.svelte";

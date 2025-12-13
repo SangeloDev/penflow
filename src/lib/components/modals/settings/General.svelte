@@ -7,7 +7,7 @@
     getToolbarItems,
     updateToolbarItemOrder,
     resetToolbarItems,
-  } from "$lib/settings.svelte.ts";
+  } from "$lib/settings/index.svelte.ts";
   import SettingsItem from "./SettingsItem.svelte";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import { onMount } from "svelte";

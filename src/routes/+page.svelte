@@ -15,7 +15,7 @@
     setContent,
     activeFileId,
   } from "$lib/components/Editor.svelte.ts";
-  import { getFirstVisit, setFirstVisit } from "$lib/settings.svelte.ts";
+  import { getFirstVisit, setFirstVisit } from "$lib/settings/index.svelte.ts";
   import { createStore, type Store } from "tinybase";
   import { get } from "svelte/store";
   import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
@@ -129,7 +129,7 @@
   $effect(() => {
     initStore();
 
-    const isFirstVisit = getFirstVisit() === "false";
+    const isFirstVisit = getFirstVisit() === false;
     if (isFirstVisit) {
       welcomeModalVisible = true;
     }
@@ -146,7 +146,7 @@
 
   function handleWelcomeFinish() {
     welcomeModalVisible = false;
-    setFirstVisit("true");
+    setFirstVisit(true);
   }
 </script>
 

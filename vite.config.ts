@@ -67,4 +67,13 @@ export default defineConfig({
     }),
     nodePolyfills(),
   ],
+  // fix weird dependency optimization loop
+  optimizeDeps: {
+    include: [
+      "@lezer/markdown",
+      "vite-plugin-node-polyfills/shims/buffer",
+      "vite-plugin-node-polyfills/shims/global",
+      "vite-plugin-node-polyfills/shims/process",
+    ],
+  },
 });
