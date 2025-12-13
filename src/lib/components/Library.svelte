@@ -7,6 +7,8 @@
   import { setSettingsModalVisibility } from "./Editor.svelte.ts";
   import { settings } from "$lib/settings/index.svelte.ts";
   import { m } from "$paraglide/messages.js";
+  import { getLocale } from "$paraglide/runtime";
+  import { dateLocaleMap } from "$lib/i18n/dateLocales";
 
   let {
     files,
@@ -53,6 +55,10 @@
   let modificationDate = $state("");
   let visitDate = $state("");
   let untitledNote = $state("");
+  let settingsLabel = $state("");
+
+  // Derive the current date-fns locale based on the language setting
+  const dateLocale = $derived(dateLocaleMap[getLocale()] || dateLocaleMap["en"]);
 
   let confirmDeletionTitle = $state((item: string) => {
     return m.library_confirmDeletion_title({ item: item });
@@ -78,6 +84,7 @@
     creationDate = m.library_note_creationDate();
     modificationDate = m.library_note_modificationDate();
     visitDate = m.library_note_visitDate();
+    settingsLabel = m.settings();
     untitledNote = m.library_note_untitled();
     confirmDeletionMessage = m.library_confirmDeletion_message();
     cancelButton = m.cancel();
@@ -150,7 +157,7 @@
     <span class="py-1 align-middle text-xl font-bold">penflow</span>
   </div>
   <div class="ml-auto flex items-center gap-1">
-    <button class="btn btn-square" onclick={() => setSettingsModalVisibility(true)} title="Settings">
+    <button class="btn btn-square" onclick={() => setSettingsModalVisibility(true)} title={settingsLabel}>
       <Settings size={20} />
     </button>
   </div>
@@ -258,17 +265,24 @@
               <div class="mt-auto flex flex-col items-center place-self-center justify-self-center text-xs opacity-50">
                 <span class="flex items-center gap-1">
                   <Clock size={13} />
-                  {creationDate}: {formatDistanceStrict(file.createdAt, new Date(), { addSuffix: true })}
+                  {creationDate}: {formatDistanceStrict(file.createdAt, new Date(), {
+                    addSuffix: true,
+                    locale: dateLocale,
+                  })}
                 </span>
                 <span class="flex items-center gap-1">
                   <PencilIcon size={13} />
                   {modificationDate}: {formatDistanceStrict(file.updatedAt, new Date(), {
                     addSuffix: true,
+                    locale: dateLocale,
                   })}
                 </span>
                 <span class="flex items-center gap-1">
                   <Eye size={13} />
-                  {visitDate}: {formatDistanceStrict(file.visitedAt, new Date(), { addSuffix: true })}
+                  {visitDate}: {formatDistanceStrict(file.visitedAt, new Date(), {
+                    addSuffix: true,
+                    locale: dateLocale,
+                  })}
                 </span>
               </div>
 
