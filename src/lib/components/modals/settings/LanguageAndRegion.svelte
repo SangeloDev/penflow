@@ -14,13 +14,18 @@
 <SettingsItem>
   {#snippet title()}{m.settings_i18n_languageItem_title()}{/snippet}
   {#snippet description()}{m.settings_i18n_languageItem_description()}{/snippet}
-</SettingsItem>
 
-<select class="input max-w-min" bind:value={selectedLocale} onchange={() => setNewLocale(selectedLocale)}>
-  <option disabled>{m.settings_i18n_languageItem_selectLang()}</option>
-  {#each locales as l (l)}
-    {#if langs[l]}
-      <option value={l}>{langs[l].name} {langs[l].flag}</option>
-    {/if}
-  {/each}
-</select>
+  <select
+    id="language-select"
+    class="input max-w-min"
+    bind:value={selectedLocale}
+    onchange={() => setNewLocale(selectedLocale)}
+  >
+    <option disabled>{m.settings_i18n_languageItem_selectLang()}</option>
+    {#each locales as l (l)}
+      {#if langs[l]}
+        <option value={l}>{langs[l].name} {langs[l].flag}</option>
+      {/if}
+    {/each}
+  </select>
+</SettingsItem>
