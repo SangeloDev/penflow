@@ -8,13 +8,14 @@
   import { getIcon } from "$lib/editor/toolbarIcons";
   import { m } from "$paraglide/messages";
 
-  const getTranslatedTitle = $derived((titleKey: string | undefined): string => {
-    if (titleKey && m[titleKey as keyof typeof m] && typeof m[titleKey as keyof typeof m] === "function") {
-      console.log(m[titleKey as keyof typeof m]({ count: {}, item: {} }));
-      return m[titleKey as keyof typeof m]({ count: {}, item: {} });
+  const toolbarActionTitle = (id: string): string => {
+    const key = `editor_toolbar_action_${id}`;
+    const msg = m[key as keyof typeof m];
+    if (typeof msg === "function") {
+      return msg({ item: {}, count: {} });
     }
-    return titleKey || "";
-  });
+    return id;
+  };
 
   // exports
   let {
@@ -31,7 +32,7 @@
 </script>
 
 <div class="border-base-400 bg-base-200 flex items-center gap-2 border-b p-2">
-  <button class="btn btn-square" onclick={onBack} title="Back to Library">
+  <button class="btn btn-square" onclick={onBack} title={m.editor_toolbar_action_library({ item: {}, count: {} })}>
     <Library size={20} />
   </button>
 
@@ -42,7 +43,7 @@
         disabled={mode === "preview"}
         class="btn btn-square"
         onclick={item.action as () => void}
-        title={getTranslatedTitle(item.title)}
+        title={toolbarActionTitle(item.id)}
       >
         <Component size={20} />
       </button>
@@ -54,7 +55,7 @@
     class="btn btn-square"
     onclick={() => onModeChange("edit")}
     aria-pressed={mode === "edit"}
-    title={m.editor_toolbar_mode_edit()}
+    title={m.editor_toolbar_mode_edit({ item: {}, count: {} })}
   >
     <Pencil size={20} />
   </button>
@@ -62,7 +63,7 @@
     class="btn btn-square"
     onclick={() => onModeChange("side-by-side")}
     aria-pressed={mode === "side-by-side"}
-    title={m.editor_toolbar_mode_sideBySide()}
+    title={m.editor_toolbar_mode_sideBySide({ item: {}, count: {} })}
   >
     <Columns size={20} />
   </button>
@@ -70,7 +71,7 @@
     class="btn btn-square"
     onclick={() => onModeChange("preview")}
     aria-pressed={mode === "preview"}
-    title={m.editor_toolbar_mode_preview()}
+    title={m.editor_toolbar_mode_preview({ item: {}, count: {} })}
   >
     <Eye size={20} />
   </button>

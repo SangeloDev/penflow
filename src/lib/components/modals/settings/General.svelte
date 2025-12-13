@@ -8,6 +8,12 @@
     updateToolbarItemOrder,
     resetToolbarItems,
   } from "$lib/settings/index.svelte.ts";
+
+  const toolbarActionTitle = (id: string): string => {
+    const key = `editor_toolbar_action_${id}`;
+    const msg = m[key as keyof typeof m];
+    return typeof msg === "function" ? msg({ item: {}, count: {} }) : id;
+  };
   import SettingsItem from "./SettingsItem.svelte";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import { onMount } from "svelte";
@@ -46,15 +52,15 @@
 </script>
 
 <SettingsItem>
-  {#snippet title()}{m.settings_general_toolbarItemsItem_name()}{/snippet}
-  {#snippet description()}{m.settings_general_toolbarItemsItem_description()}{/snippet}
+  {#snippet title()}{m.settings_general_toolbarItemsItem_name({ item: {}, count: {} })}{/snippet}
+  {#snippet description()}{m.settings_general_toolbarItemsItem_description({ item: {}, count: {} })}{/snippet}
 
   <div class="space-y-3">
     <!-- Single droppable container -->
     <div class="flex flex-wrap gap-4">
       {#each toolbarItems as item, index (item.id)}
         <label
-          title={item.title}
+          title={toolbarActionTitle(item.id)}
           class="btn btn-square size-10 {item.enabled
             ? 'btn-primary'
             : 'btn-outline'} cursor-grab active:cursor-grabbing"
@@ -76,6 +82,6 @@
   </div>
   <button class="btn flex w-fit items-center gap-1 select-none" onclick={resetToolbarItems}>
     <RotateCcw size={16} />
-    {m.settings_general_toolbarItemsItem_resetButton()}
+    {m.settings_general_toolbarItemsItem_resetButton({ item: {}, count: {} })}
   </button>
 </SettingsItem>

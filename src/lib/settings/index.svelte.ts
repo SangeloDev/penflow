@@ -11,16 +11,16 @@ const v1Defaults: Options = {
     visited: false,
     editor: {
       toolbarItems: [
-        { id: "bold", title: "Bold", enabled: true, order: 1 },
-        { id: "italic", title: "Italic", enabled: true, order: 2 },
-        { id: "heading", title: "Heading", enabled: true, order: 3 },
-        { id: "orderedList", title: "Ordered List", enabled: true, order: 4 },
-        { id: "list", title: "List", enabled: true, order: 5 },
-        { id: "checklist", title: "Checklist", enabled: true, order: 6 },
-        { id: "link", title: "Link", enabled: true, order: 7 },
-        { id: "quote", title: "Quote", enabled: true, order: 8 },
-        { id: "table", title: "Table", enabled: true, order: 9 },
-        { id: "image", title: "Image", enabled: true, order: 10 },
+        { id: "bold", enabled: true, order: 1 },
+        { id: "italic", enabled: true, order: 2 },
+        { id: "heading", enabled: true, order: 3 },
+        { id: "orderedList", enabled: true, order: 4 },
+        { id: "list", enabled: true, order: 5 },
+        { id: "checklist", enabled: true, order: 6 },
+        { id: "link", enabled: true, order: 7 },
+        { id: "quote", enabled: true, order: 8 },
+        { id: "table", enabled: true, order: 9 },
+        { id: "image", enabled: true, order: 10 },
       ],
     },
     library: {
@@ -48,7 +48,6 @@ const CANONICAL_DEFAULTS: Options = {
     editor: {
       toolbarItems: v1Defaults.general.editor.toolbarItems.map((i: ToolbarItem) => ({
         id: i.id,
-        title: i.title ?? i.id,
         enabled: i.enabled ?? true,
         order: i.order ?? 0,
       })),
