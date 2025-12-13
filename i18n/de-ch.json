@@ -87,5 +87,8 @@
   "settings_about_project_name": "penflow.app",
   "settings_about_project_slogan": "Ein simpler Markdown-Editor.",
   "settings_about_version": "Version",
-  "settings_about_sourceCode": "Quellcode"
+  "settings_about_sourceCode": "Quellcode",
+  "pwa_readyOffline": "Penflow ist jetzt bereit, offline zu funktionieren.",
+  "pwa_updateAvailable": "Ein Update ist verfügbar. Klicke auf \"Neu laden\", um Penflow zu aktualisieren.",
+  "pwa_reloadBtn": "Neu laden"
 }
