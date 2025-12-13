@@ -2,7 +2,12 @@
   import type { ToolbarItem } from "$lib/types";
   import { getIcon } from "$lib/utils/toolbarIcons.ts";
   import { RotateCcw } from "lucide-svelte";
-  import { toggleToolbarItem, getToolbarItems, updateToolbarItemOrder, resetToolbarItems } from "../Settings.svelte.ts";
+  import {
+    toggleToolbarItem,
+    getToolbarItems,
+    updateToolbarItemOrder,
+    resetToolbarItems,
+  } from "$lib/settings/index.svelte.ts";
   import SettingsItem from "./SettingsItem.svelte";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import { onMount } from "svelte";

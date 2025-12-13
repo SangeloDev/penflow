@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { settings } from "./Settings.svelte.ts";
-
   import General from "./settings/General.svelte";
   // import Home from "./settings/Home.svelte";
   import Appearance from "./settings/Appearance.svelte";
@@ -34,17 +32,6 @@
   };
 
   let current: TabItem = $state(data.nav[0]);
-  let initialized = $state(false);
-
-  $effect(() => {
-    // access settings to track as a dependency
-    const snapshot = settings;
-    if (!initialized) {
-      initialized = true;
-      return;
-    }
-    localStorage.setItem("penflow.settings", JSON.stringify(snapshot));
-  });
 </script>
 
 <div class="flex flex-row gap-4 lg:grid-cols-2">

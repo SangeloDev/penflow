@@ -5,7 +5,7 @@
   import { generateDocumentTitle } from "./Editor.svelte.ts";
   import { formatDistanceStrict } from "date-fns";
   import { setSettingsModalVisibility } from "./Editor.svelte.ts";
-  import { settings } from "./modals/Settings.svelte.ts";
+  import { settings } from "$lib/settings/index.svelte.ts";
 
   let {
     files,
