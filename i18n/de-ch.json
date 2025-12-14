@@ -90,5 +90,15 @@
   "settings_about_sourceCode": "Quellcode",
   "pwa_readyOffline": "Penflow ist jetzt bereit, offline zu funktionieren.",
   "pwa_updateAvailable": "Ein Update ist verfügbar. Klicke auf \"Neu laden\", um Penflow zu aktualisieren.",
-  "pwa_reloadBtn": "Neu laden"
+  "pwa_reloadBtn": "Neu laden",
+  "welcome_tour_title_welcome": "Willkommen bei Penflow!",
+  "welcome_tour_title_modes": "Erste Schritte",
+  "welcome_tour_title_emojis": "Erste Schritte",
+  "welcome_tour_title_offline": "Erste Schritte",
+  "welcome_tour_title_gettingStarted": "Erste Schritte",
+  "welcome_tour_button_back": "Zurück",
+  "welcome_tour_button_closeTour": "Tour schliessen",
+  "welcome_tour_button_next": "Weiter",
+  "welcome_tour_button_finish": "Fertig",
+  "welcome_tour_aria_goToStep": "Gehe zu Schritt {step}"
 }
