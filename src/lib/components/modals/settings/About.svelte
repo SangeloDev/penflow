@@ -3,6 +3,8 @@
   import commitHash from "virtual:commit-hash";
   import { m } from "$paraglide/messages";
   import SettingsItem from "./SettingsItem.svelte";
+  import IconExternalLink from "lucide-svelte/icons/external-link";
+  import IconSource from "lucide-svelte/icons/git-pull-request-arrow";
 </script>
 
 <SettingsItem>
@@ -14,13 +16,14 @@
       <p>{m.settings_about_project_slogan()}</p>
     </div>
   </div>
-  <span>
-    {m.settings_about_version()}: {version}{#if commitHash}+{commitHash.slice(0, 7)}{/if}
-  </span>
-  <span>
-    {m.settings_about_sourceCode()}:
-    <a class="text-link" target="_blank" rel="noopener noreferrer" href="https://github.com/SangeloDev/penflow">
-      GitHub
+  <div class="flex items-center gap-2">
+    <a class="btn max-w-fit" target="_blank" rel="noopener noreferrer" href="https://github.com/SangeloDev/penflow">
+      <IconExternalLink size={16} />
+      {m.settings_about_sourceCode()}
     </a>
-  </span>
+    <button class="btn max-w-fit">
+      <IconSource size={16} />
+      {m.settings_about_version()}: {version}{#if commitHash}+{commitHash.slice(0, 7)}{/if}
+    </button>
+  </div>
 </SettingsItem>
