@@ -178,6 +178,7 @@
         <select
           onchange={updateSortBy}
           value={settings.general.library.sort.by}
+          id="sort-select"
           class="input max-w-56 !rounded-l-none !border-l-0"
         >
           <option value="createdAt">{libraryFiltersCreated}</option>

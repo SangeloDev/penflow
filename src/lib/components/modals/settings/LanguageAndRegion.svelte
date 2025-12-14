@@ -17,7 +17,7 @@
 
   <select
     id="language-select"
-    class="input max-w-min"
+    class="input max-w-fit"
     bind:value={selectedLocale}
     onchange={() => setNewLocale(selectedLocale)}
   >
