@@ -6,7 +6,7 @@
   import Shortcuts from "$lib/components/modals/Shortcuts.svelte";
   import WelcomeModal from "$lib/components/modals/WelcomeModal.svelte";
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
-  import { createGlobalHotkeys as hotkeys, editorHotkeys } from "$lib/utils/hotkeys";
+  import { createGlobalHotkeys as hotkeys, createEditorHotkeys } from "$lib/hotkeys";
   import {
     getShortcutModalVisibility,
     setShortcutModalVisibility,
@@ -20,9 +20,12 @@
   import { get } from "svelte/store";
   import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
   import type { MarkdownFile } from "$lib/types";
+  import { m } from "$paraglide/messages";
 
   let shortcutModalVisible = $derived(getShortcutModalVisibility());
   let settingsModalVisible = $derived(getSettingsModalVisibility());
+  let settingsModalTitle = $derived("");
+  let helpModalTitle = $derived("");
   let welcomeModalVisible = $state(false);
 
   // App state
@@ -136,6 +139,11 @@
     };
   });
 
+  $effect(() => {
+    settingsModalTitle = m.settings();
+    helpModalTitle = m.help();
+  });
+
   function handleWelcomeFinish() {
     welcomeModalVisible = false;
     setFirstVisit(true);
@@ -153,7 +161,7 @@
 
 {#if isEditorVisible}
   <Editor
-    placeholder="Let your mind flow..."
+    placeholder={m.editor_placeholder()}
     fullscreen={true}
     bind:shortcutModalVisible
     onNewFile={() => showEditor(null)}
@@ -175,18 +183,18 @@
 
 <Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
   {#snippet header()}
-    <SettingsIcon size={18} /> Settings
+    <SettingsIcon size={18} /> {settingsModalTitle}
   {/snippet}
   <Settings />
 </Modal>
 
 <Modal bind:show={shortcutModalVisible} onclose={() => setShortcutModalVisibility(false)}>
   {#snippet header()}
-    <CircleHelp size={18} /> Help
+    <CircleHelp size={18} /> {helpModalTitle}
   {/snippet}
   <Shortcuts>
     <div>
-      <h1 class="mb-2 font-semibold">Hotkeys</h1>
+      <h1 class="mb-2 font-semibold">{m.help_hotkeys()}</h1>
       <ul>
         {#each hotkeys(undefined) as s (s.id)}
           {#if !s.hidden}
@@ -201,9 +209,9 @@
       </ul>
     </div>
     <div>
-      <h1 class="mb-2 font-semibold">Editor Hotkeys</h1>
+      <h1 class="mb-2 font-semibold">{m.help_editorHotkeys()}</h1>
       <ul>
-        {#each editorHotkeys as s (s.id)}
+        {#each createEditorHotkeys() as s (s.id)}
           {#if !s.hidden}
             <li class="mb-1 grid grid-cols-2">
               <span>{s.desc}</span>
@@ -224,7 +232,7 @@
       rel="noopener noreferrer"
     >
       <Notebook size={18} />
-      <span class="text-link">Need help with Markdown?</span>
+      <span class="text-link">{m.help_markdown()}</span>
     </a>
   {/snippet}
 </Modal>

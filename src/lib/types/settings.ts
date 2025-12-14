@@ -1,5 +1,8 @@
 import type { ToolbarItem } from ".";
 
+type SortBy = "createdAt" | "updatedAt" | "visitedAt" | "name";
+type SortOrder = "asc" | "desc";
+
 interface Options {
   version: number;
   general: {
@@ -9,8 +12,8 @@ interface Options {
     };
     library: {
       sort: {
-        by: "createdAt" | "updatedAt" | "visitedAt" | "name";
-        order: "asc" | "desc";
+        by: SortBy;
+        order: SortOrder;
       };
     };
   };
@@ -19,6 +22,34 @@ interface Options {
       wrapping: boolean;
     };
   };
+  i18n: {
+    language: string;
+  };
 }
 
-export type { Options };
+/** Permissive shape for incoming payloads read from storage */
+interface OptionsLike {
+  version?: number;
+  general?: {
+    visited?: boolean | string | null;
+    editor?: {
+      toolbarItems?: Partial<ToolbarItem>[] | undefined;
+    };
+    library?: {
+      sort?: {
+        by?: SortBy;
+        order?: SortOrder;
+      };
+    };
+  };
+  appearance?: {
+    editor?: {
+      wrapping?: boolean;
+    };
+  };
+  i18n?: {
+    language?: string;
+  };
+}
+
+export type { Options, OptionsLike, SortBy, SortOrder };

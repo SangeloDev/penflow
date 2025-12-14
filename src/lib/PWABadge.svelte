@@ -1,6 +1,7 @@
 <script lang="ts">
   import { X } from "lucide-svelte";
   import { useRegisterSW } from "virtual:pwa-register/svelte";
+  import { m } from "$paraglide/messages";
 
   // check for updates every hour
   const period = 60 * 60 * 1000;
@@ -46,18 +47,12 @@
   }
 
   let toast = $derived($offlineReady || $needRefresh);
-  let message = $derived(
-    $offlineReady
-      ? "Penflow is now ready to work offline."
-      : $needRefresh
-        ? "An update is available. Click on reload to update Penflow."
-        : ""
-  );
+  let message = $derived($offlineReady ? m.pwa_readyOffline() : $needRefresh ? m.pwa_updateAvailable() : "");
 
   // test alerts in dev mode
   // if (import.meta.env.DEV) {
-  //   offlineReady.set(true);
-  //   needRefresh.set(true);
+  // offlineReady.set(true);
+  // needRefresh.set(true);
   // }
 </script>
 
@@ -74,7 +69,9 @@
     </div>
     {#if $needRefresh}
       <div class="m-3 flex gap-2">
-        <button class="btn btn-primary" type="button" onclick={() => updateServiceWorker(true)}>Reload</button>
+        <button class="btn btn-primary" type="button" onclick={() => updateServiceWorker(true)}>
+          {m.pwa_reloadBtn()}
+        </button>
       </div>
     {/if}
     <button class="btn btn-square absolute top-0 right-0" type="button" onclick={close}><X size={16} /></button>

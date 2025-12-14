@@ -8,7 +8,7 @@ import {
   toggleWrap,
   undo as cmUndo,
   redo as cmRedo,
-} from "$lib/utils/formatting";
+} from "$lib/editor/formatting";
 
 // a helper to ensure the view exists before running an action
 function run(view: EditorView | undefined, action: (v: EditorView) => void) {

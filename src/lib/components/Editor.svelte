@@ -4,9 +4,10 @@
   import StatusBar from "./StatusBar.svelte";
   import Preview from "./Preview.svelte";
   import { Splitpanes, Pane } from "svelte-splitpanes";
-  import * as f from "$lib/utils/formattingActions";
-  import { toggleHeadingCycle } from "$lib/utils/formatting.js";
-  import { editorKeymap, type HotkeyContext } from "$lib/utils/hotkeys";
+  import * as f from "$lib/editor/formattingActions";
+  import { toggleHeadingCycle } from "$lib/editor/formatting.js";
+  import { createEditorKeymap, type HotkeyContext } from "$lib/hotkeys";
+  import { getLocale } from "$paraglide/runtime";
   import { hotkeyContext } from "$lib/store/hotkeys";
   import {
     type EditorMode,
@@ -33,7 +34,7 @@
   import { get } from "svelte/store";
   import { onDestroy, onMount, untrack } from "svelte";
   import { getEnabledToolbarItems, getLineWrappingEnabled } from "$lib/settings/index.svelte.ts";
-  import { debounce } from "$lib/utils/debounce";
+  import { debounce } from "$lib/editor/debounce";
 
   // codemirror imports
   import {
@@ -59,6 +60,7 @@
   import type { ToolbarItem } from "$lib/types/index.ts";
   import emojiList from "../data/emoji.json";
   import { EmojiExtension } from "$lib/codemirror/emojiHighlighting.ts";
+  import { m } from "$paraglide/messages.js";
 
   let {
     autofocus = true,
@@ -265,7 +267,7 @@
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
         placeholderExtension(placeholder),
         autocompletion({ override: [emojiCompletionSource] }),
-        Prec.highest(editorKeymap),
+        Prec.highest(createEditorKeymap(getLocale)),
         Prec.default(keymap.of(defaultKeymap)),
         lineWrappingCompartment.of(getLineWrappingEnabled() ? EditorView.lineWrapping : []),
         EditorView.updateListener.of((update) => {
@@ -387,7 +389,7 @@
     oldContent: string,
     historyCompartment: Compartment
   ) {
-    if (dirtyness && !confirm("You have unsaved changes. Discard them and open a new file?")) {
+    if (dirtyness && !confirm(m.editor_unsavedChanges())) {
       return;
     }
 

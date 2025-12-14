@@ -1,3 +1,4 @@
+import { m } from "$paraglide/messages";
 import { history } from "@codemirror/commands";
 import type { Compartment } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
@@ -248,7 +249,7 @@ export function generateFilename(markdownContent: string): string {
  */
 export function generateDocumentTitle(markdownContent: string): string {
   const headingMatch = markdownContent.match(/^# (.*)/m);
-  let baseName = "Untitled";
+  let baseName = m.library_note_untitled();
 
   if (headingMatch && headingMatch[1]) {
     baseName = headingMatch[1].trim();
@@ -256,7 +257,7 @@ export function generateDocumentTitle(markdownContent: string): string {
 
   const sanitizedName = baseName.replace(/\s+/g, " ").replace(/^-+|-+$/g, "");
 
-  return sanitizedName || "Untitled";
+  return sanitizedName || m.library_note_untitled();
 }
 
 /**

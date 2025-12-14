@@ -1,29 +1,26 @@
 import { browser } from "$app/environment";
 import type { ToolbarItem } from "$lib/types";
-import type { Options as OptionsV1Type } from "$lib/types/settings";
+import type { Options } from "$lib/types/settings";
 import { LocalStorageStorage, STORAGE_KEY } from "./storage";
-import { loadSettings, mergeToolbarItems, type OptionsV1 } from "./loader";
+import { loadSettings, mergeToolbarItems } from "./loader";
 
-// ---------------------------------------------------------------------------
-// Canonical defaults for v1 (built from current defaults without i18n)
-// ---------------------------------------------------------------------------
-
-const v1Defaults: OptionsV1Type = {
+// Canonical defaults for v1 (built from current defaults)
+const v1Defaults: Options = {
   version: 1,
   general: {
     visited: false,
     editor: {
       toolbarItems: [
-        { id: "bold", title: "Bold", enabled: true, order: 1 },
-        { id: "italic", title: "Italic", enabled: true, order: 2 },
-        { id: "heading", title: "Heading", enabled: true, order: 3 },
-        { id: "orderedList", title: "Ordered List", enabled: true, order: 4 },
-        { id: "list", title: "List", enabled: true, order: 5 },
-        { id: "checklist", title: "Checklist", enabled: true, order: 6 },
-        { id: "link", title: "Link", enabled: true, order: 7 },
-        { id: "quote", title: "Quote", enabled: true, order: 8 },
-        { id: "table", title: "Table", enabled: true, order: 9 },
-        { id: "image", title: "Image", enabled: true, order: 10 },
+        { id: "bold", enabled: true, order: 1 },
+        { id: "italic", enabled: true, order: 2 },
+        { id: "heading", enabled: true, order: 3 },
+        { id: "orderedList", enabled: true, order: 4 },
+        { id: "list", enabled: true, order: 5 },
+        { id: "checklist", enabled: true, order: 6 },
+        { id: "link", enabled: true, order: 7 },
+        { id: "quote", enabled: true, order: 8 },
+        { id: "table", enabled: true, order: 9 },
+        { id: "image", enabled: true, order: 10 },
       ],
     },
     library: {
@@ -38,17 +35,19 @@ const v1Defaults: OptionsV1Type = {
       wrapping: true,
     },
   },
+  i18n: {
+    language: navigator.language,
+  },
 };
 
 // Convert to the local canonical v1 type used by the loader
-const CANONICAL_DEFAULTS: OptionsV1 = {
+const CANONICAL_DEFAULTS: Options = {
   version: 1,
   general: {
     visited: false,
     editor: {
       toolbarItems: v1Defaults.general.editor.toolbarItems.map((i: ToolbarItem) => ({
         id: i.id,
-        title: i.title ?? i.id,
         enabled: i.enabled ?? true,
         order: i.order ?? 0,
       })),
@@ -65,23 +64,20 @@ const CANONICAL_DEFAULTS: OptionsV1 = {
       wrapping: v1Defaults.appearance.editor.wrapping,
     },
   },
+  i18n: {
+    language: v1Defaults.i18n.language,
+  },
 };
 
-// ---------------------------------------------------------------------------
 // Reactive settings state using Svelte 5 runes
-// ---------------------------------------------------------------------------
-
 const storage = new LocalStorageStorage(STORAGE_KEY);
 const initialRaw = browser ? storage.read() : null;
 const initialSettings = loadSettings(initialRaw, CANONICAL_DEFAULTS);
 
 // Shared reactive state (runes) adhering to v1 schema
-const _settings = $state<OptionsV1>(structuredClone(initialSettings));
+const _settings = $state<Options>(structuredClone(initialSettings));
 
-// ---------------------------------------------------------------------------
 // Auto-persist changes with debouncing (browser only)
-// ---------------------------------------------------------------------------
-
 let _persistTimer: number | undefined;
 
 function persist() {
@@ -139,7 +135,7 @@ function makePersistingProxy<T extends object>(target: T): T {
 export const settings = makePersistingProxy(_settings);
 
 // ---------------------------------------------------------------------------
-// Public API (compatible surface, without i18n helpers)
+// Public API (compatible surface)
 // ---------------------------------------------------------------------------
 
 export function getFirstVisit() {
@@ -206,4 +202,18 @@ export function resetToolbarItems() {
     settings.general.editor.toolbarItems
   );
   settings.general.editor.toolbarItems = merged;
+}
+
+/**
+ * Get the current language setting.
+ */
+export function getLanguage(): string {
+  return settings.i18n.language;
+}
+
+/**
+ * Set the current language setting.
+ */
+export function setLanguage(language: string) {
+  settings.i18n.language = language;
 }

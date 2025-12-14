@@ -5,7 +5,7 @@ import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import { CommitHashPlugin } from "vite-plugin-commit-hash";
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
   plugins: [
@@ -14,9 +14,9 @@ export default defineConfig({
     tailwindcss(),
     CommitHashPlugin({ noPrefix: false, noVirtual: false }),
     paraglideVitePlugin({
-      project: "./project.inglang",
+      project: "./penflow.inglang",
       outdir: "./src/lib/paraglide",
-      strategy: ["url", "cookie", "baseLocale"],
+      strategy: ["custom-localStorage", "preferredLanguage", "baseLocale"],
     }),
     SvelteKitPWA({
       registerType: "prompt",
@@ -67,4 +67,13 @@ export default defineConfig({
     }),
     nodePolyfills(),
   ],
+  // fix weird dependency optimization loop
+  optimizeDeps: {
+    include: [
+      "@lezer/markdown",
+      "vite-plugin-node-polyfills/shims/buffer",
+      "vite-plugin-node-polyfills/shims/global",
+      "vite-plugin-node-polyfills/shims/process",
+    ],
+  },
 });

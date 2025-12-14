@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ToolbarItem } from "$lib/types";
-  import { getIcon } from "$lib/utils/toolbarIcons.ts";
+  import { getIcon } from "$lib/editor/toolbarIcons.ts";
   import { RotateCcw } from "lucide-svelte";
   import {
     toggleToolbarItem,
@@ -8,9 +8,16 @@
     updateToolbarItemOrder,
     resetToolbarItems,
   } from "$lib/settings/index.svelte.ts";
+
+  const toolbarActionTitle = (id: string): string => {
+    const key = `editor_toolbar_action_${id}`;
+    const msg = m[key as keyof typeof m];
+    return typeof msg === "function" ? msg({ item: {}, count: {} }) : id;
+  };
   import SettingsItem from "./SettingsItem.svelte";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import { onMount } from "svelte";
+  import { m } from "$paraglide/messages";
 
   let mounted = $state(false);
   onMount(() => {
@@ -45,15 +52,15 @@
 </script>
 
 <SettingsItem>
-  {#snippet title()}Toolbar Items{/snippet}
-  {#snippet description()}Configure and reorder the items in your toolbar{/snippet}
+  {#snippet title()}{m.settings_general_toolbarItemsItem_name({ item: {}, count: {} })}{/snippet}
+  {#snippet description()}{m.settings_general_toolbarItemsItem_description({ item: {}, count: {} })}{/snippet}
 
   <div class="space-y-3">
     <!-- Single droppable container -->
     <div class="flex flex-wrap gap-4">
       {#each toolbarItems as item, index (item.id)}
         <label
-          title={item.title}
+          title={toolbarActionTitle(item.id)}
           class="btn btn-square size-10 {item.enabled
             ? 'btn-primary'
             : 'btn-outline'} cursor-grab active:cursor-grabbing"
@@ -75,6 +82,6 @@
   </div>
   <button class="btn flex w-fit items-center gap-1 select-none" onclick={resetToolbarItems}>
     <RotateCcw size={16} />
-    Reset to default
+    {m.settings_general_toolbarItemsItem_resetButton({ item: {}, count: {} })}
   </button>
 </SettingsItem>

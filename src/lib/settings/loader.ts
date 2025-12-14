@@ -1,59 +1,30 @@
-/** Sorting types retained from v1 */
-export type SortBy = "createdAt" | "updatedAt" | "visitedAt" | "name";
-export type SortOrder = "asc" | "desc";
+import type { ToolbarItem } from "$lib/types";
+import type { Options, SortBy, SortOrder } from "$lib/types/settings";
+import { locales } from "$paraglide/runtime";
 
-/** Toolbar item shape (compatible with current usage) */
-export interface ToolbarItem {
-  id: string;
-  title: string;
-  enabled: boolean;
-  order: number;
-}
-
-/** Canonical v1 settings shape (visited is a string to preserve schema) */
-export interface OptionsV1 {
-  version: 1;
-  general: {
-    /** v1 now uses a boolean to indicate first-boot initialization */
-    visited: boolean;
-    editor: {
-      toolbarItems: ToolbarItem[];
-    };
-    library: {
-      sort: {
-        by: SortBy;
-        order: SortOrder;
-      };
-    };
-  };
-  appearance: {
-    editor: {
-      wrapping: boolean;
-    };
-  };
-}
-
-/** Permissive shape for incoming payloads read from storage */
-export interface OptionsV1Like {
-  version?: number;
-  general?: {
-    visited?: boolean | string | null;
-    editor?: {
-      toolbarItems?: Partial<ToolbarItem>[] | undefined;
-    };
-    library?: {
-      sort?: {
-        by?: SortBy;
-        order?: SortOrder;
-      };
-    };
-  };
-  appearance?: {
-    editor?: {
-      wrapping?: boolean;
-    };
-  };
-}
+const LOCALE_MAP: Record<string, string> = {
+  // Bulgarian
+  bg: "bg",
+  "bg-bg": "bg",
+  // English variants
+  en: "en",
+  "en-us": "en",
+  "en-gb": "en",
+  "en-au": "en",
+  "en-ca": "en",
+  "en-nz": "en",
+  // German variants
+  de: "de-ch",
+  "de-de": "de-ch",
+  "de-at": "de-ch",
+  "de-ch": "de-ch",
+  // Spanish variants
+  es: "es",
+  "es-es": "es",
+  "es-mx": "es",
+  "es-ar": "es",
+  "es-co": "es",
+};
 
 /**
  * Defensive utilities
@@ -145,7 +116,7 @@ export function mergeToolbarItems(defaultItems: ToolbarItem[], userItems: Partia
  * Validate and repair an OptionsV1-like object using provided v1 defaults.
  * This is the final validation/normalization step; it returns a v1-compatible shape.
  */
-export function validateOptionsV1(candidate: unknown, defaults: OptionsV1): OptionsV1 {
+export function validateOptionsV1(candidate: unknown, defaults: Options): Options {
   const c = (candidate ?? {}) as Record<string, unknown>;
 
   // visited: normalize to boolean; persist as boolean in v1
@@ -162,7 +133,37 @@ export function validateOptionsV1(candidate: unknown, defaults: OptionsV1): Opti
 
   const wrapping = asBoolean((c.appearance as any)?.editor?.wrapping, defaults.appearance.editor.wrapping);
 
-  const result: OptionsV1 = {
+  const rawLang = isString((c.i18n as any)?.language) ? (c.i18n as any).language : defaults.i18n.language;
+  const normalize = (l: string): string => {
+    const lower = l.toLowerCase();
+
+    // try explicit mapping table
+    const mapped = LOCALE_MAP[lower];
+    if (mapped && (locales as unknown as string[]).includes(mapped)) return mapped;
+
+    // exact match against supported locales
+    if ((locales as unknown as string[]).includes(lower)) return lower;
+
+    // try base language before dash (e.g. en-US -> en, de-CH -> de-ch via mapping)
+    const base = lower.split("-")[0];
+    const baseMapped = LOCALE_MAP[base];
+    if (baseMapped && (locales as unknown as string[]).includes(baseMapped)) return baseMapped;
+    if ((locales as unknown as string[]).includes(base)) return base;
+
+    // fallback to a supported locale
+    const supported = locales as unknown as string[];
+    const defLower = defaults.i18n.language.toLowerCase();
+    const defMapped = LOCALE_MAP[defLower] ?? defLower;
+    // prefer mapped/default if available
+    if (supported.includes(defMapped)) return defMapped;
+    // prefer english if available otherwise
+    if (supported.includes("en")) return "en";
+    // finally fallback to the first supported locale or english
+    return supported[0] ?? "en";
+  };
+  const language = normalize(rawLang);
+
+  const result: Options = {
     version: 1,
     general: {
       visited: visitedBool,
@@ -181,6 +182,9 @@ export function validateOptionsV1(candidate: unknown, defaults: OptionsV1): Opti
         wrapping,
       },
     },
+    i18n: {
+      language,
+    },
   };
 
   return result;
@@ -196,9 +200,8 @@ export function validateOptionsV1(candidate: unknown, defaults: OptionsV1): Opti
  * Behavior:
  * - If JSON is missing or invalid: returns defaults.
  * - If version is missing or any shape deviates: repairs with defaults and returns v1-compatible object.
- * - Does NOT introduce or require i18n fields.
  */
-export function loadSettings(rawJson: string | null, defaultsV1: OptionsV1): OptionsV1 {
+export function loadSettings(rawJson: string | null, defaultsV1: Options): Options {
   if (!rawJson) {
     return validateOptionsV1(defaultsV1, defaultsV1);
   }

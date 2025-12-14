@@ -14,6 +14,9 @@ const config = {
     version: {
       name: pkg.version,
     },
+    alias: {
+      $paraglide: "src/lib/paraglide",
+    },
   },
 };
 
