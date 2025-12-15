@@ -7,6 +7,7 @@ interface Options {
   version: number;
   general: {
     visited: boolean; // whether or not penflow has been initialised
+    developer: boolean;
     editor: {
       toolbarItems: ToolbarItem[];
     };
@@ -32,6 +33,7 @@ interface OptionsLike {
   version?: number;
   general?: {
     visited?: boolean | string | null;
+    developer?: boolean;
     editor?: {
       toolbarItems?: Partial<ToolbarItem>[] | undefined;
     };

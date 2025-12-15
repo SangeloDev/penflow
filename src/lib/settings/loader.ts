@@ -122,6 +122,8 @@ export function validateOptionsV1(candidate: unknown, defaults: Options): Option
   // visited: normalize to boolean; persist as boolean in v1
   const visitedBool = asBoolean((c.general as any)?.visited, defaults.general.visited);
 
+  const developerBool = asBoolean((c.general as any)?.developer, defaults.general.developer);
+
   const sortBy = asSortBy((c.general as any)?.library?.sort?.by, defaults.general.library.sort.by);
   const sortOrder = asSortOrder((c.general as any)?.library?.sort?.order, defaults.general.library.sort.order);
 
@@ -167,6 +169,7 @@ export function validateOptionsV1(candidate: unknown, defaults: Options): Option
     version: 1,
     general: {
       visited: visitedBool,
+      developer: developerBool,
       editor: {
         toolbarItems: mergedToolbar,
       },

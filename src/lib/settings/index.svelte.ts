@@ -9,6 +9,7 @@ const v1Defaults: Options = {
   version: 1,
   general: {
     visited: false,
+    developer: false,
     editor: {
       toolbarItems: [
         { id: "bold", enabled: true, order: 1 },
@@ -45,6 +46,7 @@ const CANONICAL_DEFAULTS: Options = {
   version: 1,
   general: {
     visited: false,
+    developer: false,
     editor: {
       toolbarItems: v1Defaults.general.editor.toolbarItems.map((i: ToolbarItem) => ({
         id: i.id,
@@ -216,4 +218,18 @@ export function getLanguage(): string {
  */
 export function setLanguage(language: string) {
   settings.i18n.language = language;
+}
+
+/**
+ * Get the developer mode setting.
+ */
+export function getDeveloperMode(): boolean {
+  return settings.general.developer;
+}
+
+/**
+ * Set the developer mode setting.
+ */
+export function setDeveloperMode(value: boolean) {
+  settings.general.developer = Boolean(value);
 }

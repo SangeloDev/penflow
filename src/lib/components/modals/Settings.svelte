@@ -7,9 +7,10 @@
   import LanguageAndRegion from "./settings/LanguageAndRegion.svelte";
   // import Accessibility from "./settings/Accessibility.svelte";
   // import Plugins from "./settings/Plugins.svelte";
+  import Developer from "./settings/Developer.svelte";
   import About from "./settings/About.svelte";
   // import { AccessibilityIcon, Puzzle } from "lucide-svelte";
-  import { ChevronRight, Info, Paintbrush, Wrench, Globe } from "lucide-svelte";
+  import { ChevronRight, Info, Paintbrush, Wrench, Globe, Star } from "lucide-svelte";
 
   interface TabItem {
     id: string;
@@ -20,6 +21,15 @@
   }
 
   function buildDataObject() {
+    const footerItems: TabItem[] = [];
+
+    // only show developer tab if developer mode is enabled
+    if (settings.general.developer) {
+      footerItems.push({ id: "developer", name: m.settings_developer_section(), icon: Star, component: Developer });
+    }
+
+    footerItems.push({ id: "about", name: m.settings_about_section(), icon: Info, component: About });
+
     return {
       nav: [
         {
@@ -43,7 +53,7 @@
         // { id: "accessibility", name: "Accessibility", icon: AccessibilityIcon, component: Accessibility },
         // { id: "plugins", name: "Plugins", icon: Puzzle, component: Plugins },
       ] as TabItem[],
-      footer: [{ id: "about", name: m.settings_about_section(), icon: Info, component: About }] as TabItem[],
+      footer: footerItems, // use filtered items
     };
   }
 
