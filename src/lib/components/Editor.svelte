@@ -419,30 +419,71 @@
   function syncScroll(source: "editor" | "preview") {
     if (!editorView || !previewElement) return;
 
-    const sourceEl = source === "editor" ? editorView.scrollDOM : previewElement;
-    const targetEl = source === "editor" ? previewElement : editorView.scrollDOM;
+    const isEditor = source === "editor";
 
-    if (source === "editor") {
-      if (ignoreEditorScroll) {
-        ignoreEditorScroll = false;
-        return;
-      }
-      ignorePreviewScroll = true;
-    } else {
-      if (ignorePreviewScroll) {
-        ignorePreviewScroll = false;
-        return;
-      }
-      ignoreEditorScroll = true;
+    const sourceEl = isEditor ? editorView.scrollDOM : previewElement;
+    const targetEl = isEditor ? previewElement : editorView.scrollDOM;
+
+    // Reset ignore flag if ignoring the current source
+    if (isEditor ? ignoreEditorScroll : ignorePreviewScroll) {
+      if (isEditor) ignoreEditorScroll = false;
+      else ignorePreviewScroll = false;
+      return;
     }
 
-    const sourceScrollableDist = sourceEl.scrollHeight - sourceEl.clientHeight;
-    const targetScrollableDist = targetEl.scrollHeight - targetEl.clientHeight;
+    // Lock to prevent echo on the other source
+    if (isEditor) ignorePreviewScroll = true;
+    else ignoreEditorScroll = true;
 
-    if (sourceScrollableDist <= 0) return;
+    // Snap to top
+    if (sourceEl.scrollTop === 0) {
+      targetEl.scrollTop = 0;
+      return;
+    }
 
-    const scrollRatio = sourceEl.scrollTop / sourceScrollableDist;
-    targetEl.scrollTop = scrollRatio * targetScrollableDist;
+    // Snap to bottom
+    if (sourceEl.scrollTop + sourceEl.clientHeight >= sourceEl.scrollHeight) {
+      targetEl.scrollTop = targetEl.scrollHeight;
+      return;
+    }
+
+    // Return if scrolling from preview
+    if (!isEditor) return;
+
+    const topBlock = editorView.lineBlockAtHeight(sourceEl.scrollTop);
+    const topLine = editorView.state.doc.lineAt(topBlock.from).number;
+
+    // Find all preview lines
+    const lines = previewElement.querySelectorAll<HTMLElement>("[data-source-line]");
+    let anchor = null, nextAnchor = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = parseInt(lines[i].dataset.sourceLine || "0")
+
+      if (line <= topLine) anchor = lines[i];
+
+      if (line > topLine) {
+        nextAnchor = lines[i];
+        break;
+      }
+    }
+
+    if (!anchor) return;
+
+    const scrollOffset = sourceEl.scrollTop - topBlock.top;
+    const scrollRatio = scrollOffset / topBlock.height;
+
+    let targetTop = anchor.offsetTop + (anchor.offsetHeight * scrollRatio);
+
+    // Smooth transition to next anchor
+    if (nextAnchor && nextAnchor.offsetTop > anchor.offsetTop) {
+      const sourceGap = editorView.lineBlockAt(editorView.state.doc.line(parseInt(nextAnchor.dataset.sourceLine!)).from).top - topBlock.top;
+      const targetGap = nextAnchor.offsetTop - anchor.offsetTop;
+
+      targetTop = anchor.offsetTop + (scrollOffset / sourceGap) * targetGap;
+    }
+
+    targetEl.scrollTop = targetTop;
   }
 
   function resetPanes() {
