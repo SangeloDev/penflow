@@ -6,34 +6,12 @@
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import * as f from "$lib/editor/formattingActions";
   import { toggleHeadingCycle } from "$lib/editor/formatting.js";
-  import { createEditorKeymap, type HotkeyContext } from "$lib/hotkeys";
+  import { createEditorKeymap } from "$lib/hotkeys";
   import { getLocale } from "$paraglide/runtime";
-  import { hotkeyContext } from "$lib/store/hotkeys";
-  import {
-    type EditorMode,
-    getDirtyness,
-    getMode,
-    setDirty,
-    setMode,
-    loadFileContent,
-    handleFileSelect,
-    cycleEditMode,
-    saveFile,
-    newFile,
-    getContent,
-    setContent,
-    getShortcutModalVisibility,
-    setShortcutModalVisibility,
-    getSettingsModalVisibility,
-    setSettingsModalVisibility,
-    activeFilename as activeFilenameStore,
-    activeFileId as activeFileIdStore,
-    exportFile,
-    generateDocumentTitle,
-  } from "./Editor.svelte.ts";
-  import { get } from "svelte/store";
+  import { getEditorContext, getHotkeyContext, type EditorMode } from "$lib/context";
   import { onDestroy, onMount, untrack } from "svelte";
-  import { getEnabledToolbarItems, getLineWrappingEnabled } from "$lib/settings/index.svelte.ts";
+  import { getSettingsContext } from "$lib/context";
+  import type { HotkeyContextOperations } from "$lib/context";
   import { debounce } from "$lib/editor/debounce";
 
   // codemirror imports
@@ -62,13 +40,18 @@
   import { EmojiExtension } from "$lib/codemirror/emojiHighlighting.ts";
   import { m } from "$paraglide/messages.js";
 
+  // Get contexts
+  const editor = getEditorContext();
+  const settings = getSettingsContext();
+  const hotkey = getHotkeyContext();
+
   let {
     autofocus = true,
     fullscreen = false,
     defaultMode = "side-by-side",
     placeholder = "Write your markdown here...",
-    shortcutModalVisible = $bindable(getShortcutModalVisibility()),
-    settingsModalVisible = $bindable(getSettingsModalVisibility()),
+    shortcutModalVisible = $bindable(editor.shortcutModalVisible),
+    settingsModalVisible = $bindable(editor.settingsModalVisible),
     onNewFile,
     onSave,
     onBack,
@@ -93,10 +76,10 @@
   }
 
   // States
-  let content = $derived(getContent());
-  let mode = $derived(getMode());
+  let content = $derived(editor.content);
+  let mode = $derived(editor.mode);
   let isFullscreen = $state(fullscreen);
-  let isDirty = $derived(getDirtyness());
+  let isDirty = $derived(editor.isDirty);
 
   let fileInput: HTMLInputElement;
   let editorPaneSize = $state(50);
@@ -162,7 +145,7 @@
   let finalToolbarItems = $derived(() => {
     if (!mounted) return []; // do not render icons until we're mounted
 
-    const enabledSettings = getEnabledToolbarItems();
+    const enabledSettings = settings.getEnabledToolbarItems();
 
     return enabledSettings
       .map((settingItem: ToolbarItem) => {
@@ -190,19 +173,19 @@
   };
 
   // hotkeys
-  const hotkeyContextValue: HotkeyContext = {
-    setSettingsModalVisibility,
-    setShortcutModalVisibility,
-    getMode,
-    cycleEditMode: cycleEditMode,
-    saveFile: () => saveFile((content: string) => onSave(content), content),
-    exportFile: () => exportFile(content),
-    openFile: () => openFile(editorView, isDirty, content, historyCompartment),
-    newFile: () => newFile(editorView, onNewFile, getDirtyness()),
-    content: getContent(),
-    activeFilename: $activeFilenameStore,
+  const hotkeyContextValue: HotkeyContextOperations = {
+    setSettingsModalVisibility: (visible: boolean) => editor.setSettingsModalVisibility(visible),
+    setShortcutModalVisibility: (visible: boolean) => editor.setShortcutModalVisibility(visible),
+    getMode: () => editor.getMode(),
+    cycleEditMode: (forward?: boolean) => editor.cycleEditMode(forward ?? true),
+    saveFile: () => editor.saveFile((content: string) => onSave(content)),
+    exportFile: () => editor.exportFile(),
+    openFile: (view: EditorView | undefined) => openFile(view, isDirty, content, historyCompartment),
+    newFile: (view: EditorView | undefined, onNewFile: () => void) => editor.newFile(view, onNewFile),
+    getContent: () => editor.getContent(),
+    getActiveFilename: () => editor.getActiveFilename(),
+    getDirtyness: () => editor.getDirtyness(),
     view: getView(),
-    getDirtyness,
     onNewFile,
   };
 
@@ -217,12 +200,12 @@
       },
     });
 
-    setContent(newContent);
-    setDirty(true);
+    editor.setContent(newContent);
+    editor.setDirty(true);
   }
 
   // set the default mode
-  setMode(defaultMode);
+  editor.setMode(defaultMode);
 
   // codemirror setup effect
   $effect(() => {
@@ -269,12 +252,12 @@
         autocompletion({ override: [emojiCompletionSource] }),
         Prec.highest(createEditorKeymap(getLocale)),
         Prec.default(keymap.of(defaultKeymap)),
-        lineWrappingCompartment.of(getLineWrappingEnabled() ? EditorView.lineWrapping : []),
+        lineWrappingCompartment.of(settings.getLineWrappingEnabled() ? EditorView.lineWrapping : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             const newContent = update.state.doc.toString();
-            setContent(newContent);
-            setDirty(true);
+            editor.setContent(newContent);
+            editor.setDirty(true);
             debouncedSave(newContent);
           }
         }),
@@ -320,7 +303,7 @@
   $effect(() => {
     if (!editorView) return;
 
-    const wrappingEnabled = getLineWrappingEnabled();
+    const wrappingEnabled = settings.getLineWrappingEnabled();
     editorView.dispatch({
       effects: lineWrappingCompartment.reconfigure(wrappingEnabled ? EditorView.lineWrapping : []),
     });
@@ -409,7 +392,7 @@
         });
         const file = await fileHandle.getFile();
         const newContent = await file.text();
-        loadFileContent(view, oldContent, file.name, newContent, file.name, historyCompartment);
+        editor.loadFileContent(view, file.name, newContent, file.name, historyCompartment);
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("Error opening file:", err);
@@ -589,7 +572,9 @@
   }
 
   onMount(() => {
-    hotkeyContext.set(hotkeyContextValue);
+    hotkey.setOperations(hotkeyContextValue);
+    const config = hotkey.createGlobalHotkeysConfig();
+    hotkey.attachGlobalHotkeys(config);
 
     // observe the body tag for class attribute changes
     const observer = new MutationObserver((mutations) => {
@@ -611,23 +596,23 @@
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      hotkey.detachGlobalHotkeys();
     };
   });
 
   onDestroy(() => {
-    hotkeyContext.set(undefined);
     editorView?.destroy();
   });
 </script>
 
 <svelte:head>
-  <title>{generateDocumentTitle(content)} - Penflow</title>
+  <title>{editor.generateDocumentTitle(content, m.library_note_untitled())} - Penflow</title>
 </svelte:head>
 
 <input
   type="file"
   bind:this={fileInput}
-  onchange={(event) => handleFileSelect(event, editorView, content, get(activeFileIdStore), historyCompartment)}
+  onchange={(event) => editor.handleFileSelect(event, editorView, historyCompartment)}
   style="display: none;"
   accept=".md, .markdown, text/markdown"
 />
@@ -639,7 +624,12 @@
     ${isFullscreen ? "absolute inset-0 z-50 m-0 min-h-full max-w-full shadow-none" : "mx-auto max-h-fit max-w-3xl shadow"}
   `}
 >
-  <Toolbar {mode} onModeChange={setMode} toolbarItems={finalToolbarItems()} onBack={handleBack} />
+  <Toolbar
+    {mode}
+    onModeChange={(newMode: EditorMode) => editor.setMode(newMode)}
+    toolbarItems={finalToolbarItems()}
+    onBack={handleBack}
+  />
 
   {#if mode === "edit"}
     <div class="min-h-[300px] w-full flex-1" bind:this={editorContainer}></div>

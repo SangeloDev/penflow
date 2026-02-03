@@ -12,7 +12,16 @@
   const toolbarActionTitle = (id: string): string => {
     const key = `editor_toolbar_action_${id}`;
     const msg = m[key as keyof typeof m];
-    return typeof msg === "function" ? msg({ item: {}, count: {} }) : id;
+    if (typeof msg === "function") {
+      try {
+        // Try calling without parameters first (most toolbar actions don't need them)
+        return (msg as any)();
+      } catch {
+        // If that fails, it might need parameters - return the id as fallback
+        return id;
+      }
+    }
+    return typeof msg === "string" ? msg : id;
   };
   import SettingsItem from "./SettingsItem.svelte";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
@@ -52,8 +61,8 @@
 </script>
 
 <SettingsItem>
-  {#snippet title()}{m.settings_general_toolbarItemsItem_name({ item: {}, count: {} })}{/snippet}
-  {#snippet description()}{m.settings_general_toolbarItemsItem_description({ item: {}, count: {} })}{/snippet}
+  {#snippet title()}{m.settings_general_toolbarItemsItem_name()}{/snippet}
+  {#snippet description()}{m.settings_general_toolbarItemsItem_description()}{/snippet}
 
   <div class="space-y-3">
     <!-- Single droppable container -->
@@ -82,6 +91,6 @@
   </div>
   <button class="btn flex w-fit items-center gap-1 select-none" onclick={resetToolbarItems}>
     <RotateCcw size={16} />
-    {m.settings_general_toolbarItemsItem_resetButton({ item: {}, count: {} })}
+    {m.settings_general_toolbarItemsItem_resetButton()}
   </button>
 </SettingsItem>

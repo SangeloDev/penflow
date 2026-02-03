@@ -3,11 +3,8 @@
   import { pwaInfo } from "virtual:pwa-info";
   import { pwaAssetsHead } from "virtual:pwa-assets/head";
   import { ModeWatcher } from "mode-watcher";
-  import { globalHotkey, constructedGlobalHotkeys, createGlobalHotkeys } from "$lib/hotkeys";
-  import { hotkeyContext } from "$lib/store/hotkeys";
-  import { setSettingsModalVisibility, setShortcutModalVisibility } from "$lib/components/Editor.svelte.ts";
-  import { defineCustomClientStrategy, getLocale } from "$paraglide/runtime";
-  import { getLanguage, setLanguage } from "$lib/settings/index.svelte.ts";
+  import { defineCustomClientStrategy } from "$paraglide/runtime";
+  import { setSettingsContext } from "$lib/context";
 
   interface Props {
     children?: import("svelte").Snippet;
@@ -15,56 +12,20 @@
   let { children }: Props = $props();
   let webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 
+  // Initialize settings context at the root level
+  const settings = setSettingsContext();
+
   defineCustomClientStrategy("custom-localStorage", {
     getLocale: () => {
-      return getLanguage() ?? undefined;
+      return settings.getLanguage() ?? undefined;
     },
     setLocale: (locale) => {
-      setLanguage(locale);
+      settings.setLanguage(locale);
     },
   });
 
-  let cleanup: { destroy: () => void } | undefined;
-
-  $effect(() => {
-    // Access getLocale() to make this effect reactive to language changes
-    getLocale();
-
-    const unsubscribe = hotkeyContext.subscribe((context) => {
-      // If there's an existing hotkey listener, destroy it before creating a new one.
-      if (cleanup) {
-        cleanup.destroy();
-      }
-
-      const hotkeys = createGlobalHotkeys(
-        context || {
-          setSettingsModalVisibility: setSettingsModalVisibility,
-          setShortcutModalVisibility: setShortcutModalVisibility,
-          getMode: () => undefined,
-          cycleEditMode: () => {},
-          saveFile: () => {},
-          exportFile: () => {},
-          openFile: () => {},
-          newFile: () => {},
-          content: "",
-          activeFilename: undefined,
-          view: undefined,
-          getDirtyness: () => false,
-          onNewFile: () => {},
-        }
-      );
-      const globalHotkeys = constructedGlobalHotkeys(hotkeys);
-      cleanup = globalHotkey(globalHotkeys);
-    });
-
-    return () => {
-      // When the component is destroyed or effect re-runs, unsubscribe from the store and clean up the last listener.
-      unsubscribe();
-      if (cleanup) {
-        cleanup.destroy();
-      }
-    };
-  });
+  // Global hotkeys are now managed per-page context, not globally in layout
+  // This ensures hotkeys are properly scoped and cleaned up
 </script>
 
 <svelte:head>

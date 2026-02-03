@@ -26,6 +26,10 @@ export interface Hotkey {
   action: (arg0: any) => void;
 }
 
+/**
+ * @deprecated Use MarkdownFile from '$lib/types/database' instead
+ * This interface is kept for backwards compatibility only
+ */
 export interface MarkdownFile {
   id?: string;
   content: string;
@@ -35,3 +39,6 @@ export interface MarkdownFile {
   title?: string;
   tags?: string;
 }
+
+// Re-export database types
+export * from "./database";

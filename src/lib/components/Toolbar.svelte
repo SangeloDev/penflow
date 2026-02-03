@@ -12,7 +12,7 @@
     const key = `editor_toolbar_action_${id}`;
     const msg = m[key as keyof typeof m];
     if (typeof msg === "function") {
-      return msg({ item: {}, count: {} });
+      return msg({ item: {}, count: {}, step: {} });
     }
     return id;
   };
