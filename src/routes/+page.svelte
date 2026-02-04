@@ -17,6 +17,7 @@
   } from "$lib/context";
   import { createTinyBaseAdapter } from "$lib/adapters/TinyBaseAdapter";
   import { m } from "$paraglide/messages";
+  import { untrack } from "svelte";
 
   // Initialize contexts
   const editor = setEditorContext();
@@ -87,7 +88,7 @@
   $effect(() => {
     library.initialize(adapter);
 
-    const isFirstVisit = settings.getFirstVisit() === false;
+    const isFirstVisit = untrack(() => settings.getFirstVisit() === false);
     if (isFirstVisit) {
       modal.showWelcome();
     }
