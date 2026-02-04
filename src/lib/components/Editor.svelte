@@ -79,7 +79,7 @@
   // States
   let content = $derived(editorState.content);
   let mode = $derived(editorState.mode);
-  let isFullscreen = $state(fullscreen);
+  let isFullscreen = $derived(fullscreen);
   let isDirty = $derived(editorState.isDirty);
 
   let fileInput: HTMLInputElement;
@@ -182,12 +182,13 @@
     saveFile: () => editorOps.saveFile((content: string) => onSave(content)),
     exportFile: () => editorOps.exportFile(),
     openFile: (view: EditorView | undefined) => openFile(view, isDirty, content, historyCompartment),
-    newFile: (view: EditorView | undefined, onNewFile: () => void) => editorOps.newFile(view, onNewFile),
+    newFile: (view: EditorView | undefined, onNewFileCallback: () => void) =>
+      editorOps.newFile(view, onNewFileCallback),
     getContent: () => editorState.content,
     getActiveFilename: () => editorState.activeFilename,
     getDirtyness: () => editorState.isDirty,
     view: getView(),
-    onNewFile,
+    onNewFile: () => onNewFile,
   };
 
   function updateEditorContent(newContent: string) {
@@ -206,7 +207,9 @@
   }
 
   // set the default mode
-  editorState.mode = defaultMode;
+  $effect(() => {
+    editorState.mode = defaultMode;
+  });
 
   // codemirror setup effect
   $effect(() => {

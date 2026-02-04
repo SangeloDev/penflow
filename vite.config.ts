@@ -14,7 +14,7 @@ export default defineConfig({
     tailwindcss(),
     CommitHashPlugin({ noPrefix: false, noVirtual: false }),
     paraglideVitePlugin({
-      project: "./penflow.inglang",
+      project: "./penflow.inlang",
       outdir: "./src/lib/paraglide",
       strategy: ["custom-localStorage", "preferredLanguage", "baseLocale"],
     }),
