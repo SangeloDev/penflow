@@ -455,10 +455,11 @@
 
     // Find all preview lines
     const lines = previewElement.querySelectorAll<HTMLElement>("[data-source-line]");
-    let anchor = null, nextAnchor = null;
+    let anchor = null,
+      nextAnchor = null;
 
     for (let i = 0; i < lines.length; i++) {
-      const line = parseInt(lines[i].dataset.sourceLine || "0")
+      const line = parseInt(lines[i].dataset.sourceLine || "0");
 
       if (line <= topLine) anchor = lines[i];
 
@@ -470,18 +471,42 @@
 
     if (!anchor) return;
 
-    const scrollOffset = sourceEl.scrollTop - topBlock.top;
+    const anchorLine = parseInt(anchor.dataset.sourceLine || "0");
+    const anchorBlock = editorView.lineBlockAt(editorView.state.doc.line(anchorLine + 1).from);
+
+    // Calculate absolute position of anchor relative to scroll container
+    const getAbsoluteTop = (element: HTMLElement) => {
+      let top = 0;
+      let el: HTMLElement | null = element;
+      while (el && el !== targetEl) {
+        top += el.offsetTop;
+        el = el.offsetParent as HTMLElement;
+      }
+      return top;
+    };
+
+    const anchorAbsoluteTop = getAbsoluteTop(anchor);
+    const nextAnchorAbsoluteTop = nextAnchor ? getAbsoluteTop(nextAnchor) : null;
+
+    const scrollOffset = sourceEl.scrollTop - anchorBlock.top;
     const scrollRatio = scrollOffset / topBlock.height;
 
-    let targetTop = anchor.offsetTop + (anchor.offsetHeight * scrollRatio);
+    let targetTop = anchorAbsoluteTop + anchor.offsetHeight * scrollRatio;
 
     // Smooth transition to next anchor
-    if (nextAnchor && nextAnchor.offsetTop > anchor.offsetTop) {
-      const sourceGap = editorView.lineBlockAt(editorView.state.doc.line(parseInt(nextAnchor.dataset.sourceLine!)).from).top - topBlock.top;
-      const targetGap = nextAnchor.offsetTop - anchor.offsetTop;
+    if (nextAnchor && nextAnchorAbsoluteTop !== null && nextAnchorAbsoluteTop > anchorAbsoluteTop) {
+      const nextAnchorLine = parseInt(nextAnchor.dataset.sourceLine || "0");
+      const nextAnchorBlock = editorView.lineBlockAt(editorView.state.doc.line(nextAnchorLine + 1).from);
 
-      targetTop = anchor.offsetTop + (scrollOffset / sourceGap) * targetGap;
+      const sourceGap = nextAnchorBlock.top - anchorBlock.top;
+      const targetGap = nextAnchorAbsoluteTop - anchorAbsoluteTop;
+
+      targetTop = anchorAbsoluteTop + (scrollOffset / sourceGap) * targetGap;
     }
+
+    // Clamp to valid scroll range to prevent overflow
+    const maxScroll = targetEl.scrollHeight - targetEl.clientHeight;
+    targetTop = Math.max(0, Math.min(targetTop, maxScroll));
 
     targetEl.scrollTop = targetTop;
   }
