@@ -50,7 +50,7 @@ export default defineConfig({
       },
 
       workbox: {
-        maximumFileSizeToCacheInBytes: 6000000,
+        maximumFileSizeToCacheInBytes: 8000000,
         globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,woff,woff2}"],
 
         cleanupOutdatedCaches: true,
