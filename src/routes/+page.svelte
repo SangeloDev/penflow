@@ -8,7 +8,8 @@
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
   import { createGlobalHotkeys as hotkeys, createEditorHotkeys } from "$lib/hotkeys";
   import {
-    setEditorContext,
+    setEditorStateContext,
+    setEditorOperationsContext,
     setLibraryContext,
     setModalContext,
     setSettingsContext,
@@ -16,13 +17,14 @@
     type HotkeyConfig,
   } from "$lib/context";
   import { useLibrary, useEditor } from "$lib/composables";
-  import { createFileService } from "$lib/services";
+  import { getFileService } from "$lib/services";
   import { createTinyBaseAdapter } from "$lib/adapters/TinyBaseAdapter";
   import { m } from "$paraglide/messages";
   import { untrack } from "svelte";
 
   // Initialize contexts
-  setEditorContext();
+  setEditorStateContext();
+  setEditorOperationsContext();
   const libraryContext = setLibraryContext();
   const modal = setModalContext();
   const settings = setSettingsContext();
@@ -31,7 +33,7 @@
   // Use composables for cleaner API
   const library = useLibrary();
   const editor = useEditor();
-  const fileService = createFileService();
+  const fileService = getFileService();
 
   // Reactive state derived from contexts
   let settingsModalTitle = $derived("");
@@ -45,14 +47,14 @@
   const adapter = createTinyBaseAdapter("penflow");
 
   function showEditor(fileId: string | null) {
-    editor.setActiveFileId(fileId);
+    editor.state.activeFileId = fileId;
     if (fileId) {
       // Load file
       const file = library.getFile(fileId);
       if (file) {
-        editor.setContent(file.content);
+        editor.content = file.content;
         // Clear activeFilename so export generates fresh filename from content
-        editor.setActiveFilename(undefined);
+        editor.state.activeFilename = undefined;
 
         // Parse frontmatter from content if present
         const { frontmatter: parsed } = fileService.parseMarkdownFrontmatter(file.content);
@@ -65,8 +67,8 @@
       }
     } else {
       // New file
-      editor.setContent("");
-      editor.setActiveFilename(undefined);
+      editor.content = "";
+      editor.state.activeFilename = undefined;
       frontmatter = {};
     }
     isEditorVisible = true;
@@ -74,11 +76,11 @@
 
   function showLibrary() {
     isEditorVisible = false;
-    editor.setActiveFileId(null);
+    editor.state.activeFileId = null;
   }
 
   async function handleSave(content: string) {
-    const fileId = editor.getActiveFileId();
+    const fileId = editor.activeFileId;
 
     // Generate title from content if not provided
     const title = frontmatter.title || fileService.generateTitleFromContent(content);
@@ -92,11 +94,12 @@
       });
     } else {
       // Create new file
-      const newFileId = library.createFile(content, title, tags);
-      editor.setActiveFileId(newFileId);
+      const newFileId = crypto.randomUUID();
+      library.createFile(newFileId, content, title, tags);
+      editor.state.activeFileId = newFileId;
     }
 
-    editor.setDirty(false);
+    editor.isDirty = false;
   }
 
   function handleDelete(fileId: string) {
@@ -133,8 +136,8 @@
     // The Editor component manages its own hotkeys when visible
     if (!isEditorVisible) {
       const hotkeyConfig: HotkeyConfig = {
-        "ctrl+comma": () => editor.setSettingsModalVisibility(true),
-        "ctrl+alt+slash": () => editor.setShortcutModalVisibility(true),
+        "ctrl+comma": () => (editor.state.settingsModalVisible = true),
+        "ctrl+alt+slash": () => (editor.state.shortcutModalVisible = true),
         "ctrl+shift+o": () => showEditor(null),
       };
 
@@ -156,7 +159,7 @@
   <Editor
     placeholder={m.editor_placeholder()}
     fullscreen={true}
-    bind:shortcutModalVisible={editor.shortcutModalVisible}
+    bind:shortcutModalVisible={editor.state.shortcutModalVisible}
     onNewFile={() => showEditor(null)}
     onSave={(content) => handleSave(content)}
     onBack={showLibrary}
@@ -168,15 +171,15 @@
     onNewFile={() => showEditor(null)}
     onOpenFile={showEditor}
     onDeleteFile={handleDelete}
-    isLoading={library.loading}
+    isLoading={library.isLoading}
   />
 {/if}
 
 <WelcomeModal show={modal.isVisible("welcome")} onclose={() => handleWelcomeFinish()} />
 
 <Modal
-  bind:show={editor.settingsModalVisible}
-  onclose={() => editor.setSettingsModalVisibility(false)}
+  bind:show={editor.state.settingsModalVisible}
+  onclose={() => (editor.state.settingsModalVisible = false)}
   className="w-full"
 >
   {#snippet header()}
@@ -185,7 +188,7 @@
   <Settings />
 </Modal>
 
-<Modal bind:show={editor.shortcutModalVisible} onclose={() => editor.setShortcutModalVisibility(false)}>
+<Modal bind:show={editor.state.shortcutModalVisible} onclose={() => (editor.state.shortcutModalVisible = false)}>
   {#snippet header()}
     <CircleHelp size={18} /> {helpModalTitle}
   {/snippet}

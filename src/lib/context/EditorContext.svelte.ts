@@ -9,9 +9,9 @@ import { getContext, setContext } from "svelte";
 import { history } from "@codemirror/commands";
 import type { Compartment } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { createFileService } from "$lib/services/FileService";
-import { createExportService } from "$lib/services/ExportService";
+import { getFileService, getExportService } from "$lib/services";
 import type { MarkdownFile } from "$lib/types/database";
+import { ContextNotFoundError, FileOperationError } from "$lib/errors";
 
 const EDITOR_CONTEXT_KEY = Symbol("editor");
 
@@ -32,9 +32,9 @@ export class EditorContext {
   shortcutModalVisible = $state<boolean>(false);
   settingsModalVisible = $state<boolean>(false);
 
-  // Services
-  private fileService = createFileService();
-  private exportService = createExportService();
+  // Services (singletons)
+  private fileService = getFileService();
+  private exportService = getExportService();
 
   /**
    * Set the editor mode to either `edit`, `side-by-side` or `preview`.
@@ -264,8 +264,13 @@ export class EditorContext {
    */
   async saveFile(onSave: (content: string) => Promise<void>): Promise<void> {
     if (!this.content) return;
-    await onSave(this.content);
-    this.setDirty(false);
+
+    try {
+      await onSave(this.content);
+      this.setDirty(false);
+    } catch (error) {
+      throw new FileOperationError("save", this.activeFileId || null, error as Error);
+    }
   }
 
   /**
@@ -274,41 +279,45 @@ export class EditorContext {
   async exportFile(): Promise<void> {
     if (!this.content && !this.activeFilename) return; // Don't save empty, untitled files
 
-    // Determine title: check frontmatter first, then H1 heading, then "Untitled"
-    let title: string;
-    if (this.activeFilename) {
-      title = this.fileService.getFilenameWithoutExtension(this.activeFilename);
-    } else {
-      // Parse frontmatter to check for title
-      const { frontmatter } = this.fileService.parseMarkdownFrontmatter(this.content);
-      title = frontmatter.title || this.fileService.generateTitleFromContent(this.content);
+    try {
+      // Determine title: check frontmatter first, then H1 heading, then "Untitled"
+      let title: string;
+      if (this.activeFilename) {
+        title = this.fileService.getFilenameWithoutExtension(this.activeFilename);
+      } else {
+        // Parse frontmatter to check for title
+        const { frontmatter } = this.fileService.parseMarkdownFrontmatter(this.content);
+        title = frontmatter.title || this.fileService.generateTitleFromContent(this.content);
+      }
+
+      // Create a temporary file object for export
+      const tempFile: MarkdownFile = {
+        id: this.activeFileId || "temp",
+        content: this.content,
+        title,
+        tags: "",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        visitedAt: Date.now(),
+      };
+
+      // Use ExportService to create the blob
+      const blob = this.exportService.exportFile(tempFile, {
+        format: "markdown",
+        includeMetadata: false,
+      });
+
+      // Generate filename using ExportService
+      const baseFilename = this.activeFilename ?? this.exportService.generateExportFilename(tempFile, "markdown");
+
+      // Download the file
+      this.exportService.downloadFile(blob, baseFilename);
+
+      this.setActiveFilename(baseFilename);
+      this.setDirty(false);
+    } catch (error) {
+      throw new FileOperationError("export", this.activeFileId || null, error as Error);
     }
-
-    // Create a temporary file object for export
-    const tempFile: MarkdownFile = {
-      id: this.activeFileId || "temp",
-      content: this.content,
-      title,
-      tags: "",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      visitedAt: Date.now(),
-    };
-
-    // Use ExportService to create the blob
-    const blob = this.exportService.exportFile(tempFile, {
-      format: "markdown",
-      includeMetadata: false,
-    });
-
-    // Generate filename using ExportService
-    const baseFilename = this.activeFilename ?? this.exportService.generateExportFilename(tempFile, "markdown");
-
-    // Download the file
-    this.exportService.downloadFile(blob, baseFilename);
-
-    this.setActiveFilename(baseFilename);
-    this.setDirty(false);
   }
 }
 
@@ -327,7 +336,7 @@ export function setEditorContext(): EditorContext {
 export function getEditorContext(): EditorContext {
   const context = getContext<EditorContext>(EDITOR_CONTEXT_KEY);
   if (!context) {
-    throw new Error("EditorContext not found. Make sure to call setEditorContext() in a parent component.");
+    throw new ContextNotFoundError("EditorContext");
   }
   return context;
 }

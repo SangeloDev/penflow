@@ -4,7 +4,23 @@
  * Re-exports all context modules for convenient importing.
  */
 
-export { EditorContext, setEditorContext, getEditorContext, type EditorMode } from "./EditorContext.svelte.ts";
+// New split editor contexts (recommended)
+export {
+  EditorStateContext,
+  setEditorStateContext,
+  getEditorStateContext,
+  type EditorMode,
+} from "./EditorStateContext.svelte.ts";
+
+export {
+  EditorOperationsContext,
+  setEditorOperationsContext,
+  getEditorOperationsContext,
+} from "./EditorOperationsContext.svelte.ts";
+
+// Legacy editor context (deprecated - use split contexts above)
+/** @deprecated Use EditorStateContext and EditorOperationsContext instead */
+export { EditorContext, setEditorContext, getEditorContext } from "./EditorContext.svelte.ts";
 
 export { LibraryContext, setLibraryContext, getLibraryContext } from "./LibraryContext.svelte.ts";
 
@@ -20,3 +36,6 @@ export {
   type HotkeyHandler,
   type HotkeyContextOperations,
 } from "./HotkeyContext.svelte.ts";
+
+// Re-export error classes for context usage
+export { ContextNotFoundError } from "$lib/errors";

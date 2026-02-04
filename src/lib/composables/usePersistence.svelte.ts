@@ -1,18 +1,34 @@
 /**
  * usePersistence Composable
  *
- * Provides database persistence operations as a composable.
- * Manages TinyBase adapter initialization and database operations.
+ * Simplified composable that provides direct access to persistence functionality.
+ * This is a thin wrapper that adds convenience methods but primarily exposes
+ * the TinyBaseAdapter directly for maximum flexibility.
  */
 
 import { TinyBaseAdapter } from "$lib/adapters/TinyBaseAdapter";
-import type { MarkdownFile } from "$lib/types/database";
+import { NotInitializedError, DatabaseError } from "$lib/errors";
 
 /**
- * Persistence composable for managing database operations
+ * Persistence composable - manages database operations with TinyBase
+ *
+ * @example
+ * ```typescript
+ * const persistence = usePersistence();
+ *
+ * // Initialize
+ * const adapter = await persistence.initialize("penflow");
+ *
+ * // Use adapter directly for full control
+ * adapter.createFile(id, data);
+ * const file = adapter.getFile(id);
+ *
+ * // Or use convenience methods
+ * await persistence.saveFile(id, content, title, tags);
+ * ```
  */
 export function usePersistence() {
-  let adapter: TinyBaseAdapter | null = null;
+  let adapter: TinyBaseAdapter | null = $state(null);
   let isInitialized = $state(false);
   let isLoading = $state(false);
 
@@ -33,172 +49,49 @@ export function usePersistence() {
       isInitialized = true;
       return adapter;
     } catch (error) {
-      console.error("Failed to initialize persistence:", error);
-      throw error;
+      throw new DatabaseError("initialization", error as Error);
     } finally {
       isLoading = false;
     }
   }
 
   /**
-   * Get the current adapter instance
+   * Get the adapter instance (throws if not initialized)
    */
-  function getAdapter(): TinyBaseAdapter | null {
+  function getAdapter(): TinyBaseAdapter {
+    if (!adapter) {
+      throw new NotInitializedError("Persistence");
+    }
     return adapter;
   }
 
   /**
-   * Check if persistence is initialized
-   */
-  function getIsInitialized(): boolean {
-    return isInitialized;
-  }
-
-  /**
-   * Check if persistence is currently loading
-   */
-  function getIsLoading(): boolean {
-    return isLoading;
-  }
-
-  /**
-   * Save a file to the database
+   * Save or update a file in the database (convenience method)
    */
   async function saveFile(id: string, content: string, title?: string, tags?: string): Promise<void> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
+    const db = getAdapter();
     const now = Date.now();
 
-    if (adapter.fileExists(id)) {
-      // Update existing file
-      adapter.updateFile(id, {
-        content,
-        title: title || "",
-        tags: tags || "",
-        updatedAt: now,
-      });
-    } else {
-      // Create new file
-      adapter.createFile(id, {
-        content,
-        title: title || "",
-        tags: tags || "",
-        createdAt: now,
-        updatedAt: now,
-        visitedAt: now,
-      });
-    }
-  }
-
-  /**
-   * Load a file from the database
-   */
-  async function loadFile(id: string): Promise<MarkdownFile | null> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    return adapter.getFile(id);
-  }
-
-  /**
-   * Delete a file from the database
-   */
-  async function deleteFile(id: string): Promise<void> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    adapter.deleteFile(id);
-  }
-
-  /**
-   * Load all files from the database
-   */
-  async function loadAllFiles(): Promise<Record<string, MarkdownFile>> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    return adapter.getAllFiles();
-  }
-
-  /**
-   * Check if a file exists in the database
-   */
-  async function fileExists(id: string): Promise<boolean> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    return adapter.fileExists(id);
-  }
-
-  /**
-   * Get the total number of files in the database
-   */
-  async function getFileCount(): Promise<number> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    return adapter.getFileCount();
-  }
-
-  /**
-   * Clear all files from the database (with confirmation)
-   */
-  async function clearAllFiles(): Promise<void> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    if (confirm("Are you sure you want to delete all files? This cannot be undone.")) {
-      adapter.clearAllFiles();
-    }
-  }
-
-  /**
-   * Export the entire database as JSON
-   */
-  async function exportDatabase(): Promise<string> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
-    const files = adapter.getAllFiles();
-    return JSON.stringify(files, null, 2);
-  }
-
-  /**
-   * Import files from JSON data
-   */
-  async function importDatabase(jsonData: string): Promise<void> {
-    if (!adapter) {
-      throw new Error("Persistence not initialized");
-    }
-
     try {
-      const files = JSON.parse(jsonData) as Record<string, MarkdownFile>;
-
-      // Validate and import each file
-      for (const [id, file] of Object.entries(files)) {
-        if (file && typeof file === "object") {
-          adapter.createFile(id, {
-            content: file.content || "",
-            title: file.title || "",
-            tags: file.tags || "",
-            createdAt: file.createdAt || Date.now(),
-            updatedAt: file.updatedAt || Date.now(),
-            visitedAt: file.visitedAt || Date.now(),
-          });
-        }
+      if (db.fileExists(id)) {
+        db.updateFile(id, {
+          content,
+          title: title || "",
+          tags: tags || "",
+          updatedAt: now,
+        });
+      } else {
+        db.createFile(id, {
+          content,
+          title: title || "",
+          tags: tags || "",
+          createdAt: now,
+          updatedAt: now,
+          visitedAt: now,
+        });
       }
     } catch (error) {
-      console.error("Failed to import database:", error);
-      throw new Error("Invalid database format");
+      throw new DatabaseError("save file", error as Error);
     }
   }
 
@@ -214,34 +107,25 @@ export function usePersistence() {
   }
 
   return {
-    // Initialization
+    // Core methods
     initialize,
     destroy,
 
-    // State
+    // Adapter access
+    get adapter() {
+      return adapter;
+    },
     getAdapter,
-    getIsInitialized,
-    getIsLoading,
 
-    // File operations
-    saveFile,
-    loadFile,
-    deleteFile,
-    loadAllFiles,
-    fileExists,
-    getFileCount,
-
-    // Bulk operations
-    clearAllFiles,
-    exportDatabase,
-    importDatabase,
-
-    // Reactive state access
+    // State
     get initialized() {
       return isInitialized;
     },
     get loading() {
       return isLoading;
     },
+
+    // Convenience methods
+    saveFile,
   };
 }

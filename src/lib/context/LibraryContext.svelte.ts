@@ -8,8 +8,10 @@
 import { getContext, setContext } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
 import type { TinyBaseAdapter } from "$lib/adapters/TinyBaseAdapter";
-import type { MarkdownFile } from "$lib/types/database";
+import type { MarkdownFile, MarkdownFileUpdate } from "$lib/types/database";
 import type { SortConfig } from "$lib/types/database";
+import { NotInitializedError, FileOperationError, ContextNotFoundError } from "$lib/errors";
+import { getFileService } from "$lib/services";
 
 const LIBRARY_CONTEXT_KEY = Symbol("library");
 
@@ -19,8 +21,10 @@ const LIBRARY_CONTEXT_KEY = Symbol("library");
 export class LibraryContext {
   files = $state<Record<string, MarkdownFile>>({});
   isLoading = $state<boolean>(true);
-  sortConfig = $state<SortConfig>({ by: "visitedAt", order: "desc" });
+  sortConfig = $state<SortConfig>({ by: "updatedAt", order: "desc" });
+
   private adapter: TinyBaseAdapter | null = null;
+  private fileService = getFileService();
   private unsubscribe: (() => void) | null = null;
 
   /**
@@ -81,18 +85,23 @@ export class LibraryContext {
    */
   createFile(id: string, content: string, title?: string, tags?: string): void {
     if (!this.adapter) {
-      throw new Error("Library adapter not initialized");
+      throw new NotInitializedError("Library");
     }
 
     const now = Date.now();
-    this.adapter.createFile(id, {
-      content,
-      title: title || "",
-      tags: tags || "",
-      createdAt: now,
-      updatedAt: now,
-      visitedAt: now,
-    });
+
+    try {
+      this.adapter.createFile(id, {
+        content,
+        title: title || this.fileService.generateTitleFromContent(content),
+        tags: tags || "",
+        createdAt: now,
+        updatedAt: now,
+        visitedAt: now,
+      });
+    } catch (error) {
+      throw new FileOperationError("create", id, error as Error);
+    }
   }
 
   /**
@@ -100,11 +109,14 @@ export class LibraryContext {
    */
   updateFile(id: string, updates: Partial<MarkdownFile>): void {
     if (!this.adapter) {
-      throw new Error("Library adapter not initialized");
+      throw new NotInitializedError("Library");
     }
 
-    // Remove id from updates if present (it shouldn't be updated)
-    const { id: _, ...fileUpdates } = updates;
+    // Extract only the fields that can be updated
+    const fileUpdates: Partial<MarkdownFileUpdate> = {};
+    if (updates.content !== undefined) fileUpdates.content = updates.content;
+    if (updates.title !== undefined) fileUpdates.title = updates.title;
+    if (updates.tags !== undefined) fileUpdates.tags = updates.tags;
 
     this.adapter.updateFile(id, {
       ...fileUpdates,
@@ -117,7 +129,7 @@ export class LibraryContext {
    */
   deleteFile(id: string): void {
     if (!this.adapter) {
-      throw new Error("Library adapter not initialized");
+      throw new NotInitializedError("Library");
     }
 
     this.adapter.deleteFile(id);
@@ -128,7 +140,7 @@ export class LibraryContext {
    */
   markFileVisited(id: string): void {
     if (!this.adapter) {
-      throw new Error("Library adapter not initialized");
+      throw new NotInitializedError("Library");
     }
 
     this.adapter.updateFile(id, {
@@ -141,7 +153,7 @@ export class LibraryContext {
    */
   fileExists(id: string): boolean {
     if (!this.adapter) {
-      return false;
+      throw new NotInitializedError("Library");
     }
 
     return this.adapter.fileExists(id);
@@ -241,7 +253,7 @@ export class LibraryContext {
    */
   clearAllFiles(): void {
     if (!this.adapter) {
-      throw new Error("Library adapter not initialized");
+      throw new NotInitializedError("Library");
     }
 
     if (confirm("Are you sure you want to delete all files? This cannot be undone.")) {
@@ -290,7 +302,7 @@ export function setLibraryContext(): LibraryContext {
 export function getLibraryContext(): LibraryContext {
   const context = getContext<LibraryContext>(LIBRARY_CONTEXT_KEY);
   if (!context) {
-    throw new Error("LibraryContext not found. Make sure to call setLibraryContext() in a parent component.");
+    throw new ContextNotFoundError("LibraryContext");
   }
   return context;
 }

@@ -8,6 +8,7 @@
 import { getContext, setContext } from "svelte";
 import type { EditorView } from "@codemirror/view";
 import type { EditorMode } from "./EditorContext.svelte";
+import { ContextNotFoundError } from "$lib/errors";
 
 const HOTKEY_CONTEXT_KEY = Symbol("hotkey");
 
@@ -175,7 +176,7 @@ export function setHotkeyContext(): HotkeyContext {
 export function getHotkeyContext(): HotkeyContext {
   const context = getContext<HotkeyContext>(HOTKEY_CONTEXT_KEY);
   if (!context) {
-    throw new Error("HotkeyContext not found. Make sure to call setHotkeyContext() in a parent component.");
+    throw new ContextNotFoundError("HotkeyContext");
   }
   return context;
 }

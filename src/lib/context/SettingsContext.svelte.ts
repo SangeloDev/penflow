@@ -1,11 +1,12 @@
 /**
  * Settings Context
  *
- * Provides settings state and operations through Svelte's context API.
- * This wraps the existing settings module with a context-based approach.
+ * Provides settings state management through Svelte's context API.
+ * Manages application settings and preferences.
  */
 
 import { getContext, setContext } from "svelte";
+import { ContextNotFoundError } from "$lib/errors";
 import {
   settings,
   getFirstVisit,
@@ -160,7 +161,7 @@ export function setSettingsContext(): SettingsContext {
 export function getSettingsContext(): SettingsContext {
   const context = getContext<SettingsContext>(SETTINGS_CONTEXT_KEY);
   if (!context) {
-    throw new Error("SettingsContext not found. Make sure to call setSettingsContext() in a parent component.");
+    throw new ContextNotFoundError("SettingsContext");
   }
   return context;
 }

@@ -18,6 +18,7 @@ import {
   rowToMarkdownFile,
   createDefaultMarkdownFile,
 } from "$lib/types/database";
+import { NotInitializedError, DatabaseError } from "$lib/errors";
 
 /**
  * TinyBase adapter class that provides type-safe database operations
@@ -25,7 +26,6 @@ import {
 export class TinyBaseAdapter {
   private store: Store | null = null;
   private persister: IndexedDbPersister | null = null;
-  private listeners: Map<string, () => void> = new Map();
 
   constructor(private readonly dbName: string = "penflow") {}
 
@@ -38,11 +38,15 @@ export class TinyBaseAdapter {
       return;
     }
 
-    this.store = createStore().setTablesSchema(LIBRARY_SCHEMA);
-    this.persister = createIndexedDbPersister(this.store, this.dbName);
+    try {
+      this.store = createStore().setTablesSchema(LIBRARY_SCHEMA);
+      this.persister = createIndexedDbPersister(this.store, this.dbName);
 
-    await this.persister.load();
-    await this.persister.startAutoSave();
+      await this.persister.load();
+      await this.persister.startAutoSave();
+    } catch (error) {
+      throw new DatabaseError("initialization", error as Error);
+    }
   }
 
   /**
@@ -50,11 +54,15 @@ export class TinyBaseAdapter {
    */
   getAllFiles(): Record<string, MarkdownFile> {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    const table = this.store.getTable(TABLE_NAMES.LIBRARY);
-    return tableToMarkdownFiles(table);
+    try {
+      const table = this.store.getTable(TABLE_NAMES.LIBRARY);
+      return tableToMarkdownFiles(table);
+    } catch (error) {
+      throw new DatabaseError("get all files", error as Error);
+    }
   }
 
   /**
@@ -62,15 +70,15 @@ export class TinyBaseAdapter {
    */
   getFile(id: string): MarkdownFile | null {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
-    }
-
-    const row = this.store.getRow(TABLE_NAMES.LIBRARY, id);
-    if (!row || Object.keys(row).length === 0) {
-      return null;
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
     try {
+      const row = this.store.getRow(TABLE_NAMES.LIBRARY, id);
+      if (!row || Object.keys(row).length === 0) {
+        return null;
+      }
+
       return rowToMarkdownFile(id, row);
     } catch (error) {
       console.error(`Failed to parse file with id ${id}:`, error);
@@ -83,18 +91,22 @@ export class TinyBaseAdapter {
    */
   createFile(id: string, data: Partial<MarkdownFileSchema>): void {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    const fileData = createDefaultMarkdownFile(data);
-    this.store.setRow(TABLE_NAMES.LIBRARY, id, {
-      content: fileData.content,
-      createdAt: fileData.createdAt,
-      updatedAt: fileData.updatedAt,
-      visitedAt: fileData.visitedAt,
-      title: fileData.title,
-      tags: fileData.tags,
-    });
+    try {
+      const fileData = createDefaultMarkdownFile(data);
+      this.store.setRow(TABLE_NAMES.LIBRARY, id, {
+        content: fileData.content,
+        createdAt: fileData.createdAt,
+        updatedAt: fileData.updatedAt,
+        visitedAt: fileData.visitedAt,
+        title: fileData.title,
+        tags: fileData.tags,
+      });
+    } catch (error) {
+      throw new DatabaseError("create file", error as Error);
+    }
   }
 
   /**
@@ -102,10 +114,14 @@ export class TinyBaseAdapter {
    */
   updateFile(id: string, updates: MarkdownFileUpdate): void {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    this.store.setPartialRow(TABLE_NAMES.LIBRARY, id, updates as any);
+    try {
+      this.store.setPartialRow(TABLE_NAMES.LIBRARY, id, updates as any);
+    } catch (error) {
+      throw new DatabaseError("update file", error as Error);
+    }
   }
 
   /**
@@ -113,10 +129,14 @@ export class TinyBaseAdapter {
    */
   deleteFile(id: string): void {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    this.store.delRow(TABLE_NAMES.LIBRARY, id);
+    try {
+      this.store.delRow(TABLE_NAMES.LIBRARY, id);
+    } catch (error) {
+      throw new DatabaseError("delete file", error as Error);
+    }
   }
 
   /**
@@ -124,11 +144,16 @@ export class TinyBaseAdapter {
    */
   fileExists(id: string): boolean {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    const row = this.store.getRow(TABLE_NAMES.LIBRARY, id);
-    return row && Object.keys(row).length > 0;
+    try {
+      const row = this.store.getRow(TABLE_NAMES.LIBRARY, id);
+      return row && Object.keys(row).length > 0;
+    } catch (error) {
+      console.error("Failed to check file existence:", error);
+      return false;
+    }
   }
 
   /**
@@ -136,23 +161,17 @@ export class TinyBaseAdapter {
    */
   addTableListener(callback: (files: Record<string, MarkdownFile>) => void): () => void {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    const listenerId = crypto.randomUUID();
-
-    this.store.addTableListener(TABLE_NAMES.LIBRARY, () => {
+    const listenerId = this.store.addTableListener(TABLE_NAMES.LIBRARY, () => {
       const files = this.getAllFiles();
       callback(files);
     });
 
-    this.listeners.set(listenerId, () => {
-      // Cleanup function stored for later
-    });
-
     // Return unsubscribe function
     return () => {
-      this.listeners.delete(listenerId);
+      this.store?.delListener(listenerId);
     };
   }
 
@@ -161,10 +180,14 @@ export class TinyBaseAdapter {
    */
   getFileCount(): number {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    return Object.keys(this.store.getTable(TABLE_NAMES.LIBRARY)).length;
+    try {
+      return Object.keys(this.store.getTable(TABLE_NAMES.LIBRARY)).length;
+    } catch (error) {
+      throw new DatabaseError("get file count", error as Error);
+    }
   }
 
   /**
@@ -172,10 +195,14 @@ export class TinyBaseAdapter {
    */
   clearAllFiles(): void {
     if (!this.store) {
-      throw new Error("Store not initialized. Call initialize() first.");
+      throw new NotInitializedError("TinyBaseAdapter");
     }
 
-    this.store.delTable(TABLE_NAMES.LIBRARY);
+    try {
+      this.store.delTable(TABLE_NAMES.LIBRARY);
+    } catch (error) {
+      throw new DatabaseError("clear all files", error as Error);
+    }
   }
 
   /**
@@ -189,18 +216,18 @@ export class TinyBaseAdapter {
    * Destroy the adapter and clean up resources
    */
   async destroy(): Promise<void> {
-    // Remove all listeners
-    this.listeners.forEach((listener) => listener());
-    this.listeners.clear();
+    try {
+      // Stop persister
+      if (this.persister) {
+        await this.persister.stopAutoSave();
+        this.persister.destroy();
+        this.persister = null;
+      }
 
-    // Stop persister
-    if (this.persister) {
-      await this.persister.stopAutoSave();
-      this.persister.destroy();
-      this.persister = null;
+      this.store = null;
+    } catch (error) {
+      throw new DatabaseError("destroy", error as Error);
     }
-
-    this.store = null;
   }
 
   /**

@@ -3,13 +3,15 @@
   import { ArrowDown, ArrowUp, Clock, Eye, Paperclip, PencilIcon, Plus, Settings, Trash2Icon, X } from "lucide-svelte";
   import Modal from "./Modal.svelte";
   import { formatDistanceStrict } from "date-fns";
-  import { getEditorContext, getSettingsContext } from "$lib/context";
+  import { getEditorStateContext, getSettingsContext } from "$lib/context";
+  import { getFileService } from "$lib/services";
   import { m } from "$paraglide/messages.js";
   import { getLocale } from "$paraglide/runtime";
   import { dateLocaleMap } from "$lib/i18n/dateLocales";
 
-  const editor = getEditorContext();
+  const editorState = getEditorStateContext();
   const settings = getSettingsContext();
+  const fileService = getFileService();
 
   let {
     files,
@@ -95,7 +97,7 @@
   const filteredFiles = $derived(
     Object.entries(files)
       .filter(([_id, file]) => {
-        const title = file.title || editor.generateDocumentTitle(file.content, untitledNote) || "Untitled";
+        const title = file.title || fileService.generateTitleFromContent(file.content, untitledNote) || "Untitled";
         const tags = (file.tags as string) || "";
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
@@ -106,8 +108,8 @@
       })
       .sort(([_a, fileA], [_b, fileB]) => {
         if (settings.getSortConfig().by === "name") {
-          const titleA = fileA.title || editor.generateDocumentTitle(fileA.content, untitledNote) || "Untitled";
-          const titleB = fileB.title || editor.generateDocumentTitle(fileB.content, untitledNote) || "Untitled";
+          const titleA = fileA.title || fileService.generateTitleFromContent(fileA.content, untitledNote) || "Untitled";
+          const titleB = fileB.title || fileService.generateTitleFromContent(fileB.content, untitledNote) || "Untitled";
           return settings.getSortConfig().order === "asc" ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
         }
 
@@ -158,7 +160,7 @@
     <span class="py-1 align-middle text-xl font-bold">penflow</span>
   </div>
   <div class="ml-auto flex items-center gap-1">
-    <button class="btn btn-square" onclick={() => editor.setSettingsModalVisibility(true)} title={settingsLabel}>
+    <button class="btn btn-square" onclick={() => (editorState.settingsModalVisible = true)} title={settingsLabel}>
       <Settings size={20} />
     </button>
   </div>
@@ -250,7 +252,7 @@
             >
               <div class="mt-auto flex flex-col gap-2">
                 <h3 class="line-clamp-1 text-center">
-                  {file.title || editor.generateDocumentTitle(file.content, untitledNote) || "Untitled"}
+                  {file.title || fileService.generateTitleFromContent(file.content, untitledNote) || "Untitled"}
                 </h3>
                 <button
                   onclick={(e) => {
@@ -311,7 +313,7 @@
         <span class="mr-4">
           {confirmDeletionTitle(
             files[fileToDelete].title ||
-              editor.generateDocumentTitle(files[fileToDelete].content, untitledNote) ||
+              fileService.generateTitleFromContent(files[fileToDelete].content, untitledNote) ||
               "Untitled"
           )}
         </span>

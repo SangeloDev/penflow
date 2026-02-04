@@ -7,13 +7,13 @@
   import { alert } from "@mdit/plugin-alert";
   import footnote from "markdown-it-footnote";
   import DOMPurify from "isomorphic-dompurify";
-  import { getEditorContext } from "$lib/context";
+  import { getEditorStateContext } from "$lib/context";
   import { emojiDefs, emojiShortcuts } from "$lib/editor/emoji.ts";
   import "highlight.js/styles/base16/dracula.min.css";
   import "../../styles/preview.css";
   import { m } from "$paraglide/messages.js";
 
-  const editor = getEditorContext();
+  const editorState = getEditorStateContext();
 
   let {
     content,
@@ -115,7 +115,7 @@
     }
 
     const newContent = lines.join("\n");
-    editor.setContent(newContent);
+    editorState.content = newContent;
     onContentChange?.(newContent);
   }
 

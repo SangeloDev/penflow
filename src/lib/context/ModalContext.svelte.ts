@@ -6,6 +6,7 @@
  */
 
 import { getContext, setContext } from "svelte";
+import { ContextNotFoundError } from "$lib/errors";
 
 const MODAL_CONTEXT_KEY = Symbol("modal");
 
@@ -171,7 +172,7 @@ export function setModalContext(): ModalContext {
 export function getModalContext(): ModalContext {
   const context = getContext<ModalContext>(MODAL_CONTEXT_KEY);
   if (!context) {
-    throw new Error("ModalContext not found. Make sure to call setModalContext() in a parent component.");
+    throw new ContextNotFoundError("ModalContext");
   }
   return context;
 }
