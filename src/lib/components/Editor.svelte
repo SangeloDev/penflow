@@ -327,6 +327,22 @@
     }
   });
 
+  // Sync external content changes to EditorView (e.g., when switching files or creating new ones)
+  $effect(() => {
+    if (!editorView) return;
+
+    const currentContent = editorView.state.doc.toString();
+    if (currentContent !== content) {
+      editorView.dispatch({
+        changes: {
+          from: 0,
+          to: editorView.state.doc.length,
+          insert: content,
+        },
+      });
+    }
+  });
+
   function emojiCompletionSource(context: CompletionContext) {
     // match a ':' followed by at least two word characters
     let word = context.matchBefore(/:\w+$/);

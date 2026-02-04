@@ -5,29 +5,36 @@
  * This replaces global state with a proper provider/consumer pattern.
  */
 
-import { getContext, setContext } from 'svelte';
-import { history } from '@codemirror/commands';
-import type { Compartment } from '@codemirror/state';
-import type { EditorView } from '@codemirror/view';
+import { getContext, setContext } from "svelte";
+import { history } from "@codemirror/commands";
+import type { Compartment } from "@codemirror/state";
+import type { EditorView } from "@codemirror/view";
+import { createFileService } from "$lib/services/FileService";
+import { createExportService } from "$lib/services/ExportService";
+import type { MarkdownFile } from "$lib/types/database";
 
-const EDITOR_CONTEXT_KEY = Symbol('editor');
+const EDITOR_CONTEXT_KEY = Symbol("editor");
 
 /**
  * The EditorMode type. Can be either `edit`, `side-by-side` or `preview`
  */
-export type EditorMode = 'edit' | 'side-by-side' | 'preview';
+export type EditorMode = "edit" | "side-by-side" | "preview";
 
 /**
  * Editor context state and operations
  */
 export class EditorContext {
-  mode = $state<EditorMode>('edit');
-  content = $state<string>('');
+  mode = $state<EditorMode>("edit");
+  content = $state<string>("");
   activeFilename = $state<string | undefined>(undefined);
   activeFileId = $state<string | null | undefined>(undefined);
   isDirty = $state<boolean>(false);
   shortcutModalVisible = $state<boolean>(false);
   settingsModalVisible = $state<boolean>(false);
+
+  // Services
+  private fileService = createFileService();
+  private exportService = createExportService();
 
   /**
    * Set the editor mode to either `edit`, `side-by-side` or `preview`.
@@ -133,28 +140,28 @@ export class EditorContext {
   cycleEditMode(forward = true): void {
     if (forward) {
       switch (this.mode) {
-        case 'edit':
-          this.setMode('side-by-side');
+        case "edit":
+          this.setMode("side-by-side");
           break;
-        case 'side-by-side':
-          this.setMode('preview');
+        case "side-by-side":
+          this.setMode("preview");
           break;
-        case 'preview':
+        case "preview":
         default:
-          this.setMode('edit');
+          this.setMode("edit");
           break;
       }
     } else {
       switch (this.mode) {
-        case 'edit':
-          this.setMode('preview');
+        case "edit":
+          this.setMode("preview");
           break;
-        case 'preview':
-          this.setMode('side-by-side');
+        case "preview":
+          this.setMode("side-by-side");
           break;
-        case 'side-by-side':
+        case "side-by-side":
         default:
-          this.setMode('edit');
+          this.setMode("edit");
           break;
       }
     }
@@ -172,11 +179,7 @@ export class EditorContext {
   /**
    * Handle file selection to load content into editor.
    */
-  handleFileSelect(
-    event: Event | undefined,
-    view: EditorView | undefined,
-    historyCompartment: Compartment
-  ): void {
+  handleFileSelect(event: Event | undefined, view: EditorView | undefined, historyCompartment: Compartment): void {
     if (!event) return;
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -190,7 +193,7 @@ export class EditorContext {
       this.setDirty(false);
     };
     reader.readAsText(file);
-    input.value = '';
+    input.value = "";
   }
 
   /**
@@ -224,7 +227,7 @@ export class EditorContext {
    * Clears the editor view content and creates a new document.
    */
   newFile(view: EditorView | undefined, onNewFile: () => void): void {
-    if (this.isDirty && !confirm('You have unsaved changes. Discard them and create a new file?')) {
+    if (this.isDirty && !confirm("You have unsaved changes. Discard them and create a new file?")) {
       return;
     }
 
@@ -237,7 +240,7 @@ export class EditorContext {
     // clear the editor view if it exists
     if (view) {
       view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: '' },
+        changes: { from: 0, to: view.state.doc.length, insert: "" },
       });
     }
   }
@@ -246,37 +249,14 @@ export class EditorContext {
    * Reads a Markdown string until it finds an h1 heading. Then it transforms it into a valid filename.
    */
   generateFilename(markdownContent: string): string {
-    const headingMatch = markdownContent.match(/^# (.*)/m);
-    let baseName = 'note';
-
-    if (headingMatch && headingMatch[1]) {
-      baseName = headingMatch[1].trim();
-    }
-
-    const sanitizedName = baseName
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    return (sanitizedName || 'note') + '.md';
+    return this.fileService.generateFilenameFromContent(markdownContent);
   }
 
   /**
    * Reads a Markdown string until it finds an h1 heading. Then it transforms it into a title.
    */
-  generateDocumentTitle(markdownContent: string, defaultTitle = 'Untitled'): string {
-    const headingMatch = markdownContent.match(/^# (.*)/m);
-    let baseName = defaultTitle;
-
-    if (headingMatch && headingMatch[1]) {
-      baseName = headingMatch[1].trim();
-    }
-
-    const sanitizedName = baseName.replace(/\s+/g, ' ').replace(/^-+|-+$/g, '');
-
-    return sanitizedName || defaultTitle;
+  generateDocumentTitle(markdownContent: string, defaultTitle = "Untitled"): string {
+    return this.fileService.generateTitleFromContent(markdownContent, defaultTitle);
   }
 
   /**
@@ -294,19 +274,39 @@ export class EditorContext {
   async exportFile(): Promise<void> {
     if (!this.content && !this.activeFilename) return; // Don't save empty, untitled files
 
-    // save as
-    const baseFilename = this.activeFilename ?? this.generateFilename(this.content);
-    const blob = new Blob([this.content], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    // Determine title: check frontmatter first, then H1 heading, then "Untitled"
+    let title: string;
+    if (this.activeFilename) {
+      title = this.fileService.getFilenameWithoutExtension(this.activeFilename);
+    } else {
+      // Parse frontmatter to check for title
+      const { frontmatter } = this.fileService.parseMarkdownFrontmatter(this.content);
+      title = frontmatter.title || this.fileService.generateTitleFromContent(this.content);
+    }
 
-    link.href = url;
-    link.download = baseFilename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Create a temporary file object for export
+    const tempFile: MarkdownFile = {
+      id: this.activeFileId || "temp",
+      content: this.content,
+      title,
+      tags: "",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      visitedAt: Date.now(),
+    };
 
-    URL.revokeObjectURL(url);
+    // Use ExportService to create the blob
+    const blob = this.exportService.exportFile(tempFile, {
+      format: "markdown",
+      includeMetadata: false,
+    });
+
+    // Generate filename using ExportService
+    const baseFilename = this.activeFilename ?? this.exportService.generateExportFilename(tempFile, "markdown");
+
+    // Download the file
+    this.exportService.downloadFile(blob, baseFilename);
+
     this.setActiveFilename(baseFilename);
     this.setDirty(false);
   }
@@ -327,7 +327,7 @@ export function setEditorContext(): EditorContext {
 export function getEditorContext(): EditorContext {
   const context = getContext<EditorContext>(EDITOR_CONTEXT_KEY);
   if (!context) {
-    throw new Error('EditorContext not found. Make sure to call setEditorContext() in a parent component.');
+    throw new Error("EditorContext not found. Make sure to call setEditorContext() in a parent component.");
   }
   return context;
 }

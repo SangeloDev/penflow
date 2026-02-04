@@ -5,11 +5,11 @@
  * This replaces the global hotkey store with a proper context-based approach.
  */
 
-import { getContext, setContext } from 'svelte';
-import type { EditorView } from '@codemirror/view';
-import type { EditorMode } from './EditorContext.svelte';
+import { getContext, setContext } from "svelte";
+import type { EditorView } from "@codemirror/view";
+import type { EditorMode } from "./EditorContext.svelte";
 
-const HOTKEY_CONTEXT_KEY = Symbol('hotkey');
+const HOTKEY_CONTEXT_KEY = Symbol("hotkey");
 
 /**
  * Hotkey handler function type
@@ -67,29 +67,29 @@ export class HotkeyContext {
    * Create a keydown event handler for hotkeys
    */
   private createHotkeyHandler(config: HotkeyConfig): (e: KeyboardEvent) => void {
-    const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().includes('MAC');
+    const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC");
 
     return (e: KeyboardEvent) => {
       const keys: string[] = [];
 
       // Normalize Ctrl/Meta key based on OS
-      if (isMac ? e.metaKey : e.ctrlKey) keys.push('ctrl');
-      if (e.altKey) keys.push('alt');
-      if (e.shiftKey) keys.push('shift');
+      if (isMac ? e.metaKey : e.ctrlKey) keys.push("ctrl");
+      if (e.altKey) keys.push("alt");
+      if (e.shiftKey) keys.push("shift");
 
       // Use e.code to get the physical key
       let code = e.code.toLowerCase();
 
       // Normalize the code for consistency
-      if (code.startsWith('key')) {
+      if (code.startsWith("key")) {
         code = code.substring(3);
-      } else if (code.startsWith('digit')) {
+      } else if (code.startsWith("digit")) {
         code = code.substring(5);
       }
 
       keys.push(code);
 
-      const combo = keys.join('+');
+      const combo = keys.join("+");
 
       if (config[combo]) {
         e.preventDefault();
@@ -102,16 +102,16 @@ export class HotkeyContext {
    * Attach global hotkey listeners
    */
   attachGlobalHotkeys(config: HotkeyConfig): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     // Clean up previous listeners if any
     this.detachGlobalHotkeys();
 
     const handler = this.createHotkeyHandler(config);
-    window.addEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
 
     this.cleanup = () => {
-      window.removeEventListener('keydown', handler);
+      window.removeEventListener("keydown", handler);
     };
   }
 
@@ -136,14 +136,14 @@ export class HotkeyContext {
     const ops = this.operations;
 
     return {
-      'ctrl+comma': () => ops.setSettingsModalVisibility(true),
-      'ctrl+alt+slash': () => ops.setShortcutModalVisibility(true),
-      'ctrl+e': () => ops.cycleEditMode(true),
-      'ctrl+shift+e': () => ops.cycleEditMode(false),
-      'ctrl+s': () => ops.saveFile(),
-      'ctrl+shift+s': () => ops.exportFile(),
-      'ctrl+o': () => ops.openFile(ops.view),
-      'ctrl+shift+o': () => {
+      "ctrl+comma": () => ops.setSettingsModalVisibility(true),
+      "ctrl+alt+slash": () => ops.setShortcutModalVisibility(true),
+      "ctrl+e": () => ops.cycleEditMode(true),
+      "ctrl+shift+e": () => ops.cycleEditMode(false),
+      "ctrl+s": () => ops.saveFile(),
+      "ctrl+shift+s": () => ops.exportFile(),
+      "ctrl+o": () => ops.openFile(ops.view),
+      "ctrl+shift+o": () => {
         if (ops.onNewFile) {
           ops.newFile(ops.view, ops.onNewFile);
         }
@@ -175,7 +175,7 @@ export function setHotkeyContext(): HotkeyContext {
 export function getHotkeyContext(): HotkeyContext {
   const context = getContext<HotkeyContext>(HOTKEY_CONTEXT_KEY);
   if (!context) {
-    throw new Error('HotkeyContext not found. Make sure to call setHotkeyContext() in a parent component.');
+    throw new Error("HotkeyContext not found. Make sure to call setHotkeyContext() in a parent component.");
   }
   return context;
 }

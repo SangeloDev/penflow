@@ -15,16 +15,23 @@
     setHotkeyContext,
     type HotkeyConfig,
   } from "$lib/context";
+  import { useLibrary, useEditor } from "$lib/composables";
+  import { createFileService } from "$lib/services";
   import { createTinyBaseAdapter } from "$lib/adapters/TinyBaseAdapter";
   import { m } from "$paraglide/messages";
   import { untrack } from "svelte";
 
   // Initialize contexts
-  const editor = setEditorContext();
-  const library = setLibraryContext();
+  setEditorContext();
+  const libraryContext = setLibraryContext();
   const modal = setModalContext();
   const settings = setSettingsContext();
   const hotkey = setHotkeyContext();
+
+  // Use composables for cleaner API
+  const library = useLibrary();
+  const editor = useEditor();
+  const fileService = createFileService();
 
   // Reactive state derived from contexts
   let settingsModalTitle = $derived("");
@@ -34,7 +41,7 @@
   let isEditorVisible = $state(false);
   let frontmatter = $state<{ [key: string]: any }>({});
 
-  // Initialize database
+  // Initialize database adapter
   const adapter = createTinyBaseAdapter("penflow");
 
   function showEditor(fileId: string | null) {
@@ -44,15 +51,22 @@
       const file = library.getFile(fileId);
       if (file) {
         editor.setContent(file.content);
+        // Clear activeFilename so export generates fresh filename from content
+        editor.setActiveFilename(undefined);
+
+        // Parse frontmatter from content if present
+        const { frontmatter: parsed } = fileService.parseMarkdownFrontmatter(file.content);
         frontmatter = {
-          title: file.title,
-          tags: [...new Set(file.tags.split(", ").filter(Boolean))],
+          title: file.title || parsed.title || "",
+          tags: file.tags ? file.tags.split(", ").filter(Boolean) : parsed.tags || [],
         };
+
         library.markFileVisited(fileId);
       }
     } else {
       // New file
       editor.setContent("");
+      editor.setActiveFilename(undefined);
       frontmatter = {};
     }
     isEditorVisible = true;
@@ -65,20 +79,24 @@
 
   async function handleSave(content: string) {
     const fileId = editor.getActiveFileId();
-    const { title, tags } = frontmatter;
+
+    // Generate title from content if not provided
+    const title = frontmatter.title || fileService.generateTitleFromContent(content);
+    const tags = fileService.formatTags(Array.isArray(frontmatter.tags) ? frontmatter.tags : []);
 
     if (fileId) {
       library.updateFile(fileId, {
         content,
-        title: title || "",
-        tags: Array.isArray(tags) ? tags.join(", ") : "",
+        title,
+        tags,
       });
     } else {
       // Create new file
-      const newFileId = crypto.randomUUID();
-      library.createFile(newFileId, content, title || "", Array.isArray(tags) ? tags.join(", ") : "");
+      const newFileId = library.createFile(content, title, tags);
       editor.setActiveFileId(newFileId);
     }
+
+    editor.setDirty(false);
   }
 
   function handleDelete(fileId: string) {
@@ -86,7 +104,8 @@
   }
 
   $effect(() => {
-    library.initialize(adapter);
+    // Initialize library with adapter
+    libraryContext.initialize(adapter);
 
     const isFirstVisit = untrack(() => settings.getFirstVisit() === false);
     if (isFirstVisit) {
@@ -94,7 +113,7 @@
     }
 
     return () => {
-      library.destroy();
+      libraryContext.destroy();
     };
   });
 
@@ -110,21 +129,17 @@
 
   // Set up global hotkeys based on current view
   $effect(() => {
-    const hotkeyConfig: HotkeyConfig = {
-      "ctrl+comma": () => editor.setSettingsModalVisibility(true),
-      "ctrl+alt+slash": () => editor.setShortcutModalVisibility(true),
-    };
-
-    // Add library-specific hotkeys when in library view
+    // Only attach page-level hotkeys when in library view
+    // The Editor component manages its own hotkeys when visible
     if (!isEditorVisible) {
-      hotkeyConfig["ctrl+shift+o"] = () => showEditor(null);
+      const hotkeyConfig: HotkeyConfig = {
+        "ctrl+comma": () => editor.setSettingsModalVisibility(true),
+        "ctrl+alt+slash": () => editor.setShortcutModalVisibility(true),
+        "ctrl+shift+o": () => showEditor(null),
+      };
+
+      hotkey.attachGlobalHotkeys(hotkeyConfig);
     }
-
-    hotkey.attachGlobalHotkeys(hotkeyConfig);
-
-    return () => {
-      hotkey.detachGlobalHotkeys();
-    };
   });
 </script>
 
@@ -153,7 +168,7 @@
     onNewFile={() => showEditor(null)}
     onOpenFile={showEditor}
     onDeleteFile={handleDelete}
-    isLoading={library.isLoading}
+    isLoading={library.loading}
   />
 {/if}
 
