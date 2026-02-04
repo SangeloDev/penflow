@@ -5,14 +5,14 @@
  * Manages visibility state for various modals in the application.
  */
 
-import { getContext, setContext } from 'svelte';
+import { getContext, setContext } from "svelte";
 
-const MODAL_CONTEXT_KEY = Symbol('modal');
+const MODAL_CONTEXT_KEY = Symbol("modal");
 
 /**
  * Modal types in the application
  */
-export type ModalType = 'shortcuts' | 'settings' | 'welcome' | 'confirm';
+export type ModalType = "shortcuts" | "settings" | "welcome" | "confirm";
 
 /**
  * Modal state for a single modal
@@ -103,61 +103,56 @@ export class ModalContext {
    * Show shortcuts modal
    */
   showShortcuts(): void {
-    this.show('shortcuts');
+    this.show("shortcuts");
   }
 
   /**
    * Hide shortcuts modal
    */
   hideShortcuts(): void {
-    this.hide('shortcuts');
+    this.hide("shortcuts");
   }
 
   /**
    * Show settings modal
    */
   showSettings(): void {
-    this.show('settings');
+    this.show("settings");
   }
 
   /**
    * Hide settings modal
    */
   hideSettings(): void {
-    this.hide('settings');
+    this.hide("settings");
   }
 
   /**
    * Show welcome modal
    */
   showWelcome(): void {
-    this.show('welcome');
+    this.show("welcome");
   }
 
   /**
    * Hide welcome modal
    */
   hideWelcome(): void {
-    this.hide('welcome');
+    this.hide("welcome");
   }
 
   /**
    * Show confirm dialog with data
    */
-  showConfirm(data: {
-    title?: string;
-    message: string;
-    onConfirm: () => void;
-    onCancel?: () => void;
-  }): void {
-    this.show('confirm', data);
+  showConfirm(data: { title?: string; message: string; onConfirm: () => void; onCancel?: () => void }): void {
+    this.show("confirm", data);
   }
 
   /**
    * Hide confirm dialog
    */
   hideConfirm(): void {
-    this.hide('confirm');
+    this.hide("confirm");
   }
 }
 
@@ -176,7 +171,7 @@ export function setModalContext(): ModalContext {
 export function getModalContext(): ModalContext {
   const context = getContext<ModalContext>(MODAL_CONTEXT_KEY);
   if (!context) {
-    throw new Error('ModalContext not found. Make sure to call setModalContext() in a parent component.');
+    throw new Error("ModalContext not found. Make sure to call setModalContext() in a parent component.");
   }
   return context;
 }

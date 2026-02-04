@@ -34,22 +34,22 @@ export type MarkdownFileUpdate = Partial<MarkdownFileSchema>;
  * Table names in the database
  */
 export const TABLE_NAMES = {
-  LIBRARY: 'library',
+  LIBRARY: "library",
 } as const;
 
-export type TableName = typeof TABLE_NAMES[keyof typeof TABLE_NAMES];
+export type TableName = (typeof TABLE_NAMES)[keyof typeof TABLE_NAMES];
 
 /**
  * TinyBase schema definition
  */
 export const LIBRARY_SCHEMA = {
   library: {
-    content: { type: 'string', default: '' },
-    createdAt: { type: 'number', default: 0 },
-    updatedAt: { type: 'number', default: 0 },
-    visitedAt: { type: 'number', default: 0 },
-    title: { type: 'string', default: '' },
-    tags: { type: 'string', default: '' },
+    content: { type: "string", default: "" },
+    createdAt: { type: "number", default: 0 },
+    updatedAt: { type: "number", default: 0 },
+    visitedAt: { type: "number", default: 0 },
+    title: { type: "string", default: "" },
+    tags: { type: "string", default: "" },
   },
 } as const;
 
@@ -57,17 +57,17 @@ export const LIBRARY_SCHEMA = {
  * Type guard to check if an object is a valid MarkdownFileSchema
  */
 export function isMarkdownFileSchema(obj: unknown): obj is MarkdownFileSchema {
-  if (!obj || typeof obj !== 'object') return false;
+  if (!obj || typeof obj !== "object") return false;
 
   const file = obj as Record<string, unknown>;
 
   return (
-    typeof file.content === 'string' &&
-    typeof file.createdAt === 'number' &&
-    typeof file.updatedAt === 'number' &&
-    typeof file.visitedAt === 'number' &&
-    typeof file.title === 'string' &&
-    typeof file.tags === 'string'
+    typeof file.content === "string" &&
+    typeof file.createdAt === "number" &&
+    typeof file.updatedAt === "number" &&
+    typeof file.visitedAt === "number" &&
+    typeof file.title === "string" &&
+    typeof file.tags === "string"
   );
 }
 
@@ -75,11 +75,11 @@ export function isMarkdownFileSchema(obj: unknown): obj is MarkdownFileSchema {
  * Type guard to check if an object is a valid MarkdownFile
  */
 export function isMarkdownFile(obj: unknown): obj is MarkdownFile {
-  if (!obj || typeof obj !== 'object') return false;
+  if (!obj || typeof obj !== "object") return false;
 
   const file = obj as Record<string, unknown>;
 
-  return typeof file.id === 'string' && isMarkdownFileSchema(file);
+  return typeof file.id === "string" && isMarkdownFileSchema(file);
 }
 
 /**
@@ -88,7 +88,7 @@ export function isMarkdownFile(obj: unknown): obj is MarkdownFile {
  */
 export function validateMarkdownFileSchema(obj: unknown): MarkdownFileSchema {
   if (!isMarkdownFileSchema(obj)) {
-    throw new Error('Invalid MarkdownFileSchema object');
+    throw new Error("Invalid MarkdownFileSchema object");
   }
   return obj;
 }
@@ -121,12 +121,12 @@ export function tableToMarkdownFiles(table: Record<string, unknown>): Record<str
 /**
  * Sort order options
  */
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 /**
  * Sortable fields for MarkdownFile
  */
-export type SortableField = keyof Pick<MarkdownFile, 'createdAt' | 'updatedAt' | 'visitedAt' | 'title'>;
+export type SortableField = keyof Pick<MarkdownFile, "createdAt" | "updatedAt" | "visitedAt" | "title">;
 
 /**
  * Sort configuration
@@ -143,12 +143,12 @@ export function createDefaultMarkdownFile(overrides?: Partial<MarkdownFileSchema
   const now = Date.now();
 
   return {
-    content: '',
+    content: "",
     createdAt: now,
     updatedAt: now,
     visitedAt: now,
-    title: '',
-    tags: '',
+    title: "",
+    tags: "",
     ...overrides,
   };
 }

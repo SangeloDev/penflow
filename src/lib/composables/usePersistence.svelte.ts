@@ -64,12 +64,7 @@ export function usePersistence() {
   /**
    * Save a file to the database
    */
-  async function saveFile(
-    id: string,
-    content: string,
-    title?: string,
-    tags?: string
-  ): Promise<void> {
+  async function saveFile(id: string, content: string, title?: string, tags?: string): Promise<void> {
     if (!adapter) {
       throw new Error("Persistence not initialized");
     }
