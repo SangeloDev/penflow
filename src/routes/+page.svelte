@@ -8,80 +8,67 @@
   import { CircleHelp, Notebook, SettingsIcon } from "lucide-svelte";
   import { createGlobalHotkeys as hotkeys, createEditorHotkeys } from "$lib/hotkeys";
   import {
-    getShortcutModalVisibility,
-    setShortcutModalVisibility,
-    getSettingsModalVisibility,
-    setSettingsModalVisibility,
-    setContent,
-    activeFileId,
-  } from "$lib/components/Editor.svelte.ts";
-  import { getFirstVisit, setFirstVisit } from "$lib/settings/index.svelte.ts";
-  import { createStore, type Store } from "tinybase";
-  import { get } from "svelte/store";
-  import { createIndexedDbPersister, type IndexedDbPersister } from "tinybase/persisters/persister-indexed-db";
-  import type { MarkdownFile } from "$lib/types";
+    setEditorStateContext,
+    setEditorOperationsContext,
+    setLibraryContext,
+    setModalContext,
+    setSettingsContext,
+    setHotkeyContext,
+    type HotkeyConfig,
+  } from "$lib/context";
+  import { useLibrary, useEditor } from "$lib/composables";
+  import { getFileService } from "$lib/services";
+  import { createTinyBaseAdapter } from "$lib/adapters/TinyBaseAdapter";
   import { m } from "$paraglide/messages";
+  import { untrack } from "svelte";
 
-  let shortcutModalVisible = $derived(getShortcutModalVisibility());
-  let settingsModalVisible = $derived(getSettingsModalVisibility());
+  // Initialize contexts
+  setEditorStateContext();
+  setEditorOperationsContext();
+  const libraryContext = setLibraryContext();
+  const modal = setModalContext();
+  const settings = setSettingsContext();
+  const hotkey = setHotkeyContext();
+
+  // Use composables for cleaner API
+  const library = useLibrary();
+  const editor = useEditor();
+  const fileService = getFileService();
+
+  // Reactive state derived from contexts
   let settingsModalTitle = $derived("");
   let helpModalTitle = $derived("");
-  let welcomeModalVisible = $state(false);
 
   // App state
   let isEditorVisible = $state(false);
-
-  // TinyBase state
-  let store = $state<Store | null>(null);
-  let persister = $state<IndexedDbPersister | null>(null);
-  let library = $state<Record<string, MarkdownFile>>({});
-  let isLoading = $state(true);
-
-  const librarySchema = {
-    library: {
-      content: { type: "string", default: "" },
-      createdAt: { type: "number", default: 0 },
-      updatedAt: { type: "number", default: 0 },
-      visitedAt: { type: "number", default: 0 },
-      title: { type: "string", default: "" },
-      tags: { type: "string", default: "" },
-    },
-  } as const;
-
   let frontmatter = $state<{ [key: string]: any }>({});
 
-  async function initStore() {
-    const newStore = createStore().setTablesSchema(librarySchema);
-    const newPersister = createIndexedDbPersister(newStore, "penflow");
-
-    await newPersister.load();
-    await newPersister.startAutoSave();
-
-    newStore.addTableListener("library", () => {
-      library = newStore.getTable("library") as unknown as Record<string, MarkdownFile>;
-    });
-
-    library = newStore.getTable("library") as unknown as Record<string, MarkdownFile>;
-
-    store = newStore;
-    persister = newPersister;
-    isLoading = false;
-  }
+  // Initialize database adapter
+  const adapter = createTinyBaseAdapter("penflow");
 
   function showEditor(fileId: string | null) {
-    activeFileId.set(fileId);
-    if (fileId && store) {
+    editor.state.activeFileId = fileId;
+    if (fileId) {
       // Load file
-      const file = store.getRow("library", fileId);
-      setContent(file.content as string);
-      frontmatter = {
-        title: file.title.toString(),
-        tags: [...new Set((file.tags as string).split(", "))],
-      };
-      store.setPartialRow("library", fileId, { visitedAt: Date.now() });
+      const file = library.getFile(fileId);
+      if (file) {
+        editor.content = file.content;
+        // Clear activeFilename so export generates fresh filename from content
+        editor.state.activeFilename = undefined;
+
+        // Parse frontmatter from content if present
+        const { frontmatter: parsed } = fileService.parseMarkdownFrontmatter(file.content);
+        frontmatter = {
+          title: file.title || parsed.title || "",
+          tags: file.tags ? file.tags.split(", ").filter(Boolean) : parsed.tags || [],
+        };
+
+        library.markFileVisited(fileId);
+      }
     } else {
       // New file
-      setContent("");
+      editor.content = "";
+      editor.state.activeFilename = undefined;
       frontmatter = {};
     }
     isEditorVisible = true;
@@ -89,53 +76,47 @@
 
   function showLibrary() {
     isEditorVisible = false;
-    activeFileId.set(null);
+    editor.state.activeFileId = null;
   }
 
   async function handleSave(content: string) {
-    if (!store) return;
+    const fileId = editor.activeFileId;
 
-    const fileId = get(activeFileId);
-    const { title, tags } = frontmatter;
+    // Generate title from content if not provided
+    const title = frontmatter.title || fileService.generateTitleFromContent(content);
+    const tags = fileService.formatTags(Array.isArray(frontmatter.tags) ? frontmatter.tags : []);
 
     if (fileId) {
-      store.setPartialRow("library", fileId, {
+      library.updateFile(fileId, {
         content,
-        updatedAt: Date.now(),
-        visitedAt: Date.now(),
         title,
-        tags: tags?.join(", ") || "",
+        tags,
       });
     } else {
       // Create new file
       const newFileId = crypto.randomUUID();
-      store.setRow("library", newFileId, {
-        content,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        visitedAt: Date.now(),
-        title,
-        tags: tags?.join(", ") || "",
-      });
-      activeFileId.set(newFileId);
+      library.createFile(newFileId, content, title, tags);
+      editor.state.activeFileId = newFileId;
     }
+
+    editor.isDirty = false;
   }
 
   function handleDelete(fileId: string) {
-    if (!store) return;
-    store.delRow("library", fileId);
+    library.deleteFile(fileId);
   }
 
   $effect(() => {
-    initStore();
+    // Initialize library with adapter
+    libraryContext.initialize(adapter);
 
-    const isFirstVisit = getFirstVisit() === false;
+    const isFirstVisit = untrack(() => settings.getFirstVisit() === false);
     if (isFirstVisit) {
-      welcomeModalVisible = true;
+      modal.showWelcome();
     }
 
     return () => {
-      persister?.destroy();
+      libraryContext.destroy();
     };
   });
 
@@ -145,9 +126,24 @@
   });
 
   function handleWelcomeFinish() {
-    welcomeModalVisible = false;
-    setFirstVisit(true);
+    modal.hideWelcome();
+    settings.setFirstVisit(true);
   }
+
+  // Set up global hotkeys based on current view
+  $effect(() => {
+    // Only attach page-level hotkeys when in library view
+    // The Editor component manages its own hotkeys when visible
+    if (!isEditorVisible) {
+      const hotkeyConfig: HotkeyConfig = {
+        "ctrl+comma": () => (editor.state.settingsModalVisible = true),
+        "ctrl+alt+slash": () => (editor.state.shortcutModalVisible = true),
+        "ctrl+shift+o": () => showEditor(null),
+      };
+
+      hotkey.attachGlobalHotkeys(hotkeyConfig);
+    }
+  });
 </script>
 
 <svelte:head>
@@ -163,7 +159,7 @@
   <Editor
     placeholder={m.editor_placeholder()}
     fullscreen={true}
-    bind:shortcutModalVisible
+    bind:shortcutModalVisible={editor.state.shortcutModalVisible}
     onNewFile={() => showEditor(null)}
     onSave={(content) => handleSave(content)}
     onBack={showLibrary}
@@ -171,24 +167,28 @@
   />
 {:else}
   <Library
-    files={library}
+    files={library.files}
     onNewFile={() => showEditor(null)}
     onOpenFile={showEditor}
     onDeleteFile={handleDelete}
-    {isLoading}
+    isLoading={library.isLoading}
   />
 {/if}
 
-<WelcomeModal show={welcomeModalVisible} onclose={() => handleWelcomeFinish()} />
+<WelcomeModal show={modal.isVisible("welcome")} onclose={() => handleWelcomeFinish()} />
 
-<Modal bind:show={settingsModalVisible} onclose={() => setSettingsModalVisibility(false)} className="w-full">
+<Modal
+  bind:show={editor.state.settingsModalVisible}
+  onclose={() => (editor.state.settingsModalVisible = false)}
+  className="w-full"
+>
   {#snippet header()}
     <SettingsIcon size={18} /> {settingsModalTitle}
   {/snippet}
   <Settings />
 </Modal>
 
-<Modal bind:show={shortcutModalVisible} onclose={() => setShortcutModalVisibility(false)}>
+<Modal bind:show={editor.state.shortcutModalVisible} onclose={() => (editor.state.shortcutModalVisible = false)}>
   {#snippet header()}
     <CircleHelp size={18} /> {helpModalTitle}
   {/snippet}

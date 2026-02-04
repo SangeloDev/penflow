@@ -4,7 +4,6 @@ import { closeBracketsKeymap } from "@codemirror/autocomplete";
 import * as f from "$lib/editor/formattingActions";
 import { toggleHeadingCycle } from "$lib/editor/formatting.js";
 import { EditorView, keymap, type KeyBinding } from "@codemirror/view";
-import { type EditorMode } from "$lib/components/Editor.svelte.ts";
 import type { Hotkey } from "$lib/types";
 import * as prettier from "prettier";
 import markdown from "prettier/plugins/markdown";
@@ -114,12 +113,12 @@ export function globalHotkey(params: { [key: string]: (e: KeyboardEvent) => void
 export type HotkeyContext = {
   setSettingsModalVisibility: (arg0: boolean) => void;
   setShortcutModalVisibility: (arg0: boolean) => void;
-  getMode: () => EditorMode | undefined;
-  cycleEditMode: (mode: EditorMode | undefined, reverse?: boolean) => void;
+  getMode: () => string | undefined;
+  cycleEditMode: (forward?: boolean) => void;
   saveFile: () => void;
-  exportFile: (content: string, filename?: string) => void;
+  exportFile: () => void;
   openFile: (view: EditorView | undefined) => void;
-  newFile: (view: EditorView | undefined | undefined, onNewFile: any, isDirty: boolean) => void;
+  newFile: (view: EditorView | undefined, onNewFile: any) => void;
   content: string;
   activeFilename?: string;
   view?: EditorView;
@@ -144,14 +143,14 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
     id: 2,
     desc: m.help_hotkeys_cycleEditingMode(),
     shortcut: "Ctrl+E",
-    action: () => context?.cycleEditMode(context?.getMode()),
+    action: () => context?.cycleEditMode(true),
   },
   {
     id: 3,
     desc: null,
     hidden: true,
     shortcut: "Ctrl+Shift+E",
-    action: () => context?.cycleEditMode(context?.getMode(), false),
+    action: () => context?.cycleEditMode(false),
   },
   {
     id: 4,
@@ -163,7 +162,7 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
     id: 5,
     desc: m.help_hotkeys_exportFile(),
     shortcut: "Ctrl+Shift+S",
-    action: () => context?.exportFile(context?.content, context?.activeFilename),
+    action: () => context?.exportFile(),
   },
   {
     id: 6,
@@ -175,7 +174,7 @@ export const createGlobalHotkeys = (context: HotkeyContext | undefined): Hotkey[
     id: 7,
     desc: m.help_hotkeys_newFile(),
     shortcut: "Ctrl+Shift+O",
-    action: () => context?.newFile(context?.view, context?.onNewFile, context?.getDirtyness()),
+    action: () => context?.newFile(context?.view, context?.onNewFile),
   },
 ];
 

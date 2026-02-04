@@ -7,11 +7,13 @@
   import { alert } from "@mdit/plugin-alert";
   import footnote from "markdown-it-footnote";
   import DOMPurify from "isomorphic-dompurify";
-  import { setContent } from "./Editor.svelte.ts";
+  import { getEditorStateContext } from "$lib/context";
   import { emojiDefs, emojiShortcuts } from "$lib/editor/emoji.ts";
   import "highlight.js/styles/base16/dracula.min.css";
   import "../../styles/preview.css";
   import { m } from "$paraglide/messages.js";
+
+  const editorState = getEditorStateContext();
 
   let {
     content,
@@ -112,9 +114,9 @@
       lines[lineNumber] = currentLine.replace("- [x]", "- [ ]");
     }
 
-    content = lines.join("\n");
-    setContent(content);
-    onContentChange?.(content);
+    const newContent = lines.join("\n");
+    editorState.content = newContent;
+    onContentChange?.(newContent);
   }
 
   function addSourceLineNumbers(state: any) {

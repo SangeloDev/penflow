@@ -6,7 +6,7 @@ type SortOrder = "asc" | "desc";
 interface Options {
   version: number;
   general: {
-    visited: boolean; // whether or not penflow has been initialised
+    visited: boolean;
     developer: boolean;
     editor: {
       toolbarItems: ToolbarItem[];

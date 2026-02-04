@@ -2,13 +2,16 @@
   import type { MarkdownFile } from "$lib/types";
   import { ArrowDown, ArrowUp, Clock, Eye, Paperclip, PencilIcon, Plus, Settings, Trash2Icon, X } from "lucide-svelte";
   import Modal from "./Modal.svelte";
-  import { generateDocumentTitle } from "./Editor.svelte.ts";
   import { formatDistanceStrict } from "date-fns";
-  import { setSettingsModalVisibility } from "./Editor.svelte.ts";
-  import { settings } from "$lib/settings/index.svelte.ts";
+  import { getEditorStateContext, getSettingsContext } from "$lib/context";
+  import { getFileService } from "$lib/services";
   import { m } from "$paraglide/messages.js";
   import { getLocale } from "$paraglide/runtime";
   import { dateLocaleMap } from "$lib/i18n/dateLocales";
+
+  const editorState = getEditorStateContext();
+  const settings = getSettingsContext();
+  const fileService = getFileService();
 
   let {
     files,
@@ -94,7 +97,7 @@
   const filteredFiles = $derived(
     Object.entries(files)
       .filter(([_id, file]) => {
-        const title = file.title || generateDocumentTitle(file.content) || untitledNote || "Untitled";
+        const title = file.title || fileService.generateTitleFromContent(file.content, untitledNote) || "Untitled";
         const tags = (file.tags as string) || "";
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
@@ -104,18 +107,16 @@
         return titleMatch || tagsMatch;
       })
       .sort(([_a, fileA], [_b, fileB]) => {
-        if (settings.general.library.sort.by === "name") {
-          const titleA = fileA.title || generateDocumentTitle(fileA.content) || untitledNote || "Untitled";
-          const titleB = fileB.title || generateDocumentTitle(fileB.content) || untitledNote || "Untitled";
-          return settings.general.library.sort.order === "asc"
-            ? titleA.localeCompare(titleB)
-            : titleB.localeCompare(titleA);
+        if (settings.getSortConfig().by === "name") {
+          const titleA = fileA.title || fileService.generateTitleFromContent(fileA.content, untitledNote) || "Untitled";
+          const titleB = fileB.title || fileService.generateTitleFromContent(fileB.content, untitledNote) || "Untitled";
+          return settings.getSortConfig().order === "asc" ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
         }
 
-        const a = fileA[settings.general.library.sort.by as "createdAt" | "updatedAt" | "visitedAt"];
-        const b = fileB[settings.general.library.sort.by as "createdAt" | "updatedAt" | "visitedAt"];
+        const a = fileA[settings.getSortConfig().by as "createdAt" | "updatedAt" | "visitedAt"];
+        const b = fileB[settings.getSortConfig().by as "createdAt" | "updatedAt" | "visitedAt"];
 
-        return settings.general.library.sort.order === "asc" ? a - b : b - a;
+        return settings.getSortConfig().order === "asc" ? a - b : b - a;
       })
   );
 
@@ -139,11 +140,13 @@
 
   function updateSortBy(event: Event) {
     const target = event.target as HTMLSelectElement;
-    settings.general.library.sort.by = target.value as "createdAt" | "updatedAt" | "visitedAt" | "name";
+    const currentOrder = settings.getSortConfig().order;
+    settings.setSortConfig(target.value as "createdAt" | "updatedAt" | "visitedAt" | "name", currentOrder);
   }
 
   function updateSortOrder(order: "asc" | "desc") {
-    settings.general.library.sort.order = order;
+    const currentBy = settings.getSortConfig().by;
+    settings.setSortConfig(currentBy, order);
   }
 </script>
 
@@ -157,7 +160,7 @@
     <span class="py-1 align-middle text-xl font-bold">penflow</span>
   </div>
   <div class="ml-auto flex items-center gap-1">
-    <button class="btn btn-square" onclick={() => setSettingsModalVisibility(true)} title={settingsLabel}>
+    <button class="btn btn-square" onclick={() => (editorState.settingsModalVisible = true)} title={settingsLabel}>
       <Settings size={20} />
     </button>
   </div>
@@ -177,7 +180,7 @@
         <label for="search" class="label peer dark:!bg-base-150">{searchLibraryPlaceholder}</label>
         <select
           onchange={updateSortBy}
-          value={settings.general.library.sort.by}
+          value={settings.getSortConfig().by}
           id="sort-select"
           class="input max-w-56 !rounded-l-none !border-l-0"
         >
@@ -191,14 +194,14 @@
         <button
           onclick={() => updateSortOrder("asc")}
           class="btn btn-square"
-          aria-pressed={settings.general.library.sort.order === "asc"}
+          aria-pressed={settings.getSortConfig().order === "asc"}
         >
           <ArrowUp size={18} />
         </button>
         <button
           onclick={() => updateSortOrder("desc")}
           class="btn btn-square"
-          aria-pressed={settings.general.library.sort.order === "desc"}
+          aria-pressed={settings.getSortConfig().order === "desc"}
         >
           <ArrowDown size={18} />
         </button>
@@ -249,7 +252,7 @@
             >
               <div class="mt-auto flex flex-col gap-2">
                 <h3 class="line-clamp-1 text-center">
-                  {file.title || generateDocumentTitle(file.content) || untitledNote || "Untitled"}
+                  {file.title || fileService.generateTitleFromContent(file.content, untitledNote) || "Untitled"}
                 </h3>
                 <button
                   onclick={(e) => {
@@ -310,8 +313,7 @@
         <span class="mr-4">
           {confirmDeletionTitle(
             files[fileToDelete].title ||
-              generateDocumentTitle(files[fileToDelete].content) ||
-              untitledNote ||
+              fileService.generateTitleFromContent(files[fileToDelete].content, untitledNote) ||
               "Untitled"
           )}
         </span>

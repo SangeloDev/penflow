@@ -1,8 +1,10 @@
 <script lang="ts">
   import CircleHelp from "lucide-svelte/icons/circle-help";
   import Settings from "lucide-svelte/icons/settings";
-  import { setSettingsModalVisibility, setShortcutModalVisibility } from "./Editor.svelte.ts";
+  import { getEditorStateContext } from "$lib/context";
   import { m } from "$paraglide/messages.js";
+
+  const editorState = getEditorStateContext();
 
   let {
     content,
@@ -23,10 +25,10 @@
   <span>{m.editor_statusBar_lineCount({ count: lines })}</span>
   <span>{m.editor_statusBar_wordCount({ count: words })}</span>
   <span>{m.editor_statusBar_charCount({ count: chars })}</span>
-  <button class="cursor-pointer" onclick={() => setSettingsModalVisibility(true)} title={m.settings()}>
+  <button class="cursor-pointer" onclick={() => (editorState.settingsModalVisible = true)} title={m.settings()}>
     <Settings size={16} />
   </button>
-  <button class="cursor-pointer" onclick={() => setShortcutModalVisibility(true)} title={m.help()}>
+  <button class="cursor-pointer" onclick={() => (editorState.shortcutModalVisible = true)} title={m.help()}>
     <CircleHelp size={16} />
   </button>
 </div>
